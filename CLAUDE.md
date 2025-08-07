@@ -458,6 +458,24 @@ The player can get the entity id for a smart entity (chests, forcefields, etc) b
 
 ## Program Hooks
 
+### Hook Context Structure
+
+Every hook receives a `HookContext` struct containing:
+```solidity
+struct HookContext {
+    EntityId caller;        // The entity that triggered the hook (usually the player)
+    EntityId target;        // The entity the program is attached to, for which the hook is being called
+    bool revertOnFailure;   // Whether to revert the action if hook fails
+    bytes extraData;        // Additional data passed to the hook (usually empty)
+}
+```
+
+### Important Hook Patterns
+
+1. **Conditional Reverting**: Only revert if `ctx.revertOnFailure` is true
+2. **Cleanup**: Always perform cleanup in detach hooks, even without reverting
+3. **Access Control**: Use hook context to determine if an action should be allowed
+
 ### Available Hooks
 
 Programs can react to various world events. Each type of entity can react to different events:
@@ -468,41 +486,86 @@ Programs can react to various world events. Each type of entity can react to dif
 
 #### Chest Hooks
 - `onTransfer(HookContext ctx, TransferData transfer)` - Called when items are transferred to/from the chest
+  ```solidity
+  struct TransferData {
+      SlotData[] deposits;    // Items being deposited
+      SlotData[] withdrawals; // Items being withdrawn
+  }
+
+  struct SlotData {
+      ObjectType objectType;  // Type of item
+      uint256 amount;        // Quantity
+  }
+  ```
 - `onOpen(HookContext ctx)` - Called when the chest is opened
 - `onClose(HookContext ctx)` - Called when the chest is closed
 
 #### Force Field Hooks
 - `onMine(HookContext ctx, MineData mine)` - Called when a block is mined within the force field
+  ```solidity
+  struct MineData {
+      EntityId entity;       // The entity that was mined
+      EntityId tool;        // Tool used for mining
+      Vec3 coord;          // Coordinates where mining occurred
+      ObjectType objectType; // Type of object mined
+  }
+  ```
 - `onBuild(HookContext ctx, BuildData build)` - Called when a block is built within the force field
+  ```solidity
+  struct BuildData {
+      EntityId entity;        // The entity being built
+      Vec3 coord;            // Build coordinates
+      ObjectType slotType;   // Slot type used
+      ObjectType objectType; // Object type being built
+      Orientation orientation; // Direction/rotation
+  }
+  ```
 - `onHit(HookContext ctx, HitData hit)` - Called when the force field is hit
+  ```solidity
+  struct HitData {
+      EntityId tool;    // Tool/weapon used
+      uint128 damage;   // Amount of damage
+  }
+  ```
 - `onEnergize(HookContext ctx, EnergizeData energize)` - Called when the force field is energized
+  ```solidity
+  struct EnergizeData {
+      uint128 amount;   // Energy amount
+  }
+  ```
 - `onAddFragment(HookContext ctx, AddFragmentData fragment)` - Called when a fragment is added
+  ```solidity
+  struct AddFragmentData {
+      EntityId added;   // The fragment entity that was added
+  }
+  ```
 - `onRemoveFragment(HookContext ctx, RemoveFragmentData fragment)` - Called when a fragment is removed
-- `validateProgram(HookContext ctx, ProgramData program)` - Validates if a program can be attached
+  ```solidity
+  struct RemoveFragmentData {
+      EntityId removed; // The fragment entity that was removed
+  }
+  ```
+- `validateProgram(HookContext ctx, ProgramData program)` - Validates if a `program` can be attached to `programmed`. In this case, `ctx.target` is the force field
+  ```solidity
+  struct ProgramData {
+      EntityId programmed;  // Entity being programmed
+      ProgramId program;    // Program being attached
+  }
+  ```
 
 #### Spawn Tile Hooks
 - `onSpawn(HookContext ctx, SpawnData spawn)` - Called when a player spawns on the tile
+  ```solidity
+  struct SpawnData {
+      uint128 energy;  // Energy amount
+      Vec3 coord;     // Spawn coordinates
+  }
+  ```
 
 #### Bed Hooks
 - `onSleep(HookContext ctx)` - Called when a player sleeps in the bed
 - `onWakeup(HookContext ctx)` - Called when a player wakes up from the bed
 
-### Hook Context Structure
-
-Every hook receives a `HookContext` struct containing:
-```solidity
-struct HookContext {
-    EntityId target;        // The entity the program is attached to
-    EntityId caller;        // The player or entity triggering the hook
-    bool revertOnFailure;   // Whether to revert the action if hook fails
-}
-```
-
-### Important Hook Patterns
-
-1. **Conditional Reverting**: Only revert if `ctx.revertOnFailure` is true
-2. **Cleanup**: Always perform cleanup in detach hooks, even without reverting
-3. **Access Control**: Use hook context to determine if an action should be allowed
 
 
 ## Example Programs
