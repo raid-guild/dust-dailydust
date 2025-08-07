@@ -1,0 +1,15 @@
+# foundry
+cache
+broadcast
+out/*
+!out/IWorld.sol
+out/IWorld.sol/*
+!out/IWorld.sol/IWorld.abi.json
+!out/IWorld.sol/IWorld.abi.d.json.ts
+
+.env
+
+# mud
+.mud
+deploys
+*.db*

@@ -1,0 +1,48 @@
+{
+  "name": "ethereum-monument",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "mud build",
+    "clean": "forge clean && shx rm -rf src/**/codegen",
+    "mud:up": "pnpm mud set-version --tag main && pnpm install",
+    "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
+    "deploy:local": ". ./set-env.sh local && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS",
+    "deploy:redstone": ". ./set-env.sh redstone && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS --kms",
+    "manager:registerApp:local": ". ./set-env.sh local && forge script RegisterApp --broadcast --sig 'run(address)' -- $WORLD_ADDRESS",
+    "manager:registerApp:redstone": ". ./set-env.sh redstone && forge script RegisterApp --aws --sig 'run(address)' -- $WORLD_ADDRESS",
+    "lint": "pnpm run prettier && pnpm run solhint",
+    "prettier": "prettier --write 'src/**/*.sol'",
+    "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
+    "test": "mud test"
+  },
+  "dependencies": {
+    "@dust/programs": "https://pkg.pr.new/dustproject/dust/@dust/programs@ec20311",
+    "@dust/world": "https://pkg.pr.new/dustproject/dust/@dust/world@ec20311",
+    "@latticexyz/cli": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/entrykit": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/schema-type": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/store": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/world": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/world-consumer": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@latticexyz/world-module-metadata": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "@openzeppelin/contracts": "^4.9.6",
+    "solady": "^0.1.14"
+  },
+  "devDependencies": {
+    "@types/big-json": "^3.2.5",
+    "@types/node": "^22.15.19",
+    "big-json": "^3.2.0",
+    "forge-std": "github:foundry-rs/forge-std#77041d2ce690e692d6e03cc812b57d1ddaa4d505",
+    "prettier": "3.2.5",
+    "prettier-plugin-solidity": "1.3.1",
+    "shx": "^0.4.0",
+    "solhint": "^3.6.2",
+    "solhint-config-mud": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "solhint-plugin-mud": "2.2.23-5ebd3d31b6ab3fbbfa8994fefcbf46d4e44c6ec2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "viem": "^2.33.0"
+  }
+}

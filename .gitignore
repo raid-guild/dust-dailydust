@@ -1,0 +1,17 @@
+.DS_Store
+logs
+*.log
+
+node_modules
+dist
+
+# foundry
+cache
+broadcast
+out/*
+!out/IWorld.sol
+out/IWorld.sol/*
+!out/IWorld.sol/IWorld.abi.json
+!out/IWorld.sol/IWorld.abi.d.json.ts
+
+.cloudflare

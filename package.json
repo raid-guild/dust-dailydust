@@ -1,0 +1,21 @@
+{
+  "name": "dust-template",
+  "private": true,
+  "scripts": {
+    "build": "pnpm recursive run build",
+    "dev": "shx rm -rf packages/contracts/deploys/31337/latest.json && mprocs"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": "^20",
+    "pnpm": "^9"
+  },
+  "devDependencies": {
+    "mprocs": "^0.7.2",
+    "wait-on": "^8.0.3",
+    "shx": "^0.3.4"
+  },
+  "packageManager": "pnpm@9.14.2"
+}
