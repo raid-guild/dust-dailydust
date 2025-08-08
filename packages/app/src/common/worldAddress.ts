@@ -1,0 +1,1 @@
+export const worldAddress = "0x253eb85B3C953bFE3827CC14a151262482E7189C";

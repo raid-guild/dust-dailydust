@@ -5,11 +5,13 @@
 Programs in DUST are smart contracts that react to world events through hooks. They use the MUD framework.
 
 ### Concepts
+
 - **Systems**: Contract logic that modifies the world state
 - **Tables**: On-chain data storage defined through schemas
 - **Hooks**: Functions that execute when specific world events occur (e.g., block placement, hitting a force field)
 
 ### Program Lifecycle
+
 1. **Registration**: Programs are registered under a namespace within the world
 2. **Event Listening**: Programs implement specific hooks
 3. **Execution**: When actions happen in the world, registered programs execute their logic
@@ -36,10 +38,11 @@ export default defineWorld({
 ```
 
 ### DUST Types
+
 - `EntityId` - Represents all unique entities in the game (players, blocks, tools)
-    - Import from `@dust/world/src/types/EntityId.sol`
+  - Import from `@dust/world/src/types/EntityId.sol`
 - `ObjectType` - The type of an entity
-    - Import from `@dust/world/src/types/ObjectType.sol`
+  - Import from `@dust/world/src/types/ObjectType.sol`
 
 ## Build Process
 
@@ -52,11 +55,13 @@ pnpm build
 ```
 
 This command:
+
 1. Reads your schema definitions from `mud.config.ts`
 2. Generates Solidity table and system libraries
-4. Compiles the Solidity code using Foundry (`forge build`)
+3. Compiles the Solidity code using Foundry (`forge build`)
 
 Generated files appear in:
+
 - `src/codegen/` - Solidity table libraries
 - `src/codegen/tables/` - Solidity table libraries
 - `src/codegen/world/` - World interface updates
@@ -66,11 +71,13 @@ Generated files appear in:
 ### Local Development
 
 1. Start local chain (from repo root):
+
 ```bash
 pnpm dev
 ```
 
 2. Deploy contracts (from contracts package):
+
 ```bash
 cd packages/contracts
 pnpm deploy:local
@@ -79,11 +86,13 @@ pnpm deploy:local
 ### Mainnet Deployment
 
 1. Set environment variables:
+
 ```bash
 export PRIVATE_KEY="your-private-key"
 ```
 
 2. Deploy (from contracts package):
+
 ```bash
 cd packages/contracts
 pnpm deploy:redstone
@@ -102,10 +111,12 @@ Every program should inherit from the appropriate base classes:
 ### System vs Program Design Pattern
 
 **Important distinction:**
+
 - **Programs** - React to world events through hooks, should only contain reactive logic
 - **Systems** - Provide callable functions for configuration and management
 
 **Configuration in mud.config.ts:**
+
 ```typescript
 // Programs - always have openAccess: false and registerWorldFunctions: false
 ChestProgram: {
@@ -120,11 +131,13 @@ TradingChainSystem: {
 ```
 
 **When to separate logic into a System:**
+
 - Admin/owner configuration functions (e.g., setting trade links, game parameters)
 - Functions that need to be called through the explorer or externally
 - Any non-reactive logic that doesn't belong in hooks
 
 **Example Pattern:**
+
 ```solidity
 // Program - handles reactive logic
 contract TradingChainProgram is ITransfer, BaseProgram {
@@ -146,28 +159,31 @@ contract TradingChainSystem is System {
 ### Critical Implementation Details
 
 **MUD System Detection Requirements:**
+
 - Programs MUST explicitly inherit from `System` even though `BaseProgram` already inherits from it
 - MUD's build system only detects contracts that directly inherit from `System`
 - Always include the override functions for `_msgSender()` and `_msgValue()` when inheriting from both System and BaseProgram
 
 **Import Patterns:**
+
 - `TransferData` is automatically available when importing `ITransfer` - don't import it separately
 - Use generated system libraries (e.g., `counterSystem` from `CounterSystemLib.sol`) to interact with deployed systems
 - Never manually deploy systems in tests - MUD handles deployment and provides access through generated libraries
 
 **Example of correct Program structure:**
+
 ```solidity
 import { System, WorldContextConsumer } from "@latticexyz/world/src/System.sol";
 import { HookContext, ITransfer } from "@dust/world/src/ProgramHooks.sol";  // TransferData is included
 
 contract MyProgram is ITransfer, System, BaseProgram {  // Explicit System inheritance required!
     // Implementation...
-    
+
     // Required overrides
     function _msgSender() public view override(WorldContextConsumer, BaseProgram) returns (address) {
         return BaseProgram._msgSender();
     }
-    
+
     function _msgValue() public view override(WorldContextConsumer, BaseProgram) returns (uint256) {
         return BaseProgram._msgValue();
     }
@@ -175,6 +191,7 @@ contract MyProgram is ITransfer, System, BaseProgram {  // Explicit System inher
 ```
 
 **Testing Systems:**
+
 ```solidity
 // Correct: Use generated library
 import { counterSystem } from "../src/codegen/systems/CounterSystemLib.sol";
@@ -210,7 +227,6 @@ abstract contract BaseProgram is IAttachProgram, IDetachProgram, System, WorldCo
     Owner.deleteRecord(ctx.target);
   }
 ```
-
 
 ```solidity
 // Import program interfaces and HookContext struct from @dust/world package
@@ -259,14 +275,13 @@ export default defineWorld({
       schema: {
         chest: "EntityId",
         value: "uint256",
-        someOtherValue: "bytes32"
+        someOtherValue: "bytes32",
       },
       key: ["chest"],
     },
   },
 });
 ```
-
 
 ```solidity
 import { SomeOtherTable, SomeOtherTableData } from "./codegen/tables/SomeOtherTable.sol";
@@ -292,12 +307,14 @@ SomeOtherTable.deleteRecord(ctx.target);
 ### Helper Functions and Utilities
 
 #### Getting Player Address from EntityId
+
 ```solidity
 // Get the player's address from ctx.caller
 address playerAddress = ctx.caller.getPlayerAddress();
 ```
 
 #### Working with Object Types
+
 ```solidity
 import { ObjectType, ObjectTypes } from "@dust/world/src/types/ObjectType.sol";
 
@@ -313,6 +330,7 @@ if (transfer.deposits[0].objectType == ObjectTypes.WheatSeed) {
 ```
 
 #### Accessing DUST World Tables
+
 ```solidity
 // Death table - tracks player deaths
 import { Death } from "@dust/world/src/codegen/tables/Death.sol";
@@ -324,6 +342,7 @@ EntityId playerId = EntityTypeLib.encodePlayer(playerAddress);
 ```
 
 #### Working with Transfer Data
+
 ```solidity
 // TransferData structure contains deposits and withdrawals
 function onTransfer(HookContext calldata ctx, TransferData calldata transfer) external {
@@ -346,6 +365,7 @@ function onTransfer(HookContext calldata ctx, TransferData calldata transfer) ex
 #### Common Patterns
 
 1. **Owner Tracking**:
+
 ```solidity
 import { Owner } from "./codegen/tables/Owner.sol";
 
@@ -362,6 +382,7 @@ Owner.deleteRecord(ctx.target);
 ```
 
 2. **State Management**:
+
 ```solidity
 // Track boolean states
 GameActive.set(ctx.target, true);
@@ -378,6 +399,7 @@ Counter.set(ctx.target, currentCount + 1);
 ### Table Design Patterns
 
 1. **Single Entity Storage**:
+
 ```solidity
 // For data tied to a single entity
 tables: {
@@ -392,6 +414,7 @@ tables: {
 ```
 
 2. **Composite Key Storage**:
+
 ```solidity
 // For relationships between entities
 tables: {
@@ -407,6 +430,7 @@ tables: {
 ```
 
 3. **Player-Entity Mapping**:
+
 ```solidity
 // For player-specific data per entity
 tables: {
@@ -424,6 +448,7 @@ tables: {
 ### Array Storage Pattern
 
 For storing lists of players or entities:
+
 ```solidity
 // Define an array table
 tables: {
@@ -453,6 +478,7 @@ for (uint256 i = 0; i < players.length; i++) {
 ### Best Practices
 
 1. **Always Handle ctx.revertOnFailure**:
+
 ```solidity
 function onTransfer(HookContext calldata ctx, TransferData calldata) external {
   // Only enforce rules when revertOnFailure is true
@@ -465,6 +491,7 @@ function onTransfer(HookContext calldata ctx, TransferData calldata) external {
 ```
 
 2. **Clean Up in onDetachProgram**:
+
 ```solidity
 function onDetachProgram(HookContext calldata ctx) public override {
   // Always clean up data, even without reverting
@@ -475,6 +502,7 @@ function onDetachProgram(HookContext calldata ctx) public override {
 ```
 
 3. **Initialize State in onAttachProgram**:
+
 ```solidity
 function onAttachProgram(HookContext calldata ctx) public override {
   // Set initial state
@@ -484,6 +512,7 @@ function onAttachProgram(HookContext calldata ctx) public override {
 ```
 
 4. **Use Memory for Complex Reads**:
+
 ```solidity
 // Read once into memory for multiple accesses
 GameStateData memory gameData = GameState.get(ctx.target);
@@ -493,6 +522,7 @@ if (gameData.active && gameData.playerCount > 0) {
 ```
 
 5. **Namespace Collision Prevention**:
+
 - Always use a unique namespace in mud.config.ts (this is the first thing the user should change!)
 - Check existing namespaces before deploying (worst case it will just fail)
 
@@ -546,6 +576,7 @@ The player can get the entity id for a smart entity (chests, forcefields, etc) b
 ### Hook Context Structure
 
 Every hook receives a `HookContext` struct containing:
+
 ```solidity
 struct HookContext {
     EntityId caller;        // The entity that triggered the hook (usually the player)
@@ -566,11 +597,14 @@ struct HookContext {
 Programs can react to various world events. Each type of entity can react to different events:
 
 #### Universal Hooks (All Programs)
+
 - `onAttachProgram(HookContext ctx)` - Called when the program is attached to an entity
 - `onDetachProgram(HookContext ctx)` - Called when the program is detached from an entity
 
 #### Chest Hooks
+
 - `onTransfer(HookContext ctx, TransferData transfer)` - Called when items are transferred to/from the chest
+
   ```solidity
   struct TransferData {
       SlotData[] deposits;    // Items being deposited
@@ -582,10 +616,12 @@ Programs can react to various world events. Each type of entity can react to dif
       uint256 amount;        // Quantity
   }
   ```
+
 - `onOpen(HookContext ctx)` - Called when the chest is opened
 - `onClose(HookContext ctx)` - Called when the chest is closed
 
 #### Force Field Hooks
+
 - `onMine(HookContext ctx, MineData mine)` - Called when a block is mined within the force field
   ```solidity
   struct MineData {
@@ -639,6 +675,7 @@ Programs can react to various world events. Each type of entity can react to dif
   ```
 
 #### Spawn Tile Hooks
+
 - `onSpawn(HookContext ctx, SpawnData spawn)` - Called when a player spawns on the tile
   ```solidity
   struct SpawnData {
@@ -648,10 +685,9 @@ Programs can react to various world events. Each type of entity can react to dif
   ```
 
 #### Bed Hooks
+
 - `onSleep(HookContext ctx)` - Called when a player sleeps in the bed
 - `onWakeup(HookContext ctx)` - Called when a player wakes up from the bed
-
-
 
 ## Example Programs
 
@@ -820,6 +856,7 @@ contract SpleefArena is IMine, IBuild, System, BaseProgram {
 ```
 
 **How it works:**
+
 1. Players deposit 5 wheat seeds to enter the game
 2. Their death count is recorded when they join
 3. Players can only mine leaves within the force field
@@ -830,38 +867,45 @@ contract SpleefArena is IMine, IBuild, System, BaseProgram {
 ### Common Issues
 
 **Build fails after schema change**
+
 - Rebuild (including MUD codegen): `pnpm build`
 - Clean and rebuild if issues persist: `forge clean && pnpm build`
 
 **Deployment fails**
+
 - Check account balance
 - Verify RPC connection
 - Ensure PRIVATE_KEY is set correctly
 - Check if namespace is already taken
 
 **Attaching program fails**
+
 - Check error message and transaction traces (`cast run --rpc-url https://rpc.redstonechain.com <tx hash>`)
 - Check any permissions implemented by the program
 - Ensure you're close enough to the entity in-game
 - Verify the program was deployed successfully
 
 **Program not working as intended**
+
 - Ensure program is attached by checking the EntityProgram table in the explorer (https://explorer.mud.dev/redstone/worlds/0x253eb85B3C953bFE3827CC14a151262482E7189C/explore)
 - Check the data of the tables registered under your namespace
 - Verify hook implementations match expected signatures
 - Check if `ctx.revertOnFailure` is being handled correctly
 
 **"Hook not supported" error**
+
 - Entity type doesn't support that specific hook
 - Check you're implementing the correct interface for your entity type
 - Ensure fallback function is properly configured
 
 **Table access errors**
+
 - Ensure tables are imported from the correct codegen path
 - Run `pnpm build` after any schema changes
 - Check table keys match what you defined in mud.config.ts
 
 **Player address issues**
+
 - Use `ctx.caller.getPlayerAddress()` to get the player's address
 - EntityId and address are different - always convert when needed
 
@@ -870,11 +914,13 @@ contract SpleefArena is IMine, IBuild, System, BaseProgram {
 ### Common Math Libraries
 
 For advanced math operations, you can use:
+
 - **Solady's FixedPointMathLib**: Import from `solady/src/utils/FixedPointMathLib.sol`
   - Provides WAD math operations (1e18 precision)
   - Useful for percentages, ratios, and complex calculations
 
 For simple operations, use native Solidity:
+
 ```solidity
 // Simple percentage calculation
 uint256 result = (value * percentage) / 100;
@@ -934,3 +980,291 @@ This pattern avoids iteration to clean up player data while ensuring each progra
 - Solidity Documentation: https://docs.soliditylang.org
 - Dust docs: https://dev.dustproject.org/
 - Project Scripts: See `package.json` for all available commands
+
+# Dust UI Extension Development Guide
+
+## Introduction
+
+The Dust client supports embedded apps - web apps that integrate directly into the game client UI and interact with in-game objects and physics. Apps let developers build on top of the world and extend the game client with custom functionality like shops and marketplaces.
+
+A Dust app is:
+
+- A web app hosted at a URL
+- Described by a JSON manifest ([schema](https://raw.githubusercontent.com/dustproject/dust/refs/heads/main/packages/dustkit/json-schemas/app-config.json))
+- Registered onchain (once per manifest URL)
+- Launched manually (e.g. installing into client's "desktop" view) or contextually (e.g. opening a chest)
+
+### App lifecycle
+
+1. **[Registration](registration)**: Developer interacts with the App Registry to register the app's manifest URL.
+2. **Discovery**: The Dust client automatically detects app registrations.
+3. **Launch**:
+   - Manual: User opens via their desktop
+   - Contextual: Interacts with an in-game entity (e.g. chest)
+4. **Communication**:
+   - App loads in iframe
+   - [Dustkit](dustkit) sets up postMessage channel
+   - App sends `ready` message
+   - Client sends contextual info (e.g. `entityId` of chest that opened the app)
+
+## Registration
+
+### Preview an app in the client
+
+Before registering an app to make it available to everyone, you can preview your app in the production client by using the `debug-app` URL parameter.
+
+Example: `https://alpha.dustproject.org/?debug-app=http://localhost:3000/dust-app.json`
+
+### Register a global app
+
+To make an app available in everyone's client, you have to register it in the global app registry.
+
+1. Register a new MUD namespace.
+
+   ```solidity
+    import { ResourceId, WorldResourceIdInstance, WorldResourceIdLib } from "@latticexyz/world/src/WorldResourceId.sol";
+    import { ResourceIds } from "@latticexyz/store/src/codegen/tables/ResourceIds.sol";
+
+    IWorld world = IWorld(0x253eb85B3C953bFE3827CC14a151262482E7189C);
+    ResourceId appNamespaceId = WorldResourceIdLib.encodeNamespace(bytes14(bytes("your-dust-app")));
+    if (!ResourceIds.getExists(appNamespaceId)) {
+      world.registerNamespace(appNamespaceId);
+    }
+   ```
+
+2. Register by setting a resource tag that points to your ([app's manifest](https://esm.sh/pr/dustproject/dust/dustkit@d9cb17b/json-schemas/app-config.json))
+
+   ```solidity
+   import { metadataSystem } from
+   "@latticexyz/world-module-metadata/src/codegen/experimental/systems/MetadataSystemLib.sol";
+
+   metadataSystem.setResourceTag(appNamespaceId, "dust.appConfigUrl", bytes("https://your-dust-app.com/dust-app.json"));
+   ```
+
+In this repository, you can run the [`RegisterScript.s.sol`](packages/contracts/script/RegisterApp.s.sol) forge script.
+The easiest way to run it is via the `pnpm manager:registerApp:redstone` command in the `contracts` package.
+
+### Register a contextual app
+
+To show a contextual app when interacting with an entity that has [your program installed](../programs/registration.md), your program needs to implement the [`appConfigURI` function](https://github.com/dustproject/dust/blob/main/packages/dustkit/contracts/IAppConfigURI.sol).
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.24;
+
+contract CustomProgram {
+  function appConfigURI(EntityId viaEntity) external returns (string memory uri) {
+    return "https://your-dust-app.com/dust-app.json";
+  }
+}
+```
+
+### Register a spawn app
+
+Spawn apps are displayed on the spawn screen and should implement spawning functionality for custom spawn tiles.
+Registering them is very similar to registering global apps, just using the `dust.spawnAppConfigUrl` resource tag instead.
+
+1. Register a new MUD namespace.
+
+   ```solidity
+    import { ResourceId, WorldResourceIdInstance, WorldResourceIdLib } from "@latticexyz/world/src/WorldResourceId.sol";
+    import { ResourceIds } from "@latticexyz/store/src/codegen/tables/ResourceIds.sol";
+
+    IWorld world = IWorld(0x253eb85B3C953bFE3827CC14a151262482E7189C);
+    ResourceId appNamespaceId = WorldResourceIdLib.encodeNamespace(bytes14(bytes("your-dust-app")));
+    if (!ResourceIds.getExists(appNamespaceId)) {
+      world.registerNamespace(appNamespaceId);
+    }
+   ```
+
+2. Register by setting a resource tag that points to your ([spawn app's manifest](https://esm.sh/pr/dustproject/dust/dustkit@d9cb17b/json-schemas/app-config.json))
+
+   ```solidity
+   import { metadataSystem } from
+   "@latticexyz/world-module-metadata/src/codegen/experimental/systems/MetadataSystemLib.sol";
+
+   metadataSystem.setResourceTag(appNamespaceId, "dust.spawnAppConfigUrl", bytes("https://your-dust-spawn-app.com/dust-app.json"));
+   ```
+
+## Dustkit
+
+Dustkit is the bridge between apps and the native Dust browser client.
+
+### Setup
+
+This is already done in this repository, but here are the setup instructions for context.
+
+1. Add `dustkit` as a dependency to `package.json`. The tag at the end corresponds to the github commit on main.
+
+```typescript
+"dustkit": "https://pkg.pr.new/dustproject/dust/dustkit@27f724c"
+```
+
+2. Connect the dustkit client:
+
+```typescript
+import { connectDustClient } from "dustkit/internal";
+const { appContext, provider } = await connectDustClient();
+```
+
+3. You can now access the methods on the `provider` object. For example, to get the player's position:
+
+```typescript
+const position = await provider.request({
+  method: "getPlayerPosition",
+  params: {
+    entity: "0x",
+  },
+});
+```
+
+### Reference
+
+#### `setWaypoint`
+
+Sets a waypoint for a specific entity with a label.
+
+**Parameters:**
+
+- `entity` (EntityId): The entity to set the waypoint for
+- `label` (string): The label for the waypoint
+
+**Returns:** `void`
+
+#### `getSlots`
+
+Retrieves slot information for inventory operations.
+
+**Parameters:**
+
+- `entity` (EntityId): The entity to get slots for
+- `objectType` (number): The type of object
+- `amount` (number): The amount of objects
+- `operationType` ("withdraw" | "deposit"): "withdraw" means you want the slots where this object & amount exists and "deposit" means you want the slots where this object & amount will fit
+
+**Returns:**
+
+```typescript
+{
+  slots: {
+    slot: number;
+    amount: number;
+  }
+  [];
+}
+```
+
+#### `systemCall`
+
+Executes a system call in the world
+
+**Parameters:**
+
+- `params` (SystemCalls): The system call parameters
+
+**Returns:** Either a user operation receipt or transaction receipt:
+
+```typescript
+{
+  userOperationHash: Hex;
+  receipt: UserOperationReceipt;
+} | {
+  transactionHash: Hex;
+  receipt: TransactionReceipt;
+}
+```
+
+#### `getPlayerPosition`
+
+Gets the 3D position of a player entity.
+
+**Parameters:**
+
+- `entity` (EntityId): The player entity
+
+**Returns:**
+
+```typescript
+{
+  x: number;
+  y: number;
+  z: number;
+}
+```
+
+#### `setBlueprint`
+
+Sets a blueprint with block positions and options.
+
+**Parameters:**
+
+- `blocks`: Array of block definitions:
+  ```typescript
+  {
+    objectTypeId: number;
+    x: number;
+    y: number;
+    z: number;
+    orientation: number;
+  }
+  [];
+  ```
+- `options` (optional, defaults to true for both): Blueprint display options:
+  ```typescript
+  {
+    showBlocksToMine: boolean;
+    showBlocksToBuild: boolean;
+  }
+  ```
+
+**Returns:** `void`
+
+#### `getSelectedObjectType`
+
+Gets the currently selected object type in the players hotbar.
+
+**Parameters:** None
+
+**Returns:** `number` - The selected object type ID
+
+#### `getForceFieldAt`
+
+Gets force field information at a specific coordinate.
+
+**Parameters:**
+
+- `x` (number): X coordinate
+- `y` (number): Y coordinate
+- `z` (number): Z coordinate
+
+**Returns:** Force field data or undefined:
+
+```typescript
+{
+  forceFieldId: Hex;
+  fragmentId: Hex;
+  fragmentPos: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  forceFieldCreatedAt: bigint;
+  extraDrainRate: bigint;
+} | undefined
+```
+
+#### `getCursorPosition`
+
+Gets the current cursor position in the world, if available.
+
+**Parameters:** None
+
+**Returns:** Cursor position or undefined:
+
+```typescript
+{
+  x: number;
+  y: number;
+  z: number;
+} | undefined
+```

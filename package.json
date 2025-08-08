@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm recursive run build",
-    "dev": "shx rm -rf packages/contracts/deploys/31337/latest.json && mprocs"
+    "dev": "shx rm -rf packages/contracts/deploys/31337/latest.json && pnpm --filter app dev"
   },
   "workspaces": [
     "packages/*"

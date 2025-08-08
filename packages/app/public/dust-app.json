@@ -1,9 +1,9 @@
 {
   "$schema": "https://esm.sh/pr/dustproject/dust/dustkit@ac7725c/json-schemas/app-config.json",
-  "name": "App",
+  "name": "My First App",
   "startUrl": "/",
   "defaultSize": {
-    "width": 420,
-    "height": 635
+    "width": 600,
+    "height": 400
   }
 }

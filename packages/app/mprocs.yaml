@@ -1,0 +1,4 @@
+scrollback: 10000
+procs:
+  app:
+    shell: pnpm vite --port 3000

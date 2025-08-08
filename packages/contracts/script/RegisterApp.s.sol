@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import { metadataSystem } from
-  "@latticexyz/world-module-metadata/src/codegen/experimental/systems/MetadataSystemLib.sol";
+import { metadataSystem } from "@latticexyz/world-module-metadata/src/codegen/experimental/systems/MetadataSystemLib.sol";
 import { ResourceId, WorldResourceIdLib } from "@latticexyz/world/src/WorldResourceId.sol";
 
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
@@ -20,9 +19,6 @@ contract RegisterApp is Script {
 
     ResourceId appNamespaceId = WorldResourceIdLib.encodeNamespace("my_namespace");
     string memory appUrl = "https://example.com/dust-app.json";
-    if (block.chainid == 31337) {
-      appUrl = "http://localhost:3001/dust-app.json";
-    }
     console.log("Registering app with url: %s", appUrl);
 
     metadataSystem.setResourceTag(appNamespaceId, "dust.appConfigUrl", bytes(appUrl));
