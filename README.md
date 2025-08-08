@@ -41,48 +41,7 @@ A chest that only allows transfers when a global counter is odd.
 3. If the counter is even, the transfer is blocked
 4. Players can increment/decrement the counter using the `CounterSystem`
 
-### 4. TradingChainProgram + TradingChainSystem
-**Files:** `packages/contracts/src/TradingChainProgram.sol`, `packages/contracts/src/systems/TradingChainSystem.sol`
-
-A sophisticated trading chest where the owner defines a chain of item trades that other players must follow.
-
-**Key Features:**
-- Owner can define trading pairs (e.g., Wheat → Iron, Iron → Diamond)
-- Non-owners must follow the exact trading chain
-- Owner has full control to withdraw at any time
-
-**Why it needs a separate System:**
-The program is split into two parts for a crucial architectural reason:
-
-1. **TradingChainProgram** (reactive logic):
-   - Handles the `onTransfer` hook
-   - Enforces trading rules during chest interactions
-   - Allows owner full access
-
-2. **TradingChainSystem** (configuration logic):
-   - Provides `setTradeLink()` function to configure trades
-   - Can be called through the MUD explorer or external contracts
-   - Accessible outside of chest interaction events
-
-**This separation is necessary because:**
-- Hook functions (like `onTransfer`) are only triggered by specific game events
-- Configuration needs to happen outside these events (e.g., setting up trades before anyone uses the chest)
-- Systems with `registerWorldFunctions: false` can be called directly through the explorer
-- This pattern keeps reactive logic separate from administrative functions
-
-**Usage Example:**
-```solidity
-// 1. Owner attaches program to chest (sets ownership automatically)
-// 2. Owner calls setTradeLink through explorer:
-//    setTradeLink(chestId, WheatSeed, IronOre)
-//    setTradeLink(chestId, IronOre, Diamond)
-// 3. Owner deposits WheatSeed into chest
-// 4. Player A deposits IronOre, withdraws WheatSeed
-// 5. Player B deposits Diamond, withdraws IronOre
-// 6. Owner can withdraw Diamond at any time
-```
-
-### 5. CounterSystem
+### 4. CounterSystem
 **File:** `packages/contracts/src/systems/CounterSystem.sol`
 
 A simple system that manages a global counter, used by ChestCounterProgram.
@@ -95,7 +54,7 @@ A simple system that manages a global counter, used by ChestCounterProgram.
 
 **Note:** This is a System, not a Program. It provides callable functions rather than reacting to hooks.
 
-### 6. ForceFieldProgram
+### 5. ForceFieldProgram
 **File:** `packages/contracts/src/ForceFieldProgram.sol`
 
 Template for force field programs that can react to various events within their area.
@@ -106,7 +65,7 @@ Template for force field programs that can react to various events within their 
 - `onHit` - When the force field is hit
 - `onEnergize` - When energy is added
 
-### 7. SpawnTileProgram
+### 6. SpawnTileProgram
 **File:** `packages/contracts/src/SpawnTileProgram.sol`
 
 Template for spawn tile programs that react to player spawning.
@@ -114,7 +73,7 @@ Template for spawn tile programs that react to player spawning.
 **Available Hooks:**
 - `onSpawn` - When a player spawns on the tile
 
-### 8. BedProgram
+### 7. BedProgram
 **File:** `packages/contracts/src/BedProgram.sol`
 
 Template for bed programs that react to sleep events.
@@ -139,7 +98,7 @@ Understanding when to use Programs vs Systems is crucial:
 - Provide callable functions
 - Can be invoked through explorer or other contracts
 - Only inherit from `System`
-- Examples: CounterSystem, TradingChainSystem
+- Examples: CounterSystem
 
 ### Configuration Pattern
 

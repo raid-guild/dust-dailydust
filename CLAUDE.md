@@ -655,66 +655,6 @@ Programs can react to various world events. Each type of entity can react to dif
 
 ## Example Programs
 
-### Trading Chain Chest
-
-This program creates a chest where the owner defines a chain of trades, and other players can swap items according to the defined chain:
-
-```solidity
-// In mud.config.ts:
-tables: {
-  ChestOwner: {
-    schema: {
-      chest: "EntityId",
-      owner: "address",
-    },
-    key: ["chest"],
-  },
-  TradingChain: {
-    schema: {
-      chest: "EntityId",
-      fromItem: "ObjectType",
-      toItem: "ObjectType",
-    },
-    key: ["chest", "fromItem"],
-  },
-}
-
-// TradingChainProgram.sol - handles the trading logic:
-contract TradingChainProgram is ITransfer, System, BaseProgram {
-  function onTransfer(HookContext calldata ctx, TransferData calldata transfer) external onlyWorld {
-    if (!ctx.revertOnFailure) return;
-    
-    // Owner can do anything
-    if (ctx.caller.getPlayerAddress() == ChestOwner.getOwner(ctx.target)) {
-      return;
-    }
-    
-    // Non-owners must swap according to chain
-    require(transfer.deposits.length == 1 && transfer.withdrawals.length == 1, "Exact swap required");
-    
-    ObjectType withdrawnItem = transfer.withdrawals[0].objectType;
-    ObjectType depositedItem = transfer.deposits[0].objectType;
-    
-    require(TradingChain.getToItem(ctx.target, withdrawnItem) == depositedItem, "Invalid trade");
-  }
-}
-
-// TradingChainSystem.sol - for configuring the chain:
-contract TradingChainSystem is System {
-  function setTradeLink(EntityId chest, ObjectType fromItem, ObjectType toItem) external {
-    require(ChestOwner.getOwner(chest) == msg.sender, "Only owner");
-    TradingChain.set(chest, fromItem, toItem);
-  }
-}
-```
-
-**How it works:**
-1. Owner attaches the program to a chest (sets ownership)
-2. Owner calls `setTradeLink` through the explorer to define trades (e.g., Wheat → Iron, Iron → Diamond)
-3. Owner deposits the first item in the chain
-4. Other players can swap items according to the defined chain
-5. Owner can withdraw at any time
-
 ### Simple Owner-Only Chest
 
 This program restricts chest access to the player who attached it:

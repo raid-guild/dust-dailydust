@@ -47,13 +47,6 @@ export default defineWorld({
       openAccess: false,
       deploy: { registerWorldFunctions: false },
     },
-    TradingChainProgram: {
-      openAccess: false,
-      deploy: { registerWorldFunctions: false },
-    },
-    TradingChainSystem: {
-      deploy: { registerWorldFunctions: false },
-    },
   },
   tables: {
     Counter: {
@@ -61,21 +54,6 @@ export default defineWorld({
         value: "uint256",
       },
       key: [],
-    },
-    ChestOwner: {
-      schema: {
-        chest: "EntityId",
-        owner: "address",
-      },
-      key: ["chest"],
-    },
-    TradingChain: {
-      schema: {
-        chest: "EntityId",
-        fromItem: "ObjectType",
-        toItem: "ObjectType",
-      },
-      key: ["chest", "fromItem"],
     },
   },
 });
