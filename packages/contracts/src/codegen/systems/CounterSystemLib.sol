@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type CounterSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "my_namespace", name: "CounterSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "template", name: "CounterSystem" }))
 CounterSystemType constant counterSystem = CounterSystemType.wrap(
-  0x73796d795f6e616d6573706163650000436f756e74657253797374656d000000
+  0x737974656d706c617465000000000000436f756e74657253797374656d000000
 );
 
 struct CallWrapper {

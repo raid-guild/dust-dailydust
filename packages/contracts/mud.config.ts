@@ -22,7 +22,8 @@ export default defineWorld({
       type: "bytes32",
     },
   },
-  namespace: "my_namespace",
+  // Replace this with a unique namespace
+  namespace: "template",
   systems: {
     ForceFieldProgram: {
       openAccess: false,

@@ -8,14 +8,13 @@
     "clean": "forge clean && shx rm -rf src/**/codegen",
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
-    "deploy:local": ". ./set-env.sh local && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS",
-    "deploy:redstone": ". ./set-env.sh redstone && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS --kms",
+    "deploy:redstone": ". ./set-env.sh redstone && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS",
     "manager:registerApp:local": ". ./set-env.sh local && forge script RegisterApp --broadcast --sig 'run(address)' -- $WORLD_ADDRESS",
     "manager:registerApp:redstone": ". ./set-env.sh redstone && forge script RegisterApp --aws --sig 'run(address)' -- $WORLD_ADDRESS",
     "lint": "pnpm run prettier && pnpm run solhint",
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
-    "test": "mud test"
+    "test": "./fund-wallet.sh && mud test"
   },
   "dependencies": {
     "@dust/programs": "https://pkg.pr.new/dustproject/dust/@dust/programs@ec20311",

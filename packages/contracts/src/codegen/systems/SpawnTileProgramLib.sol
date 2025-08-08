@@ -15,9 +15,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type SpawnTileProgramType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "my_namespace", name: "SpawnTileProgram" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "template", name: "SpawnTileProgram" }))
 SpawnTileProgramType constant spawnTileProgram = SpawnTileProgramType.wrap(
-  0x73796d795f6e616d6573706163650000537061776e54696c6550726f6772616d
+  0x737974656d706c617465000000000000537061776e54696c6550726f6772616d
 );
 
 struct CallWrapper {

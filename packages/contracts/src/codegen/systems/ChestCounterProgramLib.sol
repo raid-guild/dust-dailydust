@@ -15,9 +15,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type ChestCounterProgramType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "my_namespace", name: "ChestCounterProg" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "template", name: "ChestCounterProg" }))
 ChestCounterProgramType constant chestCounterProgram = ChestCounterProgramType.wrap(
-  0x73796d795f6e616d65737061636500004368657374436f756e74657250726f67
+  0x737974656d706c6174650000000000004368657374436f756e74657250726f67
 );
 
 struct CallWrapper {
