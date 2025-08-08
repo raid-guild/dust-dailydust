@@ -99,6 +99,91 @@ Every program should inherit from the appropriate base classes:
 2. **System** - Required for MUD system integration
 3. **Interface(s)** - The specific hooks your program responds to (e.g., ITransfer for chests)
 
+### System vs Program Design Pattern
+
+**Important distinction:**
+- **Programs** - React to world events through hooks, should only contain reactive logic
+- **Systems** - Provide callable functions for configuration and management
+
+**Configuration in mud.config.ts:**
+```typescript
+// Programs - always have openAccess: false and registerWorldFunctions: false
+ChestProgram: {
+  openAccess: false,
+  deploy: { registerWorldFunctions: false },
+},
+
+// Systems - don't need openAccess (defaults to true), always registerWorldFunctions: false
+TradingChainSystem: {
+  deploy: { registerWorldFunctions: false },
+},
+```
+
+**When to separate logic into a System:**
+- Admin/owner configuration functions (e.g., setting trade links, game parameters)
+- Functions that need to be called through the explorer or externally
+- Any non-reactive logic that doesn't belong in hooks
+
+**Example Pattern:**
+```solidity
+// Program - handles reactive logic
+contract TradingChainProgram is ITransfer, BaseProgram {
+    function onTransfer(HookContext calldata ctx, TransferData calldata transfer) external onlyWorld {
+        // Only reactive logic here
+        // Check trading rules, validate transfers
+    }
+}
+
+// System - handles configuration
+contract TradingChainSystem is System {
+    function setTradeLink(EntityId chest, ObjectType fromItem, ObjectType toItem) external {
+        // Configuration logic here
+        // Can be called through explorer
+    }
+}
+```
+
+### Critical Implementation Details
+
+**MUD System Detection Requirements:**
+- Programs MUST explicitly inherit from `System` even though `BaseProgram` already inherits from it
+- MUD's build system only detects contracts that directly inherit from `System`
+- Always include the override functions for `_msgSender()` and `_msgValue()` when inheriting from both System and BaseProgram
+
+**Import Patterns:**
+- `TransferData` is automatically available when importing `ITransfer` - don't import it separately
+- Use generated system libraries (e.g., `counterSystem` from `CounterSystemLib.sol`) to interact with deployed systems
+- Never manually deploy systems in tests - MUD handles deployment and provides access through generated libraries
+
+**Example of correct Program structure:**
+```solidity
+import { System, WorldContextConsumer } from "@latticexyz/world/src/System.sol";
+import { HookContext, ITransfer } from "@dust/world/src/ProgramHooks.sol";  // TransferData is included
+
+contract MyProgram is ITransfer, System, BaseProgram {  // Explicit System inheritance required!
+    // Implementation...
+    
+    // Required overrides
+    function _msgSender() public view override(WorldContextConsumer, BaseProgram) returns (address) {
+        return BaseProgram._msgSender();
+    }
+    
+    function _msgValue() public view override(WorldContextConsumer, BaseProgram) returns (uint256) {
+        return BaseProgram._msgValue();
+    }
+}
+```
+
+**Testing Systems:**
+```solidity
+// Correct: Use generated library
+import { counterSystem } from "../src/codegen/systems/CounterSystemLib.sol";
+// Then use directly: counterSystem.increment(world, ...);
+
+// Wrong: Manual deployment
+CounterSystem counterSystem = new CounterSystem();
+```
+
 ### Basic Program Structure (some template programs can be found in the contracts package)
 
 ```solidity
@@ -408,17 +493,17 @@ if (gameData.active && gameData.playerCount > 0) {
 ```
 
 5. **Namespace Collision Prevention**:
-- Always use a unique namespace in mud.config.ts
+- Always use a unique namespace in mud.config.ts (this is the first thing the user should change!)
 - Check existing namespaces before deploying (worst case it will just fail)
 
 ## Development Workflow
 
 ### Typical Development Cycle
 
-1. **Define Schema**: Edit `mud.config.ts` to add/modify tables
+1. **Define Namespace and Schema**: Edit `mud.config.ts` to use a custom unique namespace and add/modify tables
 2. **Generate Code**: Run `pnpm build` to generate TypeScript/Solidity code
-3. **Write Logic**: Implement systems/programs in `src/systems/`
-4. **Test Locally**: Use `pnpm dev` for local testing
+3. **Write Logic**: Implement systems/programs in `src/`
+4. **Test Locally**: Use `pnpm test` to run unit tests
 5. **Deploy**: Deploy to target network
 6. **Initialize**: Run post-deploy scripts
 
@@ -569,6 +654,66 @@ Programs can react to various world events. Each type of entity can react to dif
 
 
 ## Example Programs
+
+### Trading Chain Chest
+
+This program creates a chest where the owner defines a chain of trades, and other players can swap items according to the defined chain:
+
+```solidity
+// In mud.config.ts:
+tables: {
+  ChestOwner: {
+    schema: {
+      chest: "EntityId",
+      owner: "address",
+    },
+    key: ["chest"],
+  },
+  TradingChain: {
+    schema: {
+      chest: "EntityId",
+      fromItem: "ObjectType",
+      toItem: "ObjectType",
+    },
+    key: ["chest", "fromItem"],
+  },
+}
+
+// TradingChainProgram.sol - handles the trading logic:
+contract TradingChainProgram is ITransfer, System, BaseProgram {
+  function onTransfer(HookContext calldata ctx, TransferData calldata transfer) external onlyWorld {
+    if (!ctx.revertOnFailure) return;
+    
+    // Owner can do anything
+    if (ctx.caller.getPlayerAddress() == ChestOwner.getOwner(ctx.target)) {
+      return;
+    }
+    
+    // Non-owners must swap according to chain
+    require(transfer.deposits.length == 1 && transfer.withdrawals.length == 1, "Exact swap required");
+    
+    ObjectType withdrawnItem = transfer.withdrawals[0].objectType;
+    ObjectType depositedItem = transfer.deposits[0].objectType;
+    
+    require(TradingChain.getToItem(ctx.target, withdrawnItem) == depositedItem, "Invalid trade");
+  }
+}
+
+// TradingChainSystem.sol - for configuring the chain:
+contract TradingChainSystem is System {
+  function setTradeLink(EntityId chest, ObjectType fromItem, ObjectType toItem) external {
+    require(ChestOwner.getOwner(chest) == msg.sender, "Only owner");
+    TradingChain.set(chest, fromItem, toItem);
+  }
+}
+```
+
+**How it works:**
+1. Owner attaches the program to a chest (sets ownership)
+2. Owner calls `setTradeLink` through the explorer to define trades (e.g., Wheat → Iron, Iron → Diamond)
+3. Owner deposits the first item in the chain
+4. Other players can swap items according to the defined chain
+5. Owner can withdraw at any time
 
 ### Simple Owner-Only Chest
 
@@ -779,6 +924,69 @@ contract SpleefArena is IMine, IBuild, System, BaseProgram {
 **Player address issues**
 - Use `ctx.caller.getPlayerAddress()` to get the player's address
 - EntityId and address are different - always convert when needed
+
+## External Utilities
+
+### Common Math Libraries
+
+For advanced math operations, you can use:
+- **Solady's FixedPointMathLib**: Import from `solady/src/utils/FixedPointMathLib.sol`
+  - Provides WAD math operations (1e18 precision)
+  - Useful for percentages, ratios, and complex calculations
+
+For simple operations, use native Solidity:
+```solidity
+// Simple percentage calculation
+uint256 result = (value * percentage) / 100;
+
+// Decay calculation
+uint256 decayed = (value * 950) / 1000; // 95% of value
+```
+
+## Advanced Patterns
+
+### Session Counter Pattern
+
+When programs need to invalidate old data between attachments (e.g., resetting scores), use a session counter:
+
+```solidity
+// In mud.config.ts
+tables: {
+  Config: {
+    schema: {
+      entity: "EntityId",
+      sessionId: "uint256",
+      // other fields...
+    },
+    key: ["entity"],
+  },
+  PlayerData: {
+    schema: {
+      entity: "EntityId",
+      sessionId: "uint256", // Include session ID in composite key
+      player: "address",
+      data: "uint256",
+    },
+    key: ["entity", "sessionId", "player"], // Old sessions automatically ignored
+  },
+}
+
+// In Program.sol
+function onAttachProgram(HookContext calldata ctx) public override {
+  // Use existing session ID (0 on first attachment)
+  uint256 sessionId = Config.getSessionId(ctx.target);
+  Config.set(ctx.target, sessionId, otherData...);
+}
+
+function onDetachProgram(HookContext calldata ctx) public override {
+  // Increment session ID for next attachment
+  uint256 nextSessionId = Config.getSessionId(ctx.target) + 1;
+  Config.setSessionId(ctx.target, nextSessionId);
+  // No need to delete old player data - different sessionId makes it inaccessible
+}
+```
+
+This pattern avoids iteration to clean up player data while ensuring each program attachment starts fresh.
 
 ## Additional Resources
 
