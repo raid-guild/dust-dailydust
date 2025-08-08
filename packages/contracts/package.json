@@ -14,7 +14,7 @@
     "lint": "pnpm run prettier && pnpm run solhint",
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
-    "test": "./fund-wallet.sh && mud test"
+    "test": "mud test"
   },
   "dependencies": {
     "@dust/programs": "https://pkg.pr.new/dustproject/dust/@dust/programs@ec20311",
