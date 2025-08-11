@@ -5,7 +5,12 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const saved = localStorage.getItem("dailydust-theme");
-    const initial = saved ?? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "dark" : "light");
+    const initial =
+      saved ??
+      (window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
     apply(initial);
   }, []);
 
