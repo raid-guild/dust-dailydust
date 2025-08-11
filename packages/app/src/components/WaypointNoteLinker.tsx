@@ -143,15 +143,15 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-panel rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
+          <h2 className="text-lg font-semibold text-text-primary">
             Link Waypoints to "{displayTitle}"
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-text-secondary hover:text-text-primary"
           >
             ✕
           </button>
@@ -160,9 +160,9 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
         <div className="p-4 space-y-6 overflow-y-auto max-h-[60vh]">
           {/* Success Message */}
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+            <div className="bg-success/10 border border-success/30 rounded-md p-3">
               <div className="flex items-center">
-                <div className="text-green-800 text-sm font-medium">
+                <div className="text-success text-sm font-medium">
                   ✓ {successMessage}
                 </div>
               </div>
@@ -172,23 +172,23 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
           {/* Currently Linked Waypoints */}
           {linkedWaypoints.length > 0 && (
             <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">
+              <h3 className="text-md font-medium text-text-primary mb-3">
                 Currently Linked ({linkedWaypoints.length})
               </h3>
-              <div className="space-y-2 bg-blue-50 p-3 rounded-lg">
+              <div className="space-y-2 bg-brand-50 p-3 rounded-lg">
                 {linkedWaypoints.map((waypoint: ExtendedWaypoint) => (
                   <div
                     key={waypoint.id}
-                    className="flex items-center gap-3 p-2 bg-white border border-blue-200 rounded"
+                    className="flex items-center gap-3 p-2 bg-panel border border-brand-200 rounded"
                   >
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-brand-500 rounded-full"></div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900">{waypoint.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="font-medium text-text-primary">{waypoint.name}</div>
+                      <div className="text-sm text-text-secondary">
                         {waypoint.description} • {waypoint.category}
                       </div>
                     </div>
-                    <span className="text-xs text-blue-600 font-medium">Linked</span>
+                    <span className="text-xs text-brand-700 font-medium">Linked</span>
                   </div>
                 ))}
               </div>
@@ -197,12 +197,12 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
 
           {/* Available Waypoints */}
           <div>
-            <h3 className="text-md font-medium text-gray-900 mb-3">
+            <h3 className="text-md font-medium text-text-primary mb-3">
               Available Waypoints ({availableWaypoints.length})
             </h3>
             
             {availableWaypoints.length === 0 ? (
-              <p className="text-gray-500 text-sm">
+              <p className="text-text-secondary text-sm">
                 No available waypoints. Create new waypoints below or manage existing ones in the Waypoints tab.
               </p>
             ) : (
@@ -217,29 +217,29 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
                       key={waypoint.id}
                       className={`flex items-center gap-3 p-2 border rounded cursor-pointer transition-colors ${
                         isSelected 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:bg-gray-50'
+                          ? 'border-brand-500 bg-brand-50' 
+                          : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleWaypoint(waypoint.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <div className="font-medium text-gray-900">{waypoint.name}</div>
+                          <div className="font-medium text-text-primary">{waypoint.name}</div>
                           {isCurrentlyLinked && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded-full">
                               Currently Linked
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-text-secondary">
                           {waypoint.description} • {waypoint.category}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-text-secondary">
                           Entity ID: {waypoint.entityId}
                         </div>
                       </div>
@@ -251,8 +251,8 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
           </div>
 
           {/* Create New Waypoint */}
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-md font-medium text-gray-900 mb-3">
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
+            <h3 className="text-md font-medium text-text-primary mb-3">
               Create New Waypoint
             </h3>
             
@@ -262,7 +262,7 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
                 value={newWaypointName}
                 onChange={(e) => setNewWaypointName(e.target.value)}
                 placeholder="Waypoint name..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel text-text-primary"
               />
               
               <textarea
@@ -270,13 +270,13 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
                 onChange={(e) => setNewWaypointDescription(e.target.value)}
                 placeholder="Description..."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel text-text-primary"
               />
               
               <select
                 value={newWaypointCategory}
                 onChange={(e) => setNewWaypointCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel text-text-primary"
               >
                 <option value="exploration">Exploration</option>
                 <option value="resource">Resource</option>
@@ -289,7 +289,7 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
               <button
                 onClick={handleCreateWaypoint}
                 disabled={!newWaypointName.trim()}
-                className="w-full px-4 py-2 text-sm text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create & Link Waypoint
               </button>
@@ -298,11 +298,11 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between p-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
+          <div className="text-sm text-text-secondary">
             {selectedWaypoints.length} waypoint(s) selected
             {linkedWaypoints.length > 0 && (
-              <span className="ml-2 text-blue-600">
+              <span className="ml-2 text-brand-700">
                 • {linkedWaypoints.length} currently linked
               </span>
             )}
@@ -310,13 +310,13 @@ export function WaypointNoteLinker({ noteId, draftId, onClose }: WaypointNoteLin
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm text-text-secondary bg-panel border border-neutral-300 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800"
             >
               Cancel
             </button>
             <button
               onClick={handleLinkWaypoints}
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              className="px-4 py-2 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700"
             >
               {selectedWaypoints.length === 0 ? 'Unlink All' : `Update Links (${selectedWaypoints.length})`}
             </button>
