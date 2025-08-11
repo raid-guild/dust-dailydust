@@ -23,6 +23,15 @@ importers:
       '@dust/world':
         specifier: https://pkg.pr.new/dustproject/dust/@dust/world@2b5a710
         version: https://pkg.pr.new/dustproject/dust/@dust/world@2b5a710(@aws-sdk/client-kms@3.848.0)(asn1.js@5.4.1)(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.23.8)
+      '@fontsource/im-fell-english-sc':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/press-start-2p':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/spectral':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@latticexyz/common':
         specifier: 2.2.23-e76d72504e7ee51c76fa380bdc4a56f4815b7b59
         version: 2.2.23-e76d72504e7ee51c76fa380bdc4a56f4815b7b59(@aws-sdk/client-kms@3.848.0)(asn1.js@5.4.1)(typescript@5.8.3)(viem@2.33.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
@@ -705,6 +714,15 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@fontsource/im-fell-english-sc@5.2.6':
+    resolution: {integrity: sha512-+uVXYFiAURkyvKKbkN/DyOs2PNIVt+/pIyax8FpVppxgpU676gRFp7eAUxdKBTPCT0zhM8UFaZ+IhCza0Vpl7w==}
+
+  '@fontsource/press-start-2p@5.2.6':
+    resolution: {integrity: sha512-qzNBsl4yQaLpQLftsj9kfrNvOrhftj5MUoNk3vQf3tQwZ4mhpDD6XucBWySlA1kG2q054pVqRt73UZSP0AldYA==}
+
+  '@fontsource/spectral@5.2.6':
+    resolution: {integrity: sha512-W1+UKOwcWMD3ykoInEi40h8zPIDjJcZOFX2yCUqci2tp0sGKRYlP4N6/Hzpa1SdFAfZnk3srl8paH4sO4qZMJQ==}
 
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -5986,6 +6004,12 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@fontsource/im-fell-english-sc@5.2.6': {}
+
+  '@fontsource/press-start-2p@5.2.6': {}
+
+  '@fontsource/spectral@5.2.6': {}
 
   '@hapi/hoek@9.3.0': {}
 
