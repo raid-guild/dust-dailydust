@@ -22,8 +22,10 @@
     "clsx": "^2.1.1",
     "contracts": "workspace:*",
     "dustkit": "https://pkg.pr.new/dustproject/dust/dustkit@27f724c",
+    "lucide-react": "^0.539.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.8.0",
     "tailwind-merge": "^3.3.1",
     "viem": "^2.33.0"
   },
