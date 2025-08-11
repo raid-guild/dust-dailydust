@@ -1,4 +1,3 @@
-import type React from "react";
 import { useState, useEffect } from "react";
 import { useDrafts } from "../hooks/useDrafts";
 import { useNotes } from "../hooks/useNotes";
@@ -152,19 +151,6 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId 
       });
     }
   }, [draftId, noteId, title, headerImageUrl, content, tags, category, initialEntityId, updateDraftWithAutosave]);
-
-  // Handle saving draft manually
-  const handleSaveDraft = () => {
-    if (draftId) {
-      updateDraftImmediate(draftId, {
-        title,
-        headerImageUrl,
-        content,
-        tags,
-        category,
-      });
-    }
-  };
 
   async function createOnchainNote(noteHexId: `0x${string}`, titleIn: string, contentIn: string, tagsCsv: string) {
     if (!dustClient) throw new Error("No DUST client");
@@ -371,10 +357,10 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId 
   const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
 
   return (
-    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div className="flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
+        <h2 className="text-lg font-semibold text-text-primary">
           {noteId ? "Edit Note" : "New Note"}
         </h2>
         <div className="flex gap-2">
@@ -382,218 +368,110 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId 
             onClick={() => setShowWaypointLinker(true)}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${
               linkedWaypointsCount > 0 
-                ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
-                : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
+                ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
+                : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
             }`}
           >
             🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
           </button>
           <button
             onClick={() => setShowPreview(p => !p)}
-            className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
           >
             {showPreview ? 'Edit' : 'Preview'}
           </button>
           <button
             onClick={handleCancel}
-            className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handlePublish}
-            disabled={isPublishing || !title.trim() || !content.trim()}
-            className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isPublishing}
+            className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isPublishing ? "Publishing..." : noteId ? "Update" : "Publish"}
+            {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
           </button>
         </div>
       </div>
 
-      {/* Title + Header image + Category */}
-      <div className="p-4 border-b border-gray-100 space-y-2">
+      {/* Title & Meta */}
+      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 space-y-2">
         <input
-          type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Note title..."
-          className="w-full text-xl font-semibold text-gray-900 placeholder-gray-400 border-none outline-none resize-none"
+          className="w-full text-xl font-semibold text-text-primary placeholder-neutral-400 border-none outline-none resize-none bg-transparent"
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <input
-            type="url"
             value={headerImageUrl}
             onChange={(e) => setHeaderImageUrl(e.target.value)}
             placeholder="Header image URL (optional)"
-            className="w-full text-sm text-gray-800 placeholder-gray-400 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full text-sm text-text-primary placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full text-sm text-gray-800 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full text-sm text-text-primary border border-neutral-200 dark:border-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel"
           >
-            {['Editorial','Classified','News','Quest','Guide','Lore','Help','Release Notes'].map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
+            <option>Editorial</option>
+            <option>Guide</option>
+            <option>News</option>
+            <option>Build</option>
+            <option>Other</option>
           </select>
         </div>
       </div>
 
       {/* Tags */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex flex-wrap gap-2 mb-2">
-          {tagArray.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
-            >
-              {tag}
-              <button
-                onClick={() => handleRemoveTag(tag)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-        <TagInput onAddTag={handleAddTag} placeholder="Add tags (comma separated)..." />
-      </div>
-
-      {/* Content Editor */}
-      <div className="flex-1 p-4">
-        {!showPreview ? (
-          <>
-            <div className="flex gap-2 mb-2">
-              <button onClick={() => applyFormatting('bold')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Bold</button>
-              <button onClick={() => applyFormatting('italic')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Italic</button>
-              <button onClick={() => applyFormatting('code')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Code</button>
-              <button onClick={() => applyFormatting('quote')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Quote</button>
-              <button onClick={() => applyFormatting('ul')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">• List</button>
-              <button onClick={() => applyFormatting('ol')} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">1. List</button>
-            </div>
-            <textarea
-              id="note-content-textarea"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your note..."
-              className="w-full h-full text-gray-900 placeholder-gray-400 border-none outline-none resize-none font-mono text-sm leading-relaxed"
-            />
-          </>
-        ) : (
-          <MarkdownPreview content={content} headerImageUrl={headerImageUrl} />
-        )}
-      </div>
-
-      {/* Status Bar */}
-      <div className="flex items-center justify-between p-3 text-xs text-gray-500 border-t border-gray-100 bg-gray-50">
-        <div className="flex items-center gap-4">
-          <span>
-            {content.length} characters
-          </span>
-          {linkedWaypointsCount > 0 && (
-            <span className="text-blue-600 flex items-center gap-1">
-              🗺️ {linkedWaypointsCount} waypoint{linkedWaypointsCount !== 1 ? 's' : ''} linked
-            </span>
-          )}
-        </div>
-        {draftId && !noteId && (
+      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-amber-600">
-              Draft
-            </span>
-            <button
-              onClick={handleSaveDraft}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Save Draft
-            </button>
+            {tagArray.slice(0, 6).map((tag) => (
+              <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-brand-100 text-brand-800 rounded-full">
+                #{tag}
+                <button onClick={() => handleRemoveTag(tag)} className="text-brand-700 hover:text-brand-900">×</button>
+              </span>
+            ))}
           </div>
+          <button onClick={() => handleAddTag(prompt('New tag') || '')} className="text-brand-600 hover:text-brand-800">+ Add tag</button>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => applyFormatting('bold')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Bold</button>
+          <button onClick={() => applyFormatting('italic')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Italic</button>
+          <button onClick={() => applyFormatting('code')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Code</button>
+          <button onClick={() => applyFormatting('quote')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Quote</button>
+          <button onClick={() => applyFormatting('ul')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">• List</button>
+          <button onClick={() => applyFormatting('ol')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">1. List</button>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div className="flex-1 p-4">
+        {showPreview ? (
+          <div className="prose max-w-none text-text-primary">
+            {content || 'Nothing to preview yet.'}
+          </div>
+        ) : (
+          <textarea
+            id="note-content-textarea"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write your note in markdown..."
+            className="w-full h-full text-text-primary placeholder-neutral-400 border-none outline-none resize-none font-mono text-sm leading-relaxed bg-transparent"
+          />
         )}
       </div>
 
-      {/* Waypoint Linker Modal */}
       {showWaypointLinker && (
-        <WaypointNoteLinker
-          noteId={noteId}
-          draftId={draftId}
-          onClose={() => setShowWaypointLinker(false)}
-        />
+        <WaypointNoteLinker noteId={noteId} draftId={draftId} onClose={() => setShowWaypointLinker(false)} />
       )}
     </div>
-  );
-}
-
-function MarkdownPreview({ content, headerImageUrl }: { content: string; headerImageUrl?: string }) {
-  // Super minimal markdown rendering: headings, bold, italic, code, lists, blockquotes, links
-  const render = (md: string) => {
-    let html = md;
-    // Escape basic HTML
-    html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // Headings
-    html = html.replace(/^###\s(.+)$/gm, '<h3 class="text-base font-semibold mt-3">$1</h3>');
-    html = html.replace(/^##\s(.+)$/gm, '<h2 class="text-lg font-semibold mt-4">$1</h2>');
-    html = html.replace(/^#\s(.+)$/gm, '<h1 class="text-xl font-bold mt-6">$1</h1>');
-    // Blockquote
-    html = html.replace(/^>\s(.+)$/gm, '<blockquote class="border-l-4 pl-3 my-2 text-gray-600">$1</blockquote>');
-    // Bold/Italic/Code
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    html = html.replace(/`(.+?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
-    // Links
-    html = html.replace(/\[(.+?)\]\((https?:[^\s)]+)\)/g, '<a class="text-blue-600 underline" href="$2" target="_blank" rel="noreferrer">$1</a>');
-    // Lists (very basic)
-    html = html.replace(/^(?:-\s.+\n?)+/gm, match => `<ul class="list-disc ml-5 my-2">${match.replace(/^-\s(.+)$/gm, '<li>$1</li>')}</ul>`);
-    html = html.replace(/^(?:\d+\.\s.+\n?)+/gm, match => `<ol class="list-decimal ml-5 my-2">${match.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>')}</ol>`);
-    // Paragraphs
-    html = html.replace(/^(?!<h\d|<ul|<ol|<blockquote)(.+)$/gm, '<p class="my-2">$1</p>');
-    return html;
-  };
-
-  return (
-    <div className="prose max-w-none">
-      {headerImageUrl ? (
-        <img src={headerImageUrl} alt="header" className="w-full max-h-64 object-cover rounded mb-4" />
-      ) : null}
-      <div dangerouslySetInnerHTML={{ __html: render(content) }} />
-    </div>
-  );
-}
-
-interface TagInputProps {
-  onAddTag: (tag: string) => void;
-  placeholder?: string;
-}
-
-function TagInput({ onAddTag, placeholder = "Add tag..." }: TagInputProps) {
-  const [inputValue, setInputValue] = useState("");
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      if (inputValue.trim()) {
-        onAddTag(inputValue.trim());
-        setInputValue("");
-      }
-    }
-  };
-
-  const handleBlur = () => {
-    if (inputValue.trim()) {
-      onAddTag(inputValue.trim());
-      setInputValue("");
-    }
-  };
-
-  return (
-    <input
-      type="text"
-      value={inputValue}
-      onChange={(e) => setInputValue(e.target.value)}
-      onKeyPress={handleKeyPress}
-      onBlur={handleBlur}
-      placeholder={placeholder}
-      className="w-full px-2 py-1 text-sm text-gray-700 placeholder-gray-400 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    />
   );
 }

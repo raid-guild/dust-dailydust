@@ -22,6 +22,12 @@ export function WaypointsTab() {
     type: "success" | "error" | "info";
   } | null>(null);
 
+  const bannerClass: Record<NonNullable<typeof feedback>['type'], string> = {
+    success: "bg-success/10 text-success border border-success/30",
+    error: "bg-danger/10 text-danger border border-danger/30",
+    info: "bg-info/10 text-info border border-info/30",
+  } as const;
+
   const showFeedback = (message: string, type: "success" | "error" | "info" = "success") => {
     setFeedback({ message, type });
     setTimeout(() => setFeedback(null), 5000);
@@ -243,42 +249,33 @@ export function WaypointsTab() {
   const categories = Array.from(new Set(["All", ...waypoints.map(w => w.category || "General")])) as string[];
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="p-5">
       {feedback && (
-        <div
-          style={{
-            padding: "10px",
-            marginBottom: "20px",
-            borderRadius: "5px",
-            backgroundColor: feedback.type === "success" ? "#d4edda" : feedback.type === "error" ? "#f8d7da" : "#d1ecf1",
-            color: feedback.type === "success" ? "#155724" : feedback.type === "error" ? "#721c24" : "#0c5460",
-            border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : feedback.type === "error" ? "#f5c6cb" : "#bee5eb"}`,
-          }}
-        >
+        <div className={`p-3 mb-4 rounded ${bannerClass[feedback.type]}`}>
           {feedback.message}
         </div>
       )}
 
       {/* Filters */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 220px 120px", gap: 8, alignItems: "center", marginBottom: 12 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px_220px_120px] gap-2 items-center mb-3">
         <input
           type="text"
           placeholder="Search by name, description, category, entity..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: 8, borderRadius: 4, border: "1px solid #444", background: "#2a2a2a", color: "#fff" }}
+          className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400"
         />
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{ padding: 8, borderRadius: 4, border: "1px solid #444", background: "#2a2a2a", color: "#fff" }}
+          className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary"
         >
           {categories.map(c => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-text-primary">
             <input
               type="checkbox"
               checked={nearMe}
@@ -288,56 +285,42 @@ export function WaypointsTab() {
           </label>
           <button
             onClick={fetchPlayerPosition}
-            style={{ padding: "6px 10px", borderRadius: 4, border: "1px solid #666", background: "#444", color: "#fff" }}
+            className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-800 bg-neutral-100 hover:bg-neutral-200 text-text-primary"
           >
             📍 Position
           </button>
         </div>
-        <div style={{ color: "#aaa", fontSize: 12, textAlign: "right" }}>
+        <div className="text-right text-xs text-text-secondary">
           {playerPos ? `Pos: ${playerPos.x}, ${playerPos.y}, ${playerPos.z}` : "Pos: unknown"}
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={doExport} style={{ padding: "6px 12px", background: "#444", color: "#fff", borderRadius: 4, border: "1px solid #666" }}>⬇️ Export</button>
-          <button onClick={() => doImport(false)} style={{ padding: "6px 12px", background: "#444", color: "#fff", borderRadius: 4, border: "1px solid #666" }}>⬆️ Import (merge)</button>
-          <button onClick={() => doImport(true)} style={{ padding: "6px 12px", background: "#b23b3b", color: "#fff", borderRadius: 4, border: "1px solid #8a2b2b" }}>⬆️ Import (replace)</button>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex gap-2">
+          <button onClick={doExport} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800">⬇️ Export</button>
+          <button onClick={() => doImport(false)} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800">⬆️ Import (merge)</button>
+          <button onClick={() => doImport(true)} className="px-3 py-1.5 bg-danger text-white rounded border border-danger/60">⬆️ Import (replace)</button>
         </div>
         {waypoints.length > 0 && (
           <button
             onClick={handleClearAll}
-            style={{
-              padding: "6px 12px",
-              backgroundColor: "#f44336",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "0.8em",
-            }}
+            className="px-3 py-1.5 bg-danger text-white rounded text-xs"
           >
             🧹 Clear All
           </button>
         )}
       </div>
 
-      <div style={{ marginBottom: "30px" }}>
-        <h3 style={{ color: "#4CAF50", marginBottom: "15px" }}>📍 Create New Waypoint</h3>
+      <div className="mb-6">
+        <h3 className="text-brand-600 mb-3 font-medium">📍 Create New Waypoint</h3>
         
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px" }}>
+        <div className="flex flex-col gap-2 max-w-md">
           <input
             type="text"
             placeholder="Waypoint name"
             value={newWaypointName}
             onChange={(e) => setNewWaypointName(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              backgroundColor: "#2a2a2a",
-              color: "white",
-            }}
+            className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400"
           />
           
           <input
@@ -345,25 +328,13 @@ export function WaypointsTab() {
             placeholder="Entity ID (will be auto-filled when you click button below)"
             value={newWaypointEntityId}
             onChange={(e) => setNewWaypointEntityId(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              backgroundColor: "#2a2a2a",
-              color: "white",
-            }}
+            className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400"
           />
           
           <select
             value={newWaypointCategory}
             onChange={(e) => setNewWaypointCategory(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              backgroundColor: "#2a2a2a",
-              color: "white",
-            }}
+            className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary"
           >
             <option value="General">General</option>
             <option value="Mining">Mining</option>
@@ -378,30 +349,14 @@ export function WaypointsTab() {
             value={newWaypointDescription}
             onChange={(e) => setNewWaypointDescription(e.target.value)}
             rows={3}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              backgroundColor: "#2a2a2a",
-              color: "white",
-              resize: "vertical",
-            }}
+            className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400 resize-y"
           />
           
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex gap-2">
             <button
               onClick={async () => { await setWaypointToCurrent(); await ensurePlayerPosIfNeeded(); }}
               disabled={!newWaypointName.trim()}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: !newWaypointName.trim() ? "not-allowed" : "pointer",
-                opacity: !newWaypointName.trim() ? 0.6 : 1,
-                flex: 1,
-              }}
+              className="flex-1 px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-60 disabled:cursor-not-allowed"
             >
               📍 Create at Current Position
             </button>
@@ -409,16 +364,7 @@ export function WaypointsTab() {
             <button
               onClick={createWaypointManually}
               disabled={!newWaypointName.trim() || !newWaypointEntityId.trim()}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#2196F3",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: (!newWaypointName.trim() || !newWaypointEntityId.trim()) ? "not-allowed" : "pointer",
-                opacity: (!newWaypointName.trim() || !newWaypointEntityId.trim()) ? 0.6 : 1,
-                flex: 1,
-              }}
+              className="flex-1 px-4 py-2 rounded bg-info hover:brightness-110 text-white disabled:opacity-60 disabled:cursor-not-allowed"
             >
               ➕ Create with Entity ID
             </button>
@@ -427,20 +373,12 @@ export function WaypointsTab() {
       </div>
 
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-          <h3 style={{ color: "#4CAF50", margin: 0 }}>🗺️ Saved Waypoints ({filtered.length}/{waypoints.length})</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-brand-600 m-0 font-medium">🗺️ Saved Waypoints ({filtered.length}/{waypoints.length})</h3>
           {waypoints.length > 0 && (
             <button
               onClick={handleClearAll}
-              style={{
-                padding: "6px 12px",
-                backgroundColor: "#f44336",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "0.8em",
-              }}
+              className="px-3 py-1.5 bg-danger text-white rounded text-xs"
             >
               🧹 Clear All
             </button>
@@ -448,37 +386,32 @@ export function WaypointsTab() {
         </div>
         
         {filtered.length === 0 ? (
-          <p style={{ color: "#888", fontStyle: "italic" }}>No waypoints match your filters.</p>
+          <p className="text-text-secondary italic">No waypoints match your filters.</p>
         ) : (
-          <div style={{ display: "grid", gap: "15px" }}>
+          <div className="grid gap-3">
             {filtered.map((waypoint) => (
               <div
                 key={waypoint.id}
-                style={{
-                  border: "1px solid #444",
-                  borderRadius: "8px",
-                  padding: "15px",
-                  backgroundColor: "#2a2a2a",
-                }}
+                className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-panel"
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h4 style={{ color: "#4CAF50", margin: "0 0 5px 0" }}>
+                    <h4 className="text-brand-600 font-semibold m-0 mb-1">
                       {waypoint.name}
                     </h4>
-                    <p style={{ color: "#ccc", margin: "0", fontSize: "0.9em" }}>
+                    <p className="text-xs text-text-secondary m-0">
                       🆔 {waypoint.entityId.substring(0, 10)}...
                     </p>
-                    <p style={{ color: "#888", margin: "5px 0 0 0", fontSize: "0.8em" }}>
+                    <p className="text-xs text-neutral-500 m-0 mt-1">
                       📂 {waypoint.category}
                     </p>
                     {typeof waypoint.x === "number" && typeof waypoint.y === "number" && typeof waypoint.z === "number" && (
-                      <p style={{ color: "#888", margin: "5px 0 0 0", fontSize: "0.8em" }}>
+                      <p className="text-xs text-neutral-500 m-0 mt-1">
                         📍 {waypoint.x}, {waypoint.y}, {waypoint.z}
                         {nearMe && playerPos && (
                           <>
                             {" "}
-                            <span style={{ color: "#aaa" }}>
+                            <span className="text-neutral-400">
                               (d ≈ {Math.round(distance(playerPos, { x: waypoint.x, y: waypoint.y, z: waypoint.z }))})
                             </span>
                           </>
@@ -486,46 +419,30 @@ export function WaypointsTab() {
                       </p>
                     )}
                     {waypoint.description && (
-                      <p style={{ color: "#aaa", margin: "5px 0 0 0", fontSize: "0.9em" }}>
+                      <p className="text-sm text-text-secondary m-0 mt-1">
                         {waypoint.description}
                       </p>
                     )}
                   </div>
                   
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setWaypointInGame(waypoint)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#2196F3",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.8em",
-                      }}
+                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded text-xs"
                     >
                       🎯 Set
                     </button>
                     
                     <button
                       onClick={() => handleDeleteWaypoint(waypoint)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#f44336",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.8em",
-                      }}
+                      className="px-3 py-1.5 bg-danger hover:brightness-110 text-white rounded text-xs"
                     >
                       🗑️ Delete
                     </button>
                   </div>
                 </div>
                 
-                <div style={{ fontSize: "0.8em", color: "#666" }}>
+                <div className="text-xs text-neutral-500">
                   Created: {new Date(waypoint.createdAt).toLocaleString()}
                 </div>
               </div>

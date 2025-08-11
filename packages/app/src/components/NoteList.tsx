@@ -80,20 +80,20 @@ export function NoteList({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-panel">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Notes</h2>
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
+        <h2 className="text-lg font-semibold text-text-primary">Notes</h2>
         <div className="flex items-center gap-2">
           <button
             onClick={onCreateNew}
-            className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+            className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 transition-colors"
           >
             New Note
           </button>
           <button
             onClick={() => refetch()}
-            className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
             title="Refresh on-chain notes"
           >
             Refresh
@@ -102,13 +102,13 @@ export function NoteList({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800">
         <button
           onClick={() => setShowDrafts(false)}
           className={`px-4 py-2 text-sm font-medium ${
             !showDrafts 
-              ? "text-blue-600 border-b-2 border-blue-600" 
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-brand-600 border-b-2 border-brand-600" 
+              : "text-text-secondary hover:text-text-primary"
           }`}
         >
           Published ({sortedNotes.length})
@@ -117,8 +117,8 @@ export function NoteList({
           onClick={() => setShowDrafts(true)}
           className={`px-4 py-2 text-sm font-medium ${
             showDrafts 
-              ? "text-blue-600 border-b-2 border-blue-600" 
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-brand-600 border-b-2 border-brand-600" 
+              : "text-text-secondary hover:text-text-primary"
           }`}
         >
           Drafts ({recentDrafts.length})
@@ -131,7 +131,7 @@ export function NoteList({
           // Drafts List
           <div className="p-4 space-y-3">
             {recentDrafts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-text-secondary">
                 <p>No drafts yet</p>
                 <p className="text-sm">Start writing to create your first draft</p>
               </div>
@@ -139,21 +139,21 @@ export function NoteList({
               recentDrafts.map((draft) => (
                 <div
                   key={draft.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
                   onClick={() => onEditDraft?.(draft.id)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-medium text-text-primary truncate">
                         {draft.title || "Untitled"}
                       </h3>
                       {draft.content && (
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-text-secondary">
                           {truncateContent(draft.content)}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-text-secondary">
                           {formatDate(draft.lastSaved)}
                         </span>
                         {draft.tags && (
@@ -161,7 +161,7 @@ export function NoteList({
                             {draft.tags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3).map((tag) => (
                               <span
                                 key={tag}
-                                className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
+                                className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded"
                               >
                                 {tag}
                               </span>
@@ -177,7 +177,7 @@ export function NoteList({
                           deleteDraft(draft.id);
                         }
                       }}
-                      className="text-gray-400 hover:text-red-600 p-1"
+                      className="text-text-secondary hover:text-danger p-1"
                     >
                       ×
                     </button>
@@ -190,13 +190,13 @@ export function NoteList({
           // Published Notes List
           <div className="p-4 space-y-3">
             {chainLoading && (
-              <div className="text-center py-8 text-gray-500">Loading on-chain notes…</div>
+              <div className="text-center py-8 text-text-secondary">Loading on-chain notes…</div>
             )}
             {chainError && (
-              <div className="text-center py-2 text-red-600 text-sm">{String(chainError)}</div>
+              <div className="text-center py-2 text-danger text-sm">{String(chainError)}</div>
             )}
             {!chainLoading && sortedNotes.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-text-secondary">
                 <p>No published notes yet</p>
                 <p className="text-sm">Publish your first note to see it here</p>
               </div>
@@ -204,19 +204,19 @@ export function NoteList({
               sortedNotes.map((note) => (
                 <div
                   key={note.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
                   onClick={() => onEditNote?.(note.id)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-medium text-text-primary truncate">
                         {note.title}
                       </h3>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-text-secondary">
                         {truncateContent(note.content)}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-text-secondary">
                           {formatDate(note.updatedAt)}
                         </span>
                         {note.tags.length > 0 && (
@@ -224,20 +224,20 @@ export function NoteList({
                             {note.tags.slice(0, 3).map((tag: string) => (
                               <span
                                 key={tag}
-                                className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                                className="px-1.5 py-0.5 text-xs bg-brand-100 text-brand-800 rounded"
                               >
                                 {tag}
                               </span>
                             ))}
                             {note.tags.length > 3 && (
-                              <span className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                              <span className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded">
                                 +{note.tags.length - 3}
                               </span>
                             )}
                           </div>
                         )}
                         {typeof note.totalTips === 'number' && note.totalTips > 0 && (
-                          <span className="text-xs text-green-600 font-medium">
+                          <span className="text-xs text-success font-medium">
                             ${note.totalTips} tips
                           </span>
                         )}
@@ -250,7 +250,7 @@ export function NoteList({
                           deleteNote(note.id);
                         }
                       }}
-                      className="text-gray-400 hover:text-red-600 p-1"
+                      className="text-text-secondary hover:text-danger p-1"
                     >
                       ×
                     </button>

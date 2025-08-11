@@ -6,6 +6,7 @@ import { useDustClient } from "./common/useDustClient";
 import { WaypointsTab } from "./components/WaypointsTab";
 import { NotesManager } from "./components/NotesManager";
 import { CollectionsTab } from "./components/CollectionsTab";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function App() {
   const { data: dustClient } = useDustClient();
@@ -33,47 +34,27 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1
-        style={{
-          textAlign: "center",
-          color: "#1a1a1a",
-          marginBottom: "10px",
-          fontSize: "2.5rem",
-          fontWeight: "bold",
-          textShadow: "2px 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(76,175,80,0.5)",
-          background: "linear-gradient(135deg, #4CAF50 0%, #8BC34A 50%, #4CAF50 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-          letterSpacing: "2px",
-          borderBottom: "3px solid #4CAF50",
-          paddingBottom: "10px",
-        }}
-      >
-        The Daily Dust
-      </h1>
-      <p
-        style={{
-          textAlign: "center",
-          color: "#ffffff",
-          fontSize: "1.1rem",
-          marginBottom: "30px",
-          fontStyle: "italic",
-          textShadow: "2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.9)",
-        }}
-      >
-        Hello <AccountName address={dustClient.appContext.userAddress} />! Manage your DUST notes and waypoints
-      </p>
+    <div className="container max-w-6xl mx-auto py-6">
+      <header className="flex items-center justify-between mb-6">
+        <div className="text-center flex-1">
+          <h1 className="text-4xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500 drop-shadow">
+            The Daily Dust
+          </h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            Hello <AccountName address={dustClient.appContext.userAddress} />! Manage your DUST notes and waypoints
+          </p>
+        </div>
+        <div className="ml-4"><ThemeToggle /></div>
+      </header>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 mb-6">
         <button
           onClick={() => setActiveTab('waypoints')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'waypoints'
-              ? 'text-green-600 border-green-600'
-              : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              ? 'text-brand-600 border-brand-600'
+              : 'text-text-secondary border-transparent hover:text-text-primary hover:border-neutral-300'
           }`}
         >
           🗺️ Waypoints
@@ -82,8 +63,8 @@ export default function App() {
           onClick={() => setActiveTab('notes')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'notes'
-              ? 'text-green-600 border-green-600'
-              : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              ? 'text-brand-600 border-brand-600'
+              : 'text-text-secondary border-transparent hover:text-text-primary hover:border-neutral-300'
           }`}
         >
           📝 Notes
@@ -92,8 +73,8 @@ export default function App() {
           onClick={() => setActiveTab('collections')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'collections'
-              ? 'text-green-600 border-green-600'
-              : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              ? 'text-brand-600 border-brand-600'
+              : 'text-text-secondary border-transparent hover:text-text-primary hover:border-neutral-300'
           }`}
         >
           🗂️ Collections
