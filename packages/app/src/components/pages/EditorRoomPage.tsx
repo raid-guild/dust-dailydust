@@ -31,6 +31,8 @@ export function EditorRoomPage() {
     return chainNotes.filter(n => (n.owner || "").toLowerCase() === myAddress);
   }, [chainNotes, myAddress]);
 
+  // Helper to force update drafts list after save
+  const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
   const recentDrafts = getRecentDrafts();
 
   const formatDate = (timestamp: number) => {
@@ -99,7 +101,8 @@ export function EditorRoomPage() {
               draftId={selectedDraftId || undefined}
               onSave={() => {
                 setSelectedDraftId(null);
-                void refetch();
+                setDraftsRefreshKey(k => k + 1); // force update
+                void refetch(); // requery published notes
               }}
               onCancel={() => {
                 setSelectedDraftId(null);

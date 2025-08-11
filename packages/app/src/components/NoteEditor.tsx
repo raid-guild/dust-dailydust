@@ -59,47 +59,35 @@ function randomBytes32(): `0x${string}` {
 }
 
 export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default' }: NoteEditorProps) {
-  const { drafts, updateDraftImmediate, updateDraftWithAutosave, deleteDraft, createDraft } = useDrafts();
+  const { drafts, updateDraftImmediate, deleteDraft, createDraft } = useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
   
+  // Track an internal draft id when the editor creates one implicitly
+  const [internalDraftId, setInternalDraftId] = useState<string | null>(null);
+  const effectiveDraftId = draftId ?? internalDraftId ?? null;
+
   const [title, setTitle] = useState("");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
-  const [category, setCategory] = useState("Editorial"); // new single-select category
+  const [category, setCategory] = useState("Editorial");
   const [isPublishing, setIsPublishing] = useState(false);
   const [showWaypointLinker, setShowWaypointLinker] = useState(false);
   const [linkedWaypointsCount, setLinkedWaypointsCount] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
-  // Ensure we always have a draft when creating a new note for autosave
-  useEffect(() => {
-    if (!noteId && !draftId) {
-      const d = createDraft({ entityId: initialEntityId, category: "Editorial" });
-      // We can't change the prop, but we can load the created draft into state
-      // Consumers (NotesManager) now creates a draft, so this is just a safety net
-      const created = drafts.find(dr => dr.id === d.id) ?? d;
-      setTitle(created.title);
-      setHeaderImageUrl(created.headerImageUrl || "");
-      setContent(created.content);
-      setTags(created.tags || "");
-      setCategory(created.category || "Editorial");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Check for linked waypoints
+  // Check for linked waypoints (use effectiveDraftId)
   useEffect(() => {
     const checkLinkedWaypoints = () => {
       const links = localStorage.getItem('dailydust-waypoint-links') || localStorage.getItem('waypoint-links');
       if (links) {
         const waypointLinks = JSON.parse(links);
         const currentLinks = waypointLinks.filter((link: any) => 
-          (noteId && link.noteId === noteId) || (draftId && link.draftId === draftId)
+          (noteId && link.noteId === noteId) || (effectiveDraftId && link.draftId === effectiveDraftId)
         );
         setLinkedWaypointsCount(currentLinks.length);
-        // migrate on read
         try {
           localStorage.setItem('dailydust-waypoint-links', JSON.stringify(waypointLinks));
           localStorage.removeItem('waypoint-links');
@@ -110,17 +98,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     };
 
     checkLinkedWaypoints();
-    
-    // Re-check when the waypoint linker closes
-    if (!showWaypointLinker) {
-      checkLinkedWaypoints();
-    }
-  }, [noteId, draftId, showWaypointLinker]);
+    if (!showWaypointLinker) checkLinkedWaypoints();
+  }, [noteId, effectiveDraftId, showWaypointLinker]);
 
-  // Load existing draft or note (local)
+  // Load existing draft or note
   useEffect(() => {
     if (noteId) {
-      // Editing existing note from local store if available
       const note = notes.find(n => n.id === noteId);
       if (note) {
         setTitle(note.title);
@@ -128,11 +111,8 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         setContent(note.content);
         setTags(note.tags.join(", "));
         setCategory(note.category || "Editorial");
-        return;
       }
-    }
-    if (!noteId && draftId) {
-      // Editing existing draft
+    } else if (draftId) {
       const draft = drafts.find(d => d.id === draftId);
       if (draft) {
         setTitle(draft.title);
@@ -198,19 +178,18 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     return () => { aborted = true; };
   }, [noteId, notes]);
 
-  // Autosave to draft while editing
-  useEffect(() => {
-    if (draftId && !noteId) {
-      updateDraftWithAutosave(draftId, {
-        title,
-        headerImageUrl,
-        content,
-        tags,
-        category,
-        entityId: initialEntityId,
-      });
+  // Save draft explicitly
+  const handleSaveDraft = async () => {
+    let id = effectiveDraftId;
+    if (!id) {
+      const d = createDraft({ entityId: initialEntityId, category, title, headerImageUrl, content, tags });
+      setInternalDraftId(d.id);
+      id = d.id;
     }
-  }, [draftId, noteId, title, headerImageUrl, content, tags, category, initialEntityId, updateDraftWithAutosave]);
+    updateDraftImmediate(id!, { title, headerImageUrl, content, tags, category, entityId: initialEntityId });
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
 
   async function createOnchainNote(noteHexId: `0x${string}`, titleIn: string, contentIn: string, tagsCsv: string) {
     if (!dustClient) throw new Error("No DUST client");
@@ -428,7 +407,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         <h2 className="text-lg font-semibold text-text-primary">
           {noteId ? "Edit Note" : "New Note"}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button
             onClick={() => setShowWaypointLinker(true)}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${
@@ -445,6 +424,14 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
           >
             {showPreview ? 'Edit' : 'Preview'}
           </button>
+          {!noteId && (
+            <button
+              onClick={handleSaveDraft}
+              className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+            >
+              {justSaved ? 'Saved' : 'Save Draft'}
+            </button>
+          )}
           <button
             onClick={handleCancel}
             className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
@@ -535,7 +522,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       </div>
 
       {showWaypointLinker && (
-        <WaypointNoteLinker noteId={noteId} draftId={draftId} onClose={() => setShowWaypointLinker(false)} />
+        <WaypointNoteLinker noteId={noteId} draftId={effectiveDraftId ?? undefined} onClose={() => setShowWaypointLinker(false)} />
       )}
     </div>
   );
