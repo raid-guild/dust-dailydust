@@ -43,6 +43,7 @@ interface NoteEditorProps {
   onSave?: () => void;
   onCancel?: () => void;
   initialEntityId?: string;
+  variant?: 'default' | 'bare';
 }
 
 function randomBytes32(): `0x${string}` {
@@ -54,7 +55,7 @@ function randomBytes32(): `0x${string}` {
   return (`0x${hex}`) as `0x${string}`;
 }
 
-export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId }: NoteEditorProps) {
+export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default' }: NoteEditorProps) {
   const { drafts, updateDraftImmediate, updateDraftWithAutosave, deleteDraft, createDraft } = useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
@@ -356,8 +357,13 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId 
 
   const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
 
+  const containerClass =
+    variant === 'bare'
+      ? 'flex flex-col h-full rounded-lg'
+      : 'flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm';
+
   return (
-    <div className="flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
+    <div className={containerClass}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
         <h2 className="text-lg font-semibold text-text-primary">

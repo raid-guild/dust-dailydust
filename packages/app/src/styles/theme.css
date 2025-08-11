@@ -37,7 +37,9 @@
   --ring: rgba(34,197,94,0.35);
 
   /* Typography */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-body: "Old Standard TT", Georgia, "Times New Roman", serif;
+  --font-heading: "Playfair Display", "Old Standard TT", Georgia, serif;
+  --font-accent: "Special Elite", "Courier New", monospace;
 }
 
 /* Dark theme */
