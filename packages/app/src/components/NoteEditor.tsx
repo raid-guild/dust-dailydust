@@ -5,6 +5,7 @@ import { WaypointNoteLinker } from "./WaypointNoteLinker";
 import { useDustClient } from "../common/useDustClient";
 import type { Abi } from "viem";
 import { resourceToHex } from "@latticexyz/common";
+import { worldAddress } from "../common/worldAddress";
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [
@@ -36,6 +37,8 @@ const noteSystemAbi: Abi = [
 
 // Hardcode deployed namespace to avoid importing contracts config
 const NAMESPACE = "rg_dd_ab564f";
+const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
+const TABLE = `${NAMESPACE}__Note`;
 
 interface NoteEditorProps {
   draftId?: string;
@@ -114,10 +117,10 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     }
   }, [noteId, draftId, showWaypointLinker]);
 
-  // Load existing draft or note
+  // Load existing draft or note (local)
   useEffect(() => {
     if (noteId) {
-      // Editing existing note
+      // Editing existing note from local store if available
       const note = notes.find(n => n.id === noteId);
       if (note) {
         setTitle(note.title);
@@ -125,8 +128,10 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         setContent(note.content);
         setTags(note.tags.join(", "));
         setCategory(note.category || "Editorial");
+        return;
       }
-    } else if (draftId) {
+    }
+    if (!noteId && draftId) {
       // Editing existing draft
       const draft = drafts.find(d => d.id === draftId);
       if (draft) {
@@ -138,6 +143,60 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       }
     }
   }, [noteId, draftId, notes, drafts]);
+
+  // If editing a noteId that isn't in local storage, fetch it from indexer for prefill
+  useEffect(() => {
+    let aborted = false;
+    async function fetchOnchainById(id: string) {
+      const sql = `SELECT "noteId","owner","createdAt","updatedAt","tipJar","boostUntil","totalTips","title","content","tags","headerImageUrl" FROM "${TABLE}" WHERE "noteId"='${id}' LIMIT 1`;
+      try {
+        const res = await fetch(INDEXER_Q_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify([
+            { query: sql, address: worldAddress },
+          ]),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = (data?.result ?? []) as any[];
+        if (!Array.isArray(result) || result.length === 0) return;
+        const first = result[0];
+        if (!Array.isArray(first) || first.length === 0) return;
+        const [columns, ...rows] = first as [string[], ...any[]];
+        if (!rows[0]) return;
+        const row = rows[0] as any[];
+        const r: Record<string, any> = {};
+        (columns as string[]).forEach((col: string, i: number) => {
+          r[col] = row[i];
+        });
+        const rawTags = r.tags;
+        let tagsArr: string[] = [];
+        if (Array.isArray(rawTags)) tagsArr = rawTags.filter(Boolean);
+        else if (typeof rawTags === "string") {
+          try { tagsArr = JSON.parse(rawTags); } catch { tagsArr = rawTags.split(',').map((t: string) => t.trim()).filter(Boolean); }
+        }
+        if (!aborted) {
+          setTitle((r.title as string) ?? "");
+          setHeaderImageUrl(((r.headerImageUrl as string) ?? ""));
+          setContent((r.content as string) ?? "");
+          setTags(tagsArr.join(', '));
+          // category not on-chain yet; leave as current
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    if (noteId) {
+      const existsLocally = notes.some(n => n.id === noteId);
+      if (!existsLocally) {
+        void fetchOnchainById(noteId);
+      }
+    }
+
+    return () => { aborted = true; };
+  }, [noteId, notes]);
 
   // Autosave to draft while editing
   useEffect(() => {
