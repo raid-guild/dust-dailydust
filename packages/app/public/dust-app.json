@@ -1,9 +1,20 @@
 {
   "$schema": "https://esm.sh/pr/dustproject/dust/dustkit@ac7725c/json-schemas/app-config.json",
-  "name": "My First App",
+  "name": "The Daily Dust",
+  "description": "Your personal DUST journal - create articles, reports, and stories with waypoint integration",
   "startUrl": "/",
   "defaultSize": {
-    "width": 600,
-    "height": 400
-  }
+    "width": 900,
+    "height": 700
+  },
+  "icons": {
+    "16": "/favicon.ico",
+    "32": "/favicon.ico"
+  },
+  "permissions": [
+    "world.read",
+    "world.write",
+    "player.position"
+  ],
+  "categories": ["productivity", "tools", "publishing", "journalism"]
 }

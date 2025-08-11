@@ -912,6 +912,102 @@
   },
   {
     "type": "function",
+    "name": "rg_dd_ab564f___msgSender",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rg_dd_ab564f___msgValue",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rg_dd_ab564f__onAttachProgram",
+    "inputs": [
+      {
+        "name": "ctx",
+        "type": "tuple",
+        "internalType": "struct HookContext",
+        "components": [
+          {
+            "name": "caller",
+            "type": "bytes32",
+            "internalType": "EntityId"
+          },
+          {
+            "name": "target",
+            "type": "bytes32",
+            "internalType": "EntityId"
+          },
+          {
+            "name": "revertOnFailure",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "extraData",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rg_dd_ab564f__onDetachProgram",
+    "inputs": [
+      {
+        "name": "ctx",
+        "type": "tuple",
+        "internalType": "struct HookContext",
+        "components": [
+          {
+            "name": "caller",
+            "type": "bytes32",
+            "internalType": "EntityId"
+          },
+          {
+            "name": "target",
+            "type": "bytes32",
+            "internalType": "EntityId"
+          },
+          {
+            "name": "revertOnFailure",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "extraData",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setDynamicField",
     "inputs": [
       {
@@ -1143,102 +1239,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "template___msgSender",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "template___msgValue",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "template__onAttachProgram",
-    "inputs": [
-      {
-        "name": "ctx",
-        "type": "tuple",
-        "internalType": "struct HookContext",
-        "components": [
-          {
-            "name": "caller",
-            "type": "bytes32",
-            "internalType": "EntityId"
-          },
-          {
-            "name": "target",
-            "type": "bytes32",
-            "internalType": "EntityId"
-          },
-          {
-            "name": "revertOnFailure",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "extraData",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "template__onDetachProgram",
-    "inputs": [
-      {
-        "name": "ctx",
-        "type": "tuple",
-        "internalType": "struct HookContext",
-        "components": [
-          {
-            "name": "caller",
-            "type": "bytes32",
-            "internalType": "EntityId"
-          },
-          {
-            "name": "target",
-            "type": "bytes32",
-            "internalType": "EntityId"
-          },
-          {
-            "name": "revertOnFailure",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "extraData",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

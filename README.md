@@ -1,6 +1,15 @@
-# DUST Template - Example Programs and Development Guide
+# DUST Template - Waypoint Manager & Development Guide
 
-This repository contains example programs for DUST that demonstrate different patterns and use cases for smart entities in the game.
+This repository contains a DUST application template with a local storage-based waypoint management system, demonstrating practical patterns for DUST app development.
+
+## Features
+
+### 🗺️ **Waypoint Manager**
+- **Local Storage**: Personal waypoints stored in browser localStorage (no blockchain needed)
+- **Current Position**: Create waypoints at your current in-game position
+- **Dustkit Integration**: Set waypoints directly in the DUST client
+- **Full CRUD**: Create, view, update, and delete waypoints
+- **Persistent Data**: Waypoints persist between sessions
 
 ## Overview
 
@@ -25,36 +34,7 @@ A minimal chest program template that shows the basic structure for handling tra
 - Implements the `ITransfer` interface
 - Empty implementation ready for customization
 
-### 3. ChestCounterProgram
-**File:** `packages/contracts/src/ChestCounterProgram.sol`
-
-A chest that only allows transfers when a global counter is odd.
-
-**Key Features:**
-- Reads from the global `Counter` table
-- Conditionally blocks transfers based on counter value
-- Demonstrates interaction with external systems
-
-**How it works:**
-1. When a transfer is attempted, it checks the global counter value
-2. If the counter is odd, the transfer proceeds
-3. If the counter is even, the transfer is blocked
-4. Players can increment/decrement the counter using the `CounterSystem`
-
-### 4. CounterSystem
-**File:** `packages/contracts/src/systems/CounterSystem.sol`
-
-A simple system that manages a global counter, used by ChestCounterProgram.
-
-**Key Features:**
-- `increment()` - Increases counter by 1
-- `decrement()` - Decreases counter by 1  
-- `setValue(uint256)` - Sets counter to specific value
-- `getValue()` - Returns current counter value
-
-**Note:** This is a System, not a Program. It provides callable functions rather than reacting to hooks.
-
-### 5. ForceFieldProgram
+### 3. ForceFieldProgram
 **File:** `packages/contracts/src/ForceFieldProgram.sol`
 
 Template for force field programs that can react to various events within their area.
@@ -65,7 +45,7 @@ Template for force field programs that can react to various events within their 
 - `onHit` - When the force field is hit
 - `onEnergize` - When energy is added
 
-### 6. SpawnTileProgram
+### 4. SpawnTileProgram
 **File:** `packages/contracts/src/SpawnTileProgram.sol`
 
 Template for spawn tile programs that react to player spawning.
@@ -73,7 +53,7 @@ Template for spawn tile programs that react to player spawning.
 **Available Hooks:**
 - `onSpawn` - When a player spawns on the tile
 
-### 7. BedProgram
+### 5. BedProgram
 **File:** `packages/contracts/src/BedProgram.sol`
 
 Template for bed programs that react to sleep events.
@@ -83,6 +63,27 @@ Template for bed programs that react to sleep events.
 - `onWakeup` - When a player wakes up
 
 ## Architecture Patterns
+
+### **Local Storage vs Smart Contracts**
+
+This template demonstrates when to use different storage approaches:
+
+**Local Storage (Waypoints):**
+- ✅ Personal data that doesn't need to be shared
+- ✅ Fast, immediate updates
+- ✅ No gas costs or blockchain complexity
+- ✅ Perfect for user preferences, settings, personal notes
+- ❌ Not accessible from other devices
+- ❌ Can't be shared with other players
+
+**Smart Contracts (Program Templates):**
+- ✅ Shared global state
+- ✅ Persistent across all devices
+- ✅ Can interact with other contracts/programs
+- ✅ Verifiable and transparent
+- ❌ Gas costs for transactions
+- ❌ Slower update times
+- ❌ More complex development
 
 ### Program vs System Design
 
@@ -98,7 +99,7 @@ Understanding when to use Programs vs Systems is crucial:
 - Provide callable functions
 - Can be invoked through explorer or other contracts
 - Only inherit from `System`
-- Examples: CounterSystem
+- Examples: Custom management systems, configuration handlers
 
 ### Configuration Pattern
 
@@ -144,13 +145,7 @@ cd packages/contracts
 pnpm test
 ```
 
-Tests are provided in `packages/contracts/test/`:
-- `ChestCounterProgram.t.sol` - Comprehensive tests showing program interaction
-
-Key testing patterns:
-- Use generated system libraries (e.g., `counterSystem` from `CounterSystemLib.sol`)
-- Never manually deploy systems in tests - MUD handles this
-- Test both reverting and non-reverting modes
+The template includes example program contracts that demonstrate DUST development patterns.
 
 ## Deployment
 
@@ -191,9 +186,62 @@ dust-template/
 │   │   │   └── *.sol       # Programs and base contracts
 │   │   ├── test/           # Tests
 │   │   └── mud.config.ts   # MUD configuration
-│   └── client/             # Frontend application
+│   └── app/                # Frontend application
+│       ├── src/
+│       │   ├── components/ # React components (WaypointsTab)
+│       │   ├── hooks/      # Custom hooks (useWaypoints)
+│       │   ├── common/     # Shared utilities
+│       │   └── mud/        # MUD integration
+│       └── public/
+│           └── dust-app.json # App manifest
 └── CLAUDE.md               # Comprehensive development guide
 ```
+
+## Key Files
+
+- **`useWaypoints.ts`** - Local storage hook for waypoint management
+- **`WaypointsTab.tsx`** - Waypoint manager UI component  
+- **`App.tsx`** - Main app component
+- **`dust-app.json`** - DUST app manifest/configuration
+
+## Getting Started with Development
+
+### 1. Clone and Setup
+```bash
+git clone <repository-url>
+cd dust-template
+pnpm install
+```
+
+### 2. Start Development
+```bash
+cd packages/app
+pnpm dev
+```
+
+### 3. Preview in DUST
+Open: `https://alpha.dustproject.org?debug-app=http://localhost:3000/dust-app.json`
+
+### 4. Build Your Features
+- Add new components in `packages/app/src/components/`
+- Create custom hooks in `packages/app/src/hooks/`
+- Add smart contracts in `packages/contracts/src/` (if needed)
+
+## Development Patterns
+
+### Local Storage for Personal Data
+Use the `useWaypoints` pattern for:
+- User preferences and settings
+- Personal notes and bookmarks
+- Local game state
+- Quick prototyping
+
+### Smart Contracts for Shared State
+Use MUD programs/systems for:
+- Player interactions
+- Global game mechanics
+- Persistent world state
+- Economic systems
 
 ## Additional Resources
 

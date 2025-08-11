@@ -8,7 +8,7 @@
     "clean": "forge clean && shx rm -rf src/**/codegen",
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
-    "deploy:redstone": ". ./set-env.sh redstone && mud deploy --alwaysRunPostDeploy --profile=$FOUNDRY_PROFILE --worldAddress=$WORLD_ADDRESS",
+    "deploy:redstone": "FOUNDRY_PROFILE=redstone WORLD_ADDRESS=$(./get-world-address.sh 690) mud deploy --alwaysRunPostDeploy --profile=redstone --worldAddress=$(./get-world-address.sh 690)",
     "manager:registerApp:local": ". ./set-env.sh local && forge script RegisterApp --broadcast --sig 'run(address)' -- $WORLD_ADDRESS",
     "manager:registerApp:redstone": ". ./set-env.sh redstone && forge script RegisterApp --aws --sig 'run(address)' -- $WORLD_ADDRESS",
     "lint": "pnpm run prettier && pnpm run solhint",

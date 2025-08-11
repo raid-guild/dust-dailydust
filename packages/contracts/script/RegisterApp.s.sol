@@ -12,7 +12,6 @@ import { Script } from "./Script.sol";
 
 contract RegisterApp is Script {
   function run(address worldAddress) external {
-    // Specify a store so that you can use tables directly in PostDeploy
     StoreSwitch.setStoreAddress(worldAddress);
 
     startBroadcast();
