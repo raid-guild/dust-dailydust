@@ -4,7 +4,7 @@ import { FrontPage } from "./pages/FrontPage";
 import { BackPage } from "./pages/BackPage";
 import { DiscoverPage } from "./pages/DiscoverPage";
 import { EditorRoomPage } from "./pages/EditorRoomPage";
-import { LocalNewsPage } from "./pages/LocalNewsPage";
+import { LocalPage } from "./pages/LocalPage";
 import { ArticlePage } from "./pages/ArticlePage";
 
 export const FRONT_PAGE_PATH = "/";
@@ -18,7 +18,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path={FRONT_PAGE_PATH} element={<FrontPage />} />
-      <Route path={LOCAL_PAGE_PATH} element={<LocalNewsPage />} />
+      <Route path={LOCAL_PAGE_PATH} element={<LocalPage />} />
       <Route path={CLASSIFIEDS_PAGE_PATH} element={<BackPage />} />
       <Route path={DISCOVER_PAGE_PATH} element={<DiscoverPage />} />
       <Route path={EDITOR_PAGE_PATH} element={<EditorRoomPage />} />
