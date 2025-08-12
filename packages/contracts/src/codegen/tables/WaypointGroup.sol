@@ -20,19 +20,20 @@ struct WaypointGroupData {
   uint24 color;
   bool isPublic;
   string name;
+  string description;
 }
 
 library WaypointGroup {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_ab564f", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f6162353634660000576179706f696e7447726f7570000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000576179706f696e7447726f7570000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0004020103010000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0004020203010000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32, uint16)
   Schema constant _keySchema = Schema.wrap(0x002202005f010000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint24, bool, string)
-  Schema constant _valueSchema = Schema.wrap(0x000402010260c500000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint24, bool, string, string)
+  Schema constant _valueSchema = Schema.wrap(0x000402020260c5c5000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -49,10 +50,11 @@ library WaypointGroup {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
+    fieldNames = new string[](4);
     fieldNames[0] = "color";
     fieldNames[1] = "isPublic";
     fieldNames[2] = "name";
+    fieldNames[3] = "description";
   }
 
   /**
@@ -338,6 +340,182 @@ library WaypointGroup {
   }
 
   /**
+   * @notice Get description.
+   */
+  function getDescription(bytes32 noteId, uint16 groupId) internal view returns (string memory description) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Get description.
+   */
+  function _getDescription(bytes32 noteId, uint16 groupId) internal view returns (string memory description) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Set description.
+   */
+  function setDescription(bytes32 noteId, uint16 groupId, string memory description) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((description)));
+  }
+
+  /**
+   * @notice Set description.
+   */
+  function _setDescription(bytes32 noteId, uint16 groupId, string memory description) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((description)));
+  }
+
+  /**
+   * @notice Get the length of description.
+   */
+  function lengthDescription(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of description.
+   */
+  function _lengthDescription(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of description.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemDescription(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of description.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemDescription(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to description.
+   */
+  function pushDescription(bytes32 noteId, uint16 groupId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to description.
+   */
+  function _pushDescription(bytes32 noteId, uint16 groupId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from description.
+   */
+  function popDescription(bytes32 noteId, uint16 groupId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Pop a slice from description.
+   */
+  function _popDescription(bytes32 noteId, uint16 groupId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Update a slice of description at `_index`.
+   */
+  function updateDescription(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of description at `_index`.
+   */
+  function _updateDescription(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(bytes32 noteId, uint16 groupId) internal view returns (WaypointGroupData memory _table) {
@@ -372,11 +550,18 @@ library WaypointGroup {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 noteId, uint16 groupId, uint24 color, bool isPublic, string memory name) internal {
+  function set(
+    bytes32 noteId,
+    uint16 groupId,
+    uint24 color,
+    bool isPublic,
+    string memory name,
+    string memory description
+  ) internal {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name);
-    bytes memory _dynamicData = encodeDynamic(name);
+    EncodedLengths _encodedLengths = encodeLengths(name, description);
+    bytes memory _dynamicData = encodeDynamic(name, description);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -388,11 +573,18 @@ library WaypointGroup {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 noteId, uint16 groupId, uint24 color, bool isPublic, string memory name) internal {
+  function _set(
+    bytes32 noteId,
+    uint16 groupId,
+    uint24 color,
+    bool isPublic,
+    string memory name,
+    string memory description
+  ) internal {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name);
-    bytes memory _dynamicData = encodeDynamic(name);
+    EncodedLengths _encodedLengths = encodeLengths(name, description);
+    bytes memory _dynamicData = encodeDynamic(name, description);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -407,8 +599,8 @@ library WaypointGroup {
   function set(bytes32 noteId, uint16 groupId, WaypointGroupData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.color, _table.isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.name);
-    bytes memory _dynamicData = encodeDynamic(_table.name);
+    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.description);
+    bytes memory _dynamicData = encodeDynamic(_table.name, _table.description);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -423,8 +615,8 @@ library WaypointGroup {
   function _set(bytes32 noteId, uint16 groupId, WaypointGroupData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.color, _table.isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.name);
-    bytes memory _dynamicData = encodeDynamic(_table.name);
+    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.description);
+    bytes memory _dynamicData = encodeDynamic(_table.name, _table.description);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -448,13 +640,19 @@ library WaypointGroup {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory name) {
+  ) internal pure returns (string memory name, string memory description) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
     name = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(1);
+    }
+    description = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -470,7 +668,7 @@ library WaypointGroup {
   ) internal pure returns (WaypointGroupData memory _table) {
     (_table.color, _table.isPublic) = decodeStatic(_staticData);
 
-    (_table.name) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.name, _table.description) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -507,10 +705,13 @@ library WaypointGroup {
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(string memory name) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(
+    string memory name,
+    string memory description
+  ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(name).length);
+      _encodedLengths = EncodedLengthsLib.pack(bytes(name).length, bytes(description).length);
     }
   }
 
@@ -518,8 +719,8 @@ library WaypointGroup {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(string memory name) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((name)));
+  function encodeDynamic(string memory name, string memory description) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((name)), bytes((description)));
   }
 
   /**
@@ -531,12 +732,13 @@ library WaypointGroup {
   function encode(
     uint24 color,
     bool isPublic,
-    string memory name
+    string memory name,
+    string memory description
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name);
-    bytes memory _dynamicData = encodeDynamic(name);
+    EncodedLengths _encodedLengths = encodeLengths(name, description);
+    bytes memory _dynamicData = encodeDynamic(name, description);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

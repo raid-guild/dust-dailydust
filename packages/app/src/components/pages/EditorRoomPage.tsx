@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { NoteEditor } from "../NoteEditor";
 import { WaypointsTab } from "../WaypointsTab";
 import { CollectionsTab } from "../CollectionsTab";
+import { PublishWizard } from "../PublishWizard";
 import { useDrafts } from "../../hooks/useDrafts";
 import { useOnchainNotes } from "../../hooks/useOnchainNotes";
 import { useDustClient } from "../../common/useDustClient";
@@ -31,8 +32,6 @@ export function EditorRoomPage() {
     return chainNotes.filter(n => (n.owner || "").toLowerCase() === myAddress);
   }, [chainNotes, myAddress]);
 
-  // Helper to force update drafts list after save
-  const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
   const recentDrafts = getRecentDrafts();
 
   const formatDate = (timestamp: number) => {
@@ -95,24 +94,19 @@ export function EditorRoomPage() {
                 </button>
               </div>
             </div>
-            {/* Only draft editing in Submit tab */}
-            <NoteEditor
-              variant="bare"
+            <PublishWizard
               draftId={selectedDraftId || undefined}
-              onSave={() => {
+              onDone={() => {
                 setSelectedDraftId(null);
-                setDraftsRefreshKey(k => k + 1); // force update
-                void refetch(); // requery published notes
+                void refetch();
               }}
-              onCancel={() => {
-                setSelectedDraftId(null);
-              }}
+              onCancel={() => setSelectedDraftId(null)}
             />
           </div>
 
           {/* Your Drafts */}
           <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex itemsCenter justify-between mb-3">
               <h2 className="font-heading text-2xl">Your Drafts</h2>
               <span className="text-sm text-text-secondary">{recentDrafts.length}</span>
             </div>

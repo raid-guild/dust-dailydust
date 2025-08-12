@@ -7,6 +7,6 @@ import { EntityId } from "@dust/world/src/types/EntityId.sol";
 import { getForceField } from "./getForceField.sol";
 
 function isProtected(EntityId target) view returns (bool) {
-  (EntityId forceField,) = getForceField(target);
+  (EntityId forceField, ) = getForceField(target);
   return forceField.exists() && Energy.getEnergy(forceField) != 0;
 }

@@ -6,7 +6,7 @@ export default defineWorld({
   },
   // Replace this with a unique namespace (<= 14 chars)
   // rg: raidguild dd: dailydust deployer: ab564f
-  namespace: "rg_dd_ab564f",
+  namespace: "rg_dd_0001",
   systems: {
     NoteSystem: {
       openAccess: true,
@@ -36,6 +36,7 @@ export default defineWorld({
         boostUntil: "uint64",   // featured until timestamp, 0 if not boosted
         totalTips: "uint256",   // cache for UI display
         title: "string",
+        kicker: "string", // short deck/subhead for previews
         content: "string",      // markdown content, ~4-8KB limit
         tags: "string",         // CSV encoded for MVP
         headerImageUrl: "string", // optional header image URL
@@ -50,6 +51,7 @@ export default defineWorld({
         coordX: "int32",        // optional coord cache for proximity
         coordY: "int32",
         coordZ: "int32",
+        extra: "string",        // optional JSON/metadata (projection, offsets, etc.)
       },
       key: ["noteId", "entityId"],
     },
@@ -60,6 +62,7 @@ export default defineWorld({
         color: "uint24",        // hex color for UI hints
         isPublic: "bool",
         name: "string",
+        description: "string",  // optional group description/deck
       },
       key: ["noteId", "groupId"],
     },
@@ -85,6 +88,7 @@ export default defineWorld({
         title: "string",
         description: "string",
         headerImageUrl: "string",
+        extra: "string",        // optional JSON/metadata for layouts
       },
       key: ["collectionId"],
     },

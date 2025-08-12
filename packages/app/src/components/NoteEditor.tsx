@@ -6,6 +6,8 @@ import { useDustClient } from "../common/useDustClient";
 import type { Abi } from "viem";
 import { resourceToHex } from "@latticexyz/common";
 import { worldAddress } from "../common/worldAddress";
+import { DUST_NAMESPACE } from "../common/namespace";
+
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [
@@ -35,8 +37,8 @@ const noteSystemAbi: Abi = [
   },
 ];
 
-// Hardcode deployed namespace to avoid importing contracts config
-const NAMESPACE = "rg_dd_ab564f";
+// Use centralized namespace
+const NAMESPACE = DUST_NAMESPACE;
 const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
 const TABLE = `${NAMESPACE}__Note`;
 
@@ -47,6 +49,17 @@ interface NoteEditorProps {
   onCancel?: () => void;
   initialEntityId?: string;
   variant?: 'default' | 'bare';
+  // New: when used inside a stepper, hide action buttons and emit state upward
+  stepperMode?: boolean;
+  onStateChange?: (state: {
+    title: string;
+    headerImageUrl: string;
+    content: string;
+    tags: string; // csv
+    category: string;
+    effectiveDraftId: string | null;
+    noteId?: string;
+  }) => void;
 }
 
 function randomBytes32(): `0x${string}` {
@@ -58,7 +71,7 @@ function randomBytes32(): `0x${string}` {
   return (`0x${hex}`) as `0x${string}`;
 }
 
-export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default' }: NoteEditorProps) {
+export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default', stepperMode = false, onStateChange }: NoteEditorProps) {
   const { drafts, updateDraftImmediate, deleteDraft, createDraft } = useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
@@ -400,6 +413,21 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       ? 'flex flex-col h-full rounded-lg'
       : 'flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm';
 
+  // Emit state to parent when used in stepper mode (avoid including onStateChange in deps)
+  useEffect(() => {
+    if (!stepperMode || !onStateChange) return;
+    onStateChange({
+      title,
+      headerImageUrl,
+      content,
+      tags,
+      category,
+      effectiveDraftId,
+      noteId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, headerImageUrl, content, tags, category, effectiveDraftId, noteId, stepperMode]);
+
   return (
     <div className={containerClass}>
       {/* Header */}
@@ -407,45 +435,47 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         <h2 className="text-lg font-semibold text-text-primary">
           {noteId ? "Edit Note" : "New Note"}
         </h2>
-        <div className="flex gap-2 items-center">
-          <button
-            onClick={() => setShowWaypointLinker(true)}
-            className={`px-3 py-1.5 text-sm rounded transition-colors ${
-              linkedWaypointsCount > 0 
-                ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
-                : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
-            }`}
-          >
-            🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
-          </button>
-          <button
-            onClick={() => setShowPreview(p => !p)}
-            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
-          >
-            {showPreview ? 'Edit' : 'Preview'}
-          </button>
-          {!noteId && (
+        {!stepperMode && (
+          <div className="flex gap-2 items-center">
             <button
-              onClick={handleSaveDraft}
+              onClick={() => setShowWaypointLinker(true)}
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                linkedWaypointsCount > 0 
+                  ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
+                  : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
+              }`}
+            >
+              🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
+            </button>
+            <button
+              onClick={() => setShowPreview(p => !p)}
               className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
             >
-              {justSaved ? 'Saved' : 'Save Draft'}
+              {showPreview ? 'Edit' : 'Preview'}
             </button>
-          )}
-          <button
-            onClick={handleCancel}
-            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={isPublishing}
-            className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
-          </button>
-        </div>
+            {!noteId && (
+              <button
+                onClick={handleSaveDraft}
+                className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+              >
+                {justSaved ? 'Saved' : 'Save Draft'}
+              </button>
+            )}
+            <button
+              onClick={handleCancel}
+              className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Title & Meta */}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { worldAddress } from "../common/worldAddress";
+import { tableName } from "../common/namespace";
 
 export interface OnchainNote {
   id: string; // bytes32 hex
@@ -16,8 +17,7 @@ export interface OnchainNote {
 }
 
 const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
-const NAMESPACE = "rg_dd_ab564f";
-const TABLE = `${NAMESPACE}__Note`;
+const TABLE = tableName("Note");
 
 async function fetchOnchainNotes(limit = 100, offset = 0): Promise<OnchainNote[]> {
   const sql = `SELECT "noteId","owner","createdAt","updatedAt","tipJar","boostUntil","totalTips","title","content","tags","headerImageUrl" FROM "${TABLE}" ORDER BY "updatedAt" DESC LIMIT ${limit} OFFSET ${offset}`;

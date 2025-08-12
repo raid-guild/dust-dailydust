@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { worldAddress } from "../common/worldAddress";
+import { tableName } from "../common/namespace";
 
 export interface PublishedNoteUI {
   id: string;
@@ -16,8 +17,7 @@ export interface PublishedNoteUI {
 }
 
 const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
-const NAMESPACE = "rg_dd_ab564f";
-const TABLE = `${NAMESPACE}__Note`;
+const TABLE = tableName("Note");
 
 export function usePublishedNotes(params?: { limit?: number; offset?: number }) {
   const { limit = 200, offset = 0 } = params ?? {};

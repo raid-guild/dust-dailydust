@@ -24,8 +24,8 @@ struct WaypointStepData {
 }
 
 library WaypointStep {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_ab564f", name: "WaypointStep", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f6162353634660000576179706f696e745374657000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "WaypointStep", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000576179706f696e745374657000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x000c030104040400000000000000000000000000000000000000000000000000);
