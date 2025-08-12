@@ -64,7 +64,7 @@ export const FrontPage = () => {
         <TopBanner />
         <PixelDivider />
         <div className="lg:grid-cols-3 gap-6 grid grid-cols-1">
-          <LeadStory article={weeklyCurated[0]} />
+          {weeklyCurated[0] && <LeadStory article={weeklyCurated[0]} />}
           <div className="lg:col-span-2 gap-6 grid">
             <div className="gap-6 grid md:grid-cols-2">
               {weeklyCurated.slice(1).map((a) => (
@@ -102,10 +102,13 @@ const LeadStory = ({ article }: { article: Article }) => {
   return (
     <div className="border border-neutral-900 bg-neutral-50">
       <img
-        alt="Retro newspaper inspiration"
+        alt={article.title}
         className="grayscale object-cover w-full"
+        decoding="async"
+        fetchPriority="high"
         height={800}
-        src="/assets/news.png"
+        loading="eager"
+        src={article.image}
         width={1200}
       />
       <div className="p-4">

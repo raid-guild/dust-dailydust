@@ -29,7 +29,10 @@ export const ArticleCard = ({
           "leading-snug"
         )}
       >
-        <a className="hover:underline" href={`/story/${article.id}`}>
+        <a
+          className="hover:underline"
+          href={`/story/${encodeURIComponent(article.id)}`}
+        >
           {article.title}
         </a>
       </h3>
