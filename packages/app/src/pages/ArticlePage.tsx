@@ -1,10 +1,10 @@
 import { cn } from "../lib/utils";
-import { weeklyCurated } from "../dummy-data";
+import { weeklyCurated, localNewsSeed } from "../dummy-data";
 import { Link, useParams } from "react-router-dom";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "../Routes";
 
 const getArticleById = (id: string | undefined) => {
-  return weeklyCurated.find((a) => a.id === id);
+  return [...weeklyCurated, ...localNewsSeed].find((a) => a.id === id);
 };
 
 const formatDateTime = (timestamp: number) => {

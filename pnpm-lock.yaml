@@ -44,9 +44,15 @@ importers:
       '@latticexyz/world':
         specifier: 2.2.23-e76d72504e7ee51c76fa380bdc4a56f4815b7b59
         version: 2.2.23-e76d72504e7ee51c76fa380bdc4a56f4815b7b59(@aws-sdk/client-kms@3.848.0)(asn1.js@5.4.1)(typescript@5.8.3)(viem@2.33.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@radix-ui/react-slot':
+        specifier: ^1.2.3
+        version: 1.2.3(@types/react@18.3.23)(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.83.0
         version: 5.83.0(react@18.3.1)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2675,6 +2681,9 @@ packages:
     resolution: {tarball: https://codeload.github.com/latticexyz/clarinet/tar.gz/9c30657e6000e0354c8c5b6e1efa3a434a0c0213}
     version: 0.12.5
     engines: {chrome: '>=16.0.912', firefox: '>=0.8.0', node: '>=0.3.6'}
+
+  class-variance-authority@0.7.1:
+    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
   cliui@6.0.0:
     resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
@@ -8053,6 +8062,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.23
 
+  '@radix-ui/react-compose-refs@1.1.2(@types/react@18.3.23)(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+    optionalDependencies:
+      '@types/react': 18.3.23
+
   '@radix-ui/react-compose-refs@1.1.2(@types/react@18.3.23)(react@19.1.0)':
     dependencies:
       react: 19.1.0
@@ -8282,6 +8297,13 @@ snapshots:
       '@babel/runtime': 7.27.6
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.3.23)(react@19.1.0)
       react: 19.1.0
+    optionalDependencies:
+      '@types/react': 18.3.23
+
+  '@radix-ui/react-slot@1.2.3(@types/react@18.3.23)(react@18.3.1)':
+    dependencies:
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@18.3.23)(react@18.3.1)
+      react: 18.3.1
     optionalDependencies:
       '@types/react': 18.3.23
 
@@ -11059,6 +11081,10 @@ snapshots:
       readdirp: 4.1.2
 
   clarinet@https://codeload.github.com/latticexyz/clarinet/tar.gz/9c30657e6000e0354c8c5b6e1efa3a434a0c0213: {}
+
+  class-variance-authority@0.7.1:
+    dependencies:
+      clsx: 2.1.1
 
   cliui@6.0.0:
     dependencies:
