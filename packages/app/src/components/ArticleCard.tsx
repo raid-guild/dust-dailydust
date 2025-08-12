@@ -1,10 +1,13 @@
 import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
+import { ARTICLE_PAGE_PATH } from "../Routes";
 
 export type Article = {
   id: string;
   author: string;
   categories: string[];
   city: string;
+  content: string[];
   coords: { x: number; y: number; z: number };
   excerpt: string;
   image: string;
@@ -29,12 +32,12 @@ export const ArticleCard = ({
           "leading-snug"
         )}
       >
-        <a
-          className="hover:underline"
-          href={`/story/${encodeURIComponent(article.id)}`}
+        <Link
+          className="cursor-pointer hover:underline"
+          to={`${ARTICLE_PAGE_PATH}${encodeURIComponent(article.id)}`}
         >
           {article.title}
-        </a>
+        </Link>
       </h3>
       <div className="border border-neutral-900 my-2 overflow-hidden">
         <img

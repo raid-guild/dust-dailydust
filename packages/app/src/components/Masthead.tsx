@@ -1,6 +1,6 @@
 import { cn } from "../lib/utils";
 import { Newspaper } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   CLASSIFIEDS_PAGE_PATH,
   DISCOVER_PAGE_PATH,
@@ -18,8 +18,6 @@ const nav = [
 ];
 
 export const Masthead = () => {
-  const navigate = useNavigate();
-
   return (
     <header className="sticky top-0 z-30">
       <div className="max-w-6xl mx-auto pt-6 px-4 w-full">
@@ -61,16 +59,16 @@ export const Masthead = () => {
           </div>
           <nav className="flex flex-wrap gap-2 px-3 py-2">
             {nav.map((item) => (
-              <button
+              <Link
                 key={item.href}
-                onClick={() => navigate(item.href)}
                 className={cn(
                   "font-accent",
                   "bg-neutral-100 border border-neutral-800 hover:bg-neutral-200 px-2 py-1 rounded-[3px] text-[10px] tracking-wider uppercase"
                 )}
+                to={item.href}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
           </nav>
         </div>

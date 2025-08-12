@@ -1,61 +1,9 @@
 import { PixelDivider } from "../components/PixelDivider";
 import { type Article, ArticleCard } from "../components/ArticleCard";
 import { cn } from "../lib/utils";
-
-const weeklyCurated: Article[] = [
-  {
-    id: "1",
-    author: "miner_jim",
-    categories: ["Builds", "Culture"],
-    city: "Creeperville",
-    coords: { x: 100, y: 64, z: 100 },
-    excerpt:
-      "After a tense town meeting, alder-blocks approved funding to deploy a dedicated squad of iron golems to watch alleyways and unlit rooftops. Merchants say the move will protect their emerald reserves.",
-    image: "/assets/news.png",
-    section: "Front Page",
-    timestamp: 1754960423,
-    title: "City Hall Promises Iron Golem Night Patrols",
-  },
-  {
-    id: "2",
-    author: "miner_dan",
-    categories: ["Creatures", "Culture"],
-    city: "Creeperville",
-    coords: { x: 100, y: 64, z: 100 },
-    excerpt:
-      "A chorus of sizzling hisses startled farmers as synchronized creepers performed a surprisingly orderly serenade. No blocks were harmed.",
-    image: "/assets/creeper-orchestra-dawn.png",
-    section: "Front Page",
-    timestamp: 1754961423,
-    title: "Creeper Orchestra Surprises Village at Dawn",
-  },
-  {
-    id: "3",
-    author: "archi_ivy",
-    categories: ["Builds", "Redstone"],
-    city: "Birchwood",
-    coords: { x: 200, y: 70, z: 200 },
-    excerpt:
-      "An ambitious bibliophile unveiled a sprawling birchwood library complete with hidden piston bookcases and a lava-lit reading lounge.",
-    image: "/assets/birch-library-minecraft.png",
-    section: "Front Page",
-    timestamp: 1754960700,
-    title: "Architect Builds 1:1 Library Using Only Birch",
-  },
-  {
-    id: "4",
-    author: "bee_keeper",
-    categories: ["Politics", "Nature"],
-    city: "Beehive",
-    coords: { x: 300, y: 80, z: 300 },
-    excerpt:
-      "In a hex-ceptional election, Hive 7B-Alpha votes unanimously to appoint a Queen as Mayor, citing 'un-bee-lievable leadership.'",
-    image: "/assets/minecraft-bee-city.png",
-    section: "Front Page",
-    timestamp: 1754961720,
-    title: "Four Bees Elect First Queen Mayor",
-  },
-];
+import { weeklyCurated } from "../dummy-data";
+import { Link } from "react-router-dom";
+import { ARTICLE_PAGE_PATH } from "../Routes";
 
 export const FrontPage = () => {
   return (
@@ -121,7 +69,12 @@ const LeadStory = ({ article }: { article: Article }) => {
           Lead Story
         </div>
         <h2 className={cn("font-heading", "text-2xl leading-snug")}>
-          {article.title}
+          <Link
+            className="hover:underline cursor-pointer"
+            to={`${ARTICLE_PAGE_PATH}${encodeURIComponent(article.id)}`}
+          >
+            {article.title}
+          </Link>
         </h2>
         <p className={"mt-2 text-[15px] leading-relaxed"}>{article.excerpt}</p>
         <div className={cn("font-accent", "mt-1 text-[10px] text-neutral-700")}>
