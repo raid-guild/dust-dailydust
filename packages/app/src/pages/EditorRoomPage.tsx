@@ -5,6 +5,14 @@ import { CollectionsTab } from "../components/CollectionsTab";
 import { useDrafts } from "../hooks/useDrafts";
 import { useOnchainNotes } from "../hooks/useOnchainNotes";
 import { useDustClient } from "../common/useDustClient";
+import { cn } from "../lib/utils";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 
 export function EditorRoomPage() {
   type TabKey = "published" | "submit" | "collections" | "waypoints";
@@ -55,25 +63,27 @@ export function EditorRoomPage() {
   };
 
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
-    <button
+    <Button
       onClick={() => setTab(k)}
-      className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-        tab === k
-          ? "bg-brand-600 text-white border-brand-600"
-          : "bg-neutral-100 text-text-secondary border-neutral-300 hover:bg-neutral-200"
-      }`}
+      className={cn(
+        "font-accent",
+        "h-9 px-3 text-[10px]",
+        {
+          "bg-black": tab === k,
+          "bg-white": tab !== k,
+        },
+        { "text-white": tab === k, "text-black": tab !== k }
+      )}
     >
       {label}
-    </button>
+    </Button>
   );
 
   return (
-    <section className="rounded-xl bg-panel border border-neutral-200 dark:border-neutral-800 p-6 space-y-6">
+    <section className="gap-6 grid p-4 sm:p-6">
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="uppercase tracking-[.2em] text-xs text-neutral-500 font-accent">
-          Editor Room
-        </span>
+        <h1 className={cn("font-heading", "text-3xl")}>Editor Room</h1>
         <div className="flex flex-wrap gap-2 ml-auto">
           <TabButton k="published" label="My Published Stories" />
           <TabButton k="submit" label="Submit Content" />
@@ -84,12 +94,14 @@ export function EditorRoomPage() {
 
       {/* Content per tab */}
       {tab === "submit" && (
-        <div className="space-y-6">
-          {/* Submit New Content */}
-          <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading text-2xl">Submit New Content</h2>
-              <div className="flex items-center gap-2">
+        <>
+          <Card className="bg-white border-neutral-900">
+            {/* Submit New Content */}
+            <CardHeader>
+              <CardTitle
+                className={cn("font-heading", "flex justify-between text-xl")}
+              >
+                Submit New Content
                 <button
                   onClick={() => {
                     const d = createDraft();
@@ -100,76 +112,85 @@ export function EditorRoomPage() {
                 >
                   New Draft
                 </button>
-              </div>
-            </div>
-            {/* Only draft editing in Submit tab */}
-            <NoteEditor
-              variant="bare"
-              draftId={selectedDraftId || undefined}
-              onSave={() => {
-                setSelectedDraftId(null);
-                void refetch();
-              }}
-              onCancel={() => {
-                setSelectedDraftId(null);
-              }}
-            />
-          </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Only draft editing in Submit tab */}
+              <NoteEditor
+                variant="bare"
+                draftId={selectedDraftId || undefined}
+                onSave={() => {
+                  setSelectedDraftId(null);
+                  void refetch();
+                }}
+                onCancel={() => {
+                  setSelectedDraftId(null);
+                }}
+              />
+            </CardContent>
+          </Card>
 
           {/* Your Drafts */}
-          <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading text-2xl">Your Drafts</h2>
-              <span className="text-sm text-text-secondary">
-                {recentDrafts.length}
-              </span>
-            </div>
-            {recentDrafts.length === 0 ? (
-              <div className="text-text-secondary text-sm">
-                No drafts yet. Create one to get started.
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {recentDrafts.map((d) => (
-                  <li
-                    key={d.id}
-                    className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                  >
-                    <button
-                      className="text-left flex-1 min-w-0"
-                      onClick={() => {
-                        setSelectedDraftId(d.id);
-                      }}
+          <Card className="bg-white border-neutral-900">
+            <CardHeader>
+              <CardTitle
+                className={cn("font-heading", "flex justify-between text-xl")}
+              >
+                Your Drafts
+                <span className="text-sm text-text-secondary">
+                  {recentDrafts.length}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentDrafts.length === 0 ? (
+                <div className="text-text-secondary text-sm">
+                  No drafts yet. Create one to get started.
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {recentDrafts.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     >
-                      <div className="font-medium text-text-primary truncate">
-                        {d.title || "Untitled"}
-                      </div>
-                      <div className="text-xs text-text-secondary mt-0.5">
-                        Last saved {formatDate(d.lastSaved)}
-                      </div>
-                    </button>
-                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setSelectedDraftId(d.id)}
-                        className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
-                      >
-                        Edit
-                      </button>
-                      <button
+                        className="text-left flex-1 min-w-0"
                         onClick={() => {
-                          if (confirm("Delete this draft?")) deleteDraft(d.id);
+                          setSelectedDraftId(d.id);
                         }}
-                        className="px-2 py-1 text-xs text-danger border border-danger/30 rounded hover:bg-danger/10"
                       >
-                        Delete
+                        <div className="font-medium text-text-primary truncate">
+                          {d.title || "Untitled"}
+                        </div>
+                        <div className="text-xs text-text-secondary mt-0.5">
+                          Last saved {formatDate(d.lastSaved)}
+                        </div>
                       </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedDraftId(d.id)}
+                          className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("Delete this draft?"))
+                              deleteDraft(d.id);
+                          }}
+                          className="px-2 py-1 text-xs text-danger border border-danger/30 rounded hover:bg-danger/10"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {tab === "published" && (

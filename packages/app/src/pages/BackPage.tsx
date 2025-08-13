@@ -30,7 +30,7 @@ export const BackPage = () => {
   };
 
   return (
-    <div className="gap-6 grid p-4 sm:p-6">
+    <section className="gap-6 grid p-4 sm:p-6">
       <div>
         <h1 className={cn("font-heading", "text-3xl")}>
           Back Page — Classifieds
@@ -45,7 +45,7 @@ export const BackPage = () => {
         </p>
       </div>
 
-      <Card className="border-neutral-900">
+      <Card className="bg-white border-neutral-900">
         <CardHeader>
           <CardTitle className={cn("font-heading", "text-xl")}>
             Post a Listing
@@ -56,7 +56,13 @@ export const BackPage = () => {
             <div className="gap-2 grid sm:grid-cols-3">
               <select
                 aria-label="Type"
-                className="bg-neutral-50 border border-neutral-900 px-2 py-2 rounded-md"
+                className={cn(
+                  "border-input bg-transparent border border-neutral-900",
+                  "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
+                  "transition-[color,box-shadow] outline-none",
+                  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                  "md:text-sm"
+                )}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
                 value={form.type}
               >
@@ -106,6 +112,6 @@ export const BackPage = () => {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

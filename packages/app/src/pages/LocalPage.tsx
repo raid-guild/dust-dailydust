@@ -40,7 +40,7 @@ export const LocalPage = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6">
+    <section className="p-4 sm:p-6">
       <div className="gap-6 grid">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -115,6 +115,6 @@ export const LocalPage = () => {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
