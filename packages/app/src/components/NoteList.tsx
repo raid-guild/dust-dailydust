@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 
-import { useDrafts } from "../hooks/useDrafts";
-import { useNotes } from "../hooks/useNotes";
-import { useOnchainNotes } from "../hooks/useOnchainNotes";
+import { useDrafts } from "@/hooks/useDrafts";
+import { useNotes } from "@/hooks/useNotes";
+import { useOnchainNotes } from "@/hooks/useOnchainNotes";
 
 interface NoteListProps {
   onEditNote?: (noteId: string) => void;

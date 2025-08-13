@@ -27,5 +27,12 @@ export default tseslint.config([
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
     },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          project: "./tsconfig.app.json",
+        },
+      },
+    },
   },
 ]);

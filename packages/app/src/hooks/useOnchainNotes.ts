@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { worldAddress } from "../common/worldAddress";
+
+import { worldAddress } from "@/common/worldAddress";
 
 export interface OnchainNote {
   id: string; // bytes32 hex
@@ -19,7 +20,10 @@ const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
 const NAMESPACE = "rg_dd_ab564f";
 const TABLE = `${NAMESPACE}__Note`;
 
-async function fetchOnchainNotes(limit = 100, offset = 0): Promise<OnchainNote[]> {
+async function fetchOnchainNotes(
+  limit = 100,
+  offset = 0
+): Promise<OnchainNote[]> {
   const sql = `SELECT "noteId","owner","createdAt","updatedAt","tipJar","boostUntil","totalTips","title","content","tags","headerImageUrl" FROM "${TABLE}" ORDER BY "updatedAt" DESC LIMIT ${limit} OFFSET ${offset}`;
 
   const res = await fetch(INDEXER_Q_URL, {
@@ -59,13 +63,17 @@ async function fetchOnchainNotes(limit = 100, offset = 0): Promise<OnchainNote[]
       try {
         tags = JSON.parse(rawTags);
       } catch {
-        tags = rawTags.split(',').map((t: string) => t.trim()).filter(Boolean);
+        tags = rawTags
+          .split(",")
+          .map((t: string) => t.trim())
+          .filter(Boolean);
       }
     }
 
     return {
       id: r.noteId as string,
-      owner: (r.owner as string) ?? "0x0000000000000000000000000000000000000000",
+      owner:
+        (r.owner as string) ?? "0x0000000000000000000000000000000000000000",
       createdAt: Number(r.createdAt ?? 0),
       updatedAt: Number(r.updatedAt ?? 0),
       tipJar: (r.tipJar as string) ?? null,
@@ -85,19 +93,22 @@ export function useOnchainNotes(params?: { limit?: number; offset?: number }) {
   const [error, setError] = useState<string | null>(null);
   const { limit = 100, offset = 0 } = params ?? {};
 
-  const refetch = useMemo(() => async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchOnchainNotes(limit, offset);
-      setNotes(data);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
-      setNotes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [limit, offset]);
+  const refetch = useMemo(
+    () => async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchOnchainNotes(limit, offset);
+        setNotes(data);
+      } catch (e: any) {
+        setError(e?.message ?? String(e));
+        setNotes([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [limit, offset]
+  );
 
   useEffect(() => {
     void refetch();

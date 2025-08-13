@@ -1,8 +1,8 @@
 import { encodeBlock } from "@dust/world/internal";
 import { useState } from "react";
 
-import { useDustClient } from "../common/useDustClient";
-import { useWaypoints, type Waypoint } from "../hooks/useWaypoints";
+import { useDustClient } from "@/common/useDustClient";
+import { useWaypoints, type Waypoint } from "@/hooks/useWaypoints";
 
 export function WaypointsTab() {
   const { data: dustClient } = useDustClient();

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { worldAddress } from "../common/worldAddress";
+import { worldAddress } from "@/common/worldAddress";
 
 export interface PublishedNoteUI {
   id: string;

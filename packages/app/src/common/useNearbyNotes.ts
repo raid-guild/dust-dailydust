@@ -1,7 +1,8 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 
-import { useNotes } from "../hooks/useNotes";
-import { useWaypoints } from "../hooks/useWaypoints";
+import { useNotes } from "@/hooks/useNotes";
+import { useWaypoints } from "@/hooks/useWaypoints";
+
 import { useDustClient } from "./useDustClient";
 import { usePlayerPositionQuery } from "./usePlayerPositionQuery";
 

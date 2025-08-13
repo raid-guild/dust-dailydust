@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
-import { useCollections } from "../hooks/useCollections";
-import { useNotes } from "../hooks/useNotes";
+import { useCollections } from "@/hooks/useCollections";
+import { useNotes } from "@/hooks/useNotes";
 
 export function CollectionsTab() {
   const {

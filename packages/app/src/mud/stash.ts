@@ -4,7 +4,8 @@ import type { SyncFilter } from "@latticexyz/store-sync";
 import { syncToStash } from "@latticexyz/store-sync/internal";
 import contractsConfig from "contracts/mud.config";
 
-import { worldAddress } from "../common/worldAddress";
+import { worldAddress } from "@/common/worldAddress";
+
 import { redstone } from "./redstone";
 
 const selectedDustTables = {

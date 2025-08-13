@@ -1,4 +1,4 @@
-import type { Article } from "./components/ArticleCard";
+import type { Article } from "@/components/ArticleCard";
 
 export const weeklyCurated: Article[] = [
   {

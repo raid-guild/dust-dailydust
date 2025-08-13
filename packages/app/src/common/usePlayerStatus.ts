@@ -2,7 +2,8 @@ import { bigIntMax } from "@latticexyz/common/utils";
 import { useRecord } from "@latticexyz/stash/react";
 import { useMemo } from "react";
 
-import { stash, tables } from "../mud/stash";
+import { stash, tables } from "@/mud/stash";
+
 import { usePlayerEntityId } from "./usePlayerEntityId";
 
 export function usePlayerStatus(): "alive" | "dead" {

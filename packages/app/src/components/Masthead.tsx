@@ -1,14 +1,14 @@
 import { Newspaper } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 import {
   BACK_PAGE_PATH,
   DISCOVER_PAGE_PATH,
   EDITOR_PAGE_PATH,
   FRONT_PAGE_PATH,
   LOCAL_PAGE_PATH,
-} from "../Routes";
+} from "@/Routes";
 
 const nav = [
   { href: FRONT_PAGE_PATH, label: "Front Page" },

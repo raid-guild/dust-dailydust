@@ -2,11 +2,11 @@ import { resourceToHex } from "@latticexyz/common";
 import { useEffect, useState } from "react";
 import type { Abi } from "viem";
 
-import { useDustClient } from "../common/useDustClient";
-import { worldAddress } from "../common/worldAddress";
-import { useDrafts } from "../hooks/useDrafts";
-import { useNotes } from "../hooks/useNotes";
-import { WaypointNoteLinker } from "./WaypointNoteLinker";
+import { useDustClient } from "@/common/useDustClient";
+import { worldAddress } from "@/common/worldAddress";
+import { WaypointNoteLinker } from "@/components/WaypointNoteLinker";
+import { useDrafts } from "@/hooks/useDrafts";
+import { useNotes } from "@/hooks/useNotes";
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [

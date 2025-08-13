@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { useDrafts } from "../hooks/useDrafts";
-import { NoteEditor } from "./NoteEditor";
-import { NoteList } from "./NoteList";
+import { NoteEditor } from "@/components/NoteEditor";
+import { NoteList } from "@/components/NoteList";
+import { useDrafts } from "@/hooks/useDrafts";
 
 type View = "list" | "edit" | "create";
 

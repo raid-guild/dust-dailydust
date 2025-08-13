@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { useDrafts } from "../hooks/useDrafts";
-import { useNotes } from "../hooks/useNotes";
-import { useWaypoints, type Waypoint } from "../hooks/useWaypoints";
+import { useDrafts } from "@/hooks/useDrafts";
+import { useNotes } from "@/hooks/useNotes";
+import { useWaypoints, type Waypoint } from "@/hooks/useWaypoints";
 
 interface WaypointNoteLinkerProps {
   noteId?: string;

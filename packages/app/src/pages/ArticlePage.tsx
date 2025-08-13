@@ -1,8 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 
-import { localNewsSeed, weeklyCurated } from "../dummy-data";
-import { cn } from "../lib/utils";
-import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "../Routes";
+import { localNewsSeed, weeklyCurated } from "@/dummy-data";
+import { cn } from "@/lib/utils";
+import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 
 const getArticleById = (id: string | undefined) => {
   return [...weeklyCurated, ...localNewsSeed].find((a) => a.id === id);
