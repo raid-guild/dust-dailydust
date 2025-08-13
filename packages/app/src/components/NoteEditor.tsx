@@ -1,14 +1,13 @@
+import { resourceToHex } from "@latticexyz/common";
+import { useEffect, useState } from "react";
+import type { Abi } from "viem";
 
-import { useState, useEffect } from "react";
+import { DUST_NAMESPACE } from "../common/namespace";
+import { useDustClient } from "../common/useDustClient";
+import { worldAddress } from "../common/worldAddress";
 import { useDrafts } from "../hooks/useDrafts";
 import { useNotes } from "../hooks/useNotes";
 import { WaypointNoteLinker } from "./WaypointNoteLinker";
-import { useDustClient } from "../common/useDustClient";
-import type { Abi } from "viem";
-import { resourceToHex } from "@latticexyz/common";
-import { worldAddress } from "../common/worldAddress";
-import { DUST_NAMESPACE } from "../common/namespace";
-
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [
@@ -49,7 +48,7 @@ interface NoteEditorProps {
   onSave?: () => void;
   onCancel?: () => void;
   initialEntityId?: string;
-  variant?: 'default' | 'bare';
+  variant?: "default" | "bare";
   // New: when used inside a stepper, hide action buttons and emit state upward
   stepperMode?: boolean;
   onStateChange?: (state: {
@@ -73,11 +72,21 @@ function randomBytes32(): `0x${string}` {
   return `0x${hex}` as `0x${string}`;
 }
 
-export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default', stepperMode = false, onStateChange }: NoteEditorProps) {
-  const { drafts, updateDraftImmediate, deleteDraft, createDraft } = useDrafts();
+export function NoteEditor({
+  draftId,
+  noteId,
+  onSave,
+  onCancel,
+  initialEntityId,
+  variant = "default",
+  stepperMode = false,
+  onStateChange,
+}: NoteEditorProps) {
+  const { drafts, updateDraftImmediate, deleteDraft, createDraft } =
+    useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
-  
+
   // Track an internal draft id when the editor creates one implicitly
   const [internalDraftId, setInternalDraftId] = useState<string | null>(null);
   const effectiveDraftId = draftId ?? internalDraftId ?? null;
@@ -102,8 +111,10 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         localStorage.getItem("waypoint-links");
       if (links) {
         const waypointLinks = JSON.parse(links);
-        const currentLinks = waypointLinks.filter((link: any) => 
-          (noteId && link.noteId === noteId) || (effectiveDraftId && link.draftId === effectiveDraftId)
+        const currentLinks = waypointLinks.filter(
+          (link: any) =>
+            (noteId && link.noteId === noteId) ||
+            (effectiveDraftId && link.draftId === effectiveDraftId)
         );
         setLinkedWaypointsCount(currentLinks.length);
         try {
@@ -125,7 +136,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   // Load existing draft or note
   useEffect(() => {
     if (noteId) {
-      const note = notes.find(n => n.id === noteId);
+      const note = notes.find((n) => n.id === noteId);
       if (note) {
         setTitle(note.title);
         setHeaderImageUrl(note.headerImageUrl || "");
@@ -135,7 +146,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         setKicker(note.kicker || "");
       }
     } else if (draftId) {
-      const draft = drafts.find(d => d.id === draftId);
+      const draft = drafts.find((d) => d.id === draftId);
       if (draft) {
         setTitle(draft.title);
         setHeaderImageUrl(draft.headerImageUrl || "");
@@ -212,11 +223,27 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   const handleSaveDraft = async () => {
     let id = effectiveDraftId;
     if (!id) {
-      const d = createDraft({ entityId: initialEntityId, category, title, headerImageUrl, content, tags, kicker });
+      const d = createDraft({
+        entityId: initialEntityId,
+        category,
+        title,
+        headerImageUrl,
+        content,
+        tags,
+        kicker,
+      });
       setInternalDraftId(d.id);
       id = d.id;
     }
-    updateDraftImmediate(id!, { title, headerImageUrl, content, tags, category, kicker, entityId: initialEntityId });
+    updateDraftImmediate(id!, {
+      title,
+      headerImageUrl,
+      content,
+      tags,
+      category,
+      kicker,
+      entityId: initialEntityId,
+    });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
   };
@@ -334,8 +361,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
           tags: tagArray,
           category,
           kicker: kicker.trim(),
-          owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-          tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+          owner:
+            dustClient?.appContext.userAddress ||
+            "0x0000000000000000000000000000000000000000",
+          tipJar:
+            dustClient?.appContext.userAddress ||
+            "0x0000000000000000000000000000000000000000",
           boostUntil: 0,
           entityId: initialEntityId,
         };
@@ -492,7 +523,17 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       noteId,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, headerImageUrl, content, tags, category, kicker, effectiveDraftId, noteId, stepperMode]);
+  }, [
+    title,
+    headerImageUrl,
+    content,
+    tags,
+    category,
+    kicker,
+    effectiveDraftId,
+    noteId,
+    stepperMode,
+  ]);
 
   return (
     <div className={containerClass}>
@@ -506,25 +547,28 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
             <button
               onClick={() => setShowWaypointLinker(true)}
               className={`px-3 py-1.5 text-sm rounded transition-colors ${
-                linkedWaypointsCount > 0 
-                  ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
-                  : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
+                linkedWaypointsCount > 0
+                  ? "text-brand-700 bg-brand-100 hover:bg-brand-200"
+                  : "text-text-secondary bg-neutral-100 hover:bg-neutral-200"
               }`}
             >
-              🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
+              🗺️{" "}
+              {linkedWaypointsCount > 0
+                ? `Waypoints (${linkedWaypointsCount})`
+                : "Link Waypoints"}
             </button>
             <button
-              onClick={() => setShowPreview(p => !p)}
+              onClick={() => setShowPreview((p) => !p)}
               className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
             >
-              {showPreview ? 'Edit' : 'Preview'}
+              {showPreview ? "Edit" : "Preview"}
             </button>
             {!noteId && (
               <button
                 onClick={handleSaveDraft}
                 className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
               >
-                {justSaved ? 'Saved' : 'Save Draft'}
+                {justSaved ? "Saved" : "Save Draft"}
               </button>
             )}
             <button
@@ -538,7 +582,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
               disabled={isPublishing}
               className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
+              {isPublishing ? "Publishing…" : noteId ? "Update" : "Publish"}
             </button>
           </div>
         )}
@@ -667,7 +711,11 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       </div>
 
       {showWaypointLinker && (
-        <WaypointNoteLinker noteId={noteId} draftId={effectiveDraftId ?? undefined} onClose={() => setShowWaypointLinker(false)} />
+        <WaypointNoteLinker
+          noteId={noteId}
+          draftId={effectiveDraftId ?? undefined}
+          onClose={() => setShowWaypointLinker(false)}
+        />
       )}
     </div>
   );
