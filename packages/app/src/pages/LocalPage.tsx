@@ -1,11 +1,12 @@
-import { ArticleCard } from "../components/ArticleCard";
-import { localNewsSeed, popularPlaces } from "../dummy-data";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { useMemo, useState } from "react";
-import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
+
+import { ArticleCard } from "@/components/ArticleCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { localNewsSeed, popularPlaces } from "@/dummy-data";
+import { cn } from "@/lib/utils";
 
 const distance = (
   a: { x: number; y: number; z: number },

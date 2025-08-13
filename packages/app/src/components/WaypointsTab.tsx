@@ -1,17 +1,28 @@
-import { useState } from "react";
-import { useDustClient } from "../common/useDustClient";
-import { useWaypoints, type Waypoint } from "../hooks/useWaypoints";
 import { encodeBlock } from "@dust/world/internal";
+import { useState } from "react";
+
+import { useDustClient } from "@/common/useDustClient";
+import { useWaypoints, type Waypoint } from "@/hooks/useWaypoints";
 
 export function WaypointsTab() {
   const { data: dustClient } = useDustClient();
-  const { waypoints, addWaypoint, deleteWaypoint, clearAllWaypoints, importWaypoints } = useWaypoints();
-  
+  const {
+    waypoints,
+    addWaypoint,
+    deleteWaypoint,
+    clearAllWaypoints,
+    importWaypoints,
+  } = useWaypoints();
+
   // New filters/search state
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [nearMe, setNearMe] = useState<boolean>(false);
-  const [playerPos, setPlayerPos] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [playerPos, setPlayerPos] = useState<{
+    x: number;
+    y: number;
+    z: number;
+  } | null>(null);
 
   const [newWaypointName, setNewWaypointName] = useState("");
   const [newWaypointDescription, setNewWaypointDescription] = useState("");
@@ -22,13 +33,16 @@ export function WaypointsTab() {
     type: "success" | "error" | "info";
   } | null>(null);
 
-  const bannerClass: Record<NonNullable<typeof feedback>['type'], string> = {
+  const bannerClass: Record<NonNullable<typeof feedback>["type"], string> = {
     success: "bg-success/10 text-success border border-success/30",
     error: "bg-danger/10 text-danger border border-danger/30",
     info: "bg-info/10 text-info border border-info/30",
   } as const;
 
-  const showFeedback = (message: string, type: "success" | "error" | "info" = "success") => {
+  const showFeedback = (
+    message: string,
+    type: "success" | "error" | "info" = "success"
+  ) => {
     setFeedback({ message, type });
     setTimeout(() => setFeedback(null), 5000);
   };
@@ -43,7 +57,13 @@ export function WaypointsTab() {
         method: "getPlayerPosition",
         params: { entity: dustClient.appContext.userAddress },
       });
-      if (result && typeof result === "object" && "x" in result && "y" in result && "z" in result) {
+      if (
+        result &&
+        typeof result === "object" &&
+        "x" in result &&
+        "y" in result &&
+        "z" in result
+      ) {
         const { x, y, z } = result as { x: number; y: number; z: number };
         const roundedX = x < 0 ? Math.floor(x) : Math.round(x);
         const roundedY = y < 0 ? Math.floor(y) : Math.round(y);
@@ -67,7 +87,10 @@ export function WaypointsTab() {
     }
   };
 
-  const distance = (a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }) => {
+  const distance = (
+    a: { x: number; y: number; z: number },
+    b: { x: number; y: number; z: number }
+  ) => {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     const dz = a.z - b.z;
@@ -76,13 +99,24 @@ export function WaypointsTab() {
 
   const filtered = waypoints.filter((w) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch = !q || [w.name, w.description, w.category].some(v => (v || "").toLowerCase().includes(q)) || w.entityId.toLowerCase().includes(q);
-    const matchesCategory = categoryFilter === "All" || w.category === categoryFilter;
+    const matchesSearch =
+      !q ||
+      [w.name, w.description, w.category].some((v) =>
+        (v || "").toLowerCase().includes(q)
+      ) ||
+      w.entityId.toLowerCase().includes(q);
+    const matchesCategory =
+      categoryFilter === "All" || w.category === categoryFilter;
     let matchesProximity = true;
     if (nearMe) {
       if (!playerPos) matchesProximity = false;
-      else if (typeof w.x === "number" && typeof w.y === "number" && typeof w.z === "number") {
-        matchesProximity = distance(playerPos, { x: w.x, y: w.y, z: w.z }) <= 200;
+      else if (
+        typeof w.x === "number" &&
+        typeof w.y === "number" &&
+        typeof w.z === "number"
+      ) {
+        matchesProximity =
+          distance(playerPos, { x: w.x, y: w.y, z: w.z }) <= 200;
       } else {
         matchesProximity = false; // Unknown coords; cannot check proximity
       }
@@ -96,7 +130,9 @@ export function WaypointsTab() {
       exportedAt: new Date().toISOString(),
       waypoints,
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -119,7 +155,11 @@ export function WaypointsTab() {
         const text = await file.text();
         const json = JSON.parse(text);
         const ok = importWaypoints(json?.waypoints ? json : json, replace);
-        if (ok) showFeedback(replace ? "Waypoints replaced" : "Waypoints imported", "success");
+        if (ok)
+          showFeedback(
+            replace ? "Waypoints replaced" : "Waypoints imported",
+            "success"
+          );
         else showFeedback("No valid waypoints found in file", "error");
       } catch (e) {
         console.error("Import error", e);
@@ -147,20 +187,26 @@ export function WaypointsTab() {
         params: { entity: dustClient.appContext.userAddress },
       });
 
-      if (result && typeof result === "object" && "x" in result && "y" in result && "z" in result) {
+      if (
+        result &&
+        typeof result === "object" &&
+        "x" in result &&
+        "y" in result &&
+        "z" in result
+      ) {
         const { x, y, z } = result as { x: number; y: number; z: number };
-        
+
         // Round coordinates to integers for block position
         const roundedX = x < 0 ? Math.floor(x) : Math.round(x);
         const roundedY = y < 0 ? Math.floor(y) - 1 : Math.round(y) - 1; // -1 for block below player
         const roundedZ = z < 0 ? Math.floor(z) : Math.round(z);
-        
+
         // Use encodeBlock to generate entity ID from coordinates
         const entityId = encodeBlock([roundedX, roundedY, roundedZ]);
-        
+
         // Update the form with the generated entity ID
         setNewWaypointEntityId(entityId);
-        
+
         addWaypoint({
           name: newWaypointName,
           entityId,
@@ -171,7 +217,10 @@ export function WaypointsTab() {
           z: roundedZ,
         });
 
-        showFeedback(`Waypoint "${newWaypointName}" created successfully!`, "success");
+        showFeedback(
+          `Waypoint "${newWaypointName}" created successfully!`,
+          "success"
+        );
         setNewWaypointName("");
         setNewWaypointDescription("");
         setNewWaypointEntityId("");
@@ -225,7 +274,10 @@ export function WaypointsTab() {
       category: newWaypointCategory,
     });
 
-    showFeedback(`Waypoint "${newWaypointName}" created successfully!`, "success");
+    showFeedback(
+      `Waypoint "${newWaypointName}" created successfully!`,
+      "success"
+    );
     setNewWaypointName("");
     setNewWaypointDescription("");
     setNewWaypointEntityId("");
@@ -238,15 +290,21 @@ export function WaypointsTab() {
 
   const handleClearAll = () => {
     if (waypoints.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete all ${waypoints.length} waypoints? This cannot be undone.`)) {
+
+    if (
+      confirm(
+        `Are you sure you want to delete all ${waypoints.length} waypoints? This cannot be undone.`
+      )
+    ) {
       clearAllWaypoints();
       showFeedback("All waypoints cleared", "success");
     }
   };
 
   // Build category options from data
-  const categories = Array.from(new Set(["All", ...waypoints.map(w => w.category || "General")])) as string[];
+  const categories = Array.from(
+    new Set(["All", ...waypoints.map((w) => w.category || "General")])
+  ) as string[];
 
   return (
     <div className="p-5">
@@ -270,8 +328,10 @@ export function WaypointsTab() {
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary"
         >
-          {categories.map(c => (
-            <option key={c} value={c}>{c}</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
         <div className="flex items-center gap-2">
@@ -279,7 +339,10 @@ export function WaypointsTab() {
             <input
               type="checkbox"
               checked={nearMe}
-              onChange={async (e) => { setNearMe(e.target.checked); if (e.target.checked) await ensurePlayerPosIfNeeded(); }}
+              onChange={async (e) => {
+                setNearMe(e.target.checked);
+                if (e.target.checked) await ensurePlayerPosIfNeeded();
+              }}
             />
             <span>Near me (≤ 200)</span>
           </label>
@@ -291,15 +354,32 @@ export function WaypointsTab() {
           </button>
         </div>
         <div className="text-right text-xs text-text-secondary">
-          {playerPos ? `Pos: ${playerPos.x}, ${playerPos.y}, ${playerPos.z}` : "Pos: unknown"}
+          {playerPos
+            ? `Pos: ${playerPos.x}, ${playerPos.y}, ${playerPos.z}`
+            : "Pos: unknown"}
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex gap-2">
-          <button onClick={doExport} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800">⬇️ Export</button>
-          <button onClick={() => doImport(false)} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800">⬆️ Import (merge)</button>
-          <button onClick={() => doImport(true)} className="px-3 py-1.5 bg-danger text-white rounded border border-danger/60">⬆️ Import (replace)</button>
+          <button
+            onClick={doExport}
+            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800"
+          >
+            ⬇️ Export
+          </button>
+          <button
+            onClick={() => doImport(false)}
+            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-text-primary rounded border border-neutral-300 dark:border-neutral-800"
+          >
+            ⬆️ Import (merge)
+          </button>
+          <button
+            onClick={() => doImport(true)}
+            className="px-3 py-1.5 bg-danger text-white rounded border border-danger/60"
+          >
+            ⬆️ Import (replace)
+          </button>
         </div>
         {waypoints.length > 0 && (
           <button
@@ -312,8 +392,10 @@ export function WaypointsTab() {
       </div>
 
       <div className="mb-6">
-        <h3 className="text-brand-600 mb-3 font-medium">📍 Create New Waypoint</h3>
-        
+        <h3 className="text-brand-600 mb-3 font-medium">
+          📍 Create New Waypoint
+        </h3>
+
         <div className="flex flex-col gap-2 max-w-md">
           <input
             type="text"
@@ -322,7 +404,7 @@ export function WaypointsTab() {
             onChange={(e) => setNewWaypointName(e.target.value)}
             className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400"
           />
-          
+
           <input
             type="text"
             placeholder="Entity ID (will be auto-filled when you click button below)"
@@ -330,7 +412,7 @@ export function WaypointsTab() {
             onChange={(e) => setNewWaypointEntityId(e.target.value)}
             className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400"
           />
-          
+
           <select
             value={newWaypointCategory}
             onChange={(e) => setNewWaypointCategory(e.target.value)}
@@ -343,7 +425,7 @@ export function WaypointsTab() {
             <option value="Trading">Trading</option>
             <option value="Custom">Custom</option>
           </select>
-          
+
           <textarea
             placeholder="Description (optional)"
             value={newWaypointDescription}
@@ -351,16 +433,19 @@ export function WaypointsTab() {
             rows={3}
             className="px-2 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel text-text-primary placeholder-neutral-400 resize-y"
           />
-          
+
           <div className="flex gap-2">
             <button
-              onClick={async () => { await setWaypointToCurrent(); await ensurePlayerPosIfNeeded(); }}
+              onClick={async () => {
+                await setWaypointToCurrent();
+                await ensurePlayerPosIfNeeded();
+              }}
               disabled={!newWaypointName.trim()}
               className="flex-1 px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-60 disabled:cursor-not-allowed"
             >
               📍 Create at Current Position
             </button>
-            
+
             <button
               onClick={createWaypointManually}
               disabled={!newWaypointName.trim() || !newWaypointEntityId.trim()}
@@ -374,7 +459,9 @@ export function WaypointsTab() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-brand-600 m-0 font-medium">🗺️ Saved Waypoints ({filtered.length}/{waypoints.length})</h3>
+          <h3 className="text-brand-600 m-0 font-medium">
+            🗺️ Saved Waypoints ({filtered.length}/{waypoints.length})
+          </h3>
           {waypoints.length > 0 && (
             <button
               onClick={handleClearAll}
@@ -384,9 +471,11 @@ export function WaypointsTab() {
             </button>
           )}
         </div>
-        
+
         {filtered.length === 0 ? (
-          <p className="text-text-secondary italic">No waypoints match your filters.</p>
+          <p className="text-text-secondary italic">
+            No waypoints match your filters.
+          </p>
         ) : (
           <div className="grid gap-3">
             {filtered.map((waypoint) => (
@@ -405,26 +494,36 @@ export function WaypointsTab() {
                     <p className="text-xs text-neutral-500 m-0 mt-1">
                       📂 {waypoint.category}
                     </p>
-                    {typeof waypoint.x === "number" && typeof waypoint.y === "number" && typeof waypoint.z === "number" && (
-                      <p className="text-xs text-neutral-500 m-0 mt-1">
-                        📍 {waypoint.x}, {waypoint.y}, {waypoint.z}
-                        {nearMe && playerPos && (
-                          <>
-                            {" "}
-                            <span className="text-neutral-400">
-                              (d ≈ {Math.round(distance(playerPos, { x: waypoint.x, y: waypoint.y, z: waypoint.z }))})
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    )}
+                    {typeof waypoint.x === "number" &&
+                      typeof waypoint.y === "number" &&
+                      typeof waypoint.z === "number" && (
+                        <p className="text-xs text-neutral-500 m-0 mt-1">
+                          📍 {waypoint.x}, {waypoint.y}, {waypoint.z}
+                          {nearMe && playerPos && (
+                            <>
+                              {" "}
+                              <span className="text-neutral-400">
+                                (d ≈{" "}
+                                {Math.round(
+                                  distance(playerPos, {
+                                    x: waypoint.x,
+                                    y: waypoint.y,
+                                    z: waypoint.z,
+                                  })
+                                )}
+                                )
+                              </span>
+                            </>
+                          )}
+                        </p>
+                      )}
                     {waypoint.description && (
                       <p className="text-sm text-text-secondary m-0 mt-1">
                         {waypoint.description}
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => setWaypointInGame(waypoint)}
@@ -432,7 +531,7 @@ export function WaypointsTab() {
                     >
                       🎯 Set
                     </button>
-                    
+
                     <button
                       onClick={() => handleDeleteWaypoint(waypoint)}
                       className="px-3 py-1.5 bg-danger hover:brightness-110 text-white rounded text-xs"
@@ -441,7 +540,7 @@ export function WaypointsTab() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="text-xs text-neutral-500">
                   Created: {new Date(waypoint.createdAt).toLocaleString()}
                 </div>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { cn } from "../lib/utils";
-import { Masthead } from "./Masthead";
+
+import { Masthead } from "@/components/Masthead";
+import { cn } from "@/lib/utils";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   return (

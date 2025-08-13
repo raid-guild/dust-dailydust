@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { Collection, CollectionData } from "../codegen/tables/Collection.sol";
+import { Collection } from "../codegen/tables/Collection.sol";
 import { CollectionNote } from "../codegen/tables/CollectionNote.sol";
 
 contract CollectionSystem is System {
@@ -19,18 +19,9 @@ contract CollectionSystem is System {
     // Ensure the collection does not already exist (owner == address(0) sentinel)
     require(Collection.getOwner(collectionId) == address(0), "Collection already exists");
 
-    Collection.set(
-      collectionId,
-      CollectionData({
-        owner: _msgSender(),
-        createdAt: uint64(block.timestamp),
-        updatedAt: uint64(block.timestamp),
-        title: title,
-        description: description,
-        headerImageUrl: headerImageUrl,
-        featured: featured
-      })
-    );
+    uint64 ts = uint64(block.timestamp);
+
+    Collection.set(collectionId, _msgSender(), ts, ts, featured, title, description, headerImageUrl, "");
   }
 
   /**

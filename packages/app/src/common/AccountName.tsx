@@ -1,7 +1,8 @@
 import type { Hex } from "viem";
-import { useENS } from "./useENS";
-import { useDustName } from "./useDustName";
+
 import { TruncatedHex } from "./TruncatedHex";
+import { useDustName } from "./useDustName";
+import { useENS } from "./useENS";
 
 export type Props = {
   address: Hex;

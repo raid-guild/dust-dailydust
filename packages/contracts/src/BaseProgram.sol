@@ -10,8 +10,8 @@ import { HookContext, IAttachProgram, IDetachProgram } from "@dust/world/src/Pro
 import { Constants } from "./Constants.sol";
 
 abstract contract BaseProgram is IAttachProgram, IDetachProgram, System, WorldConsumer(Constants.DUST_WORLD) {
-  function onAttachProgram(HookContext calldata ctx) public virtual override onlyWorld { }
-  function onDetachProgram(HookContext calldata ctx) public virtual override onlyWorld { }
+  function onAttachProgram(HookContext calldata ctx) public virtual override onlyWorld {}
+  function onDetachProgram(HookContext calldata ctx) public virtual override onlyWorld {}
 
   // Other hooks revert
   fallback() external virtual {

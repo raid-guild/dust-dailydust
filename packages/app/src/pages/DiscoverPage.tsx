@@ -1,10 +1,11 @@
-import { Input } from "../components/ui/input";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { weeklyCurated, localNewsSeed } from "../dummy-data";
 import { useMemo, useState } from "react";
-import { ArticleCard } from "../components/ArticleCard";
-import { cn } from "../lib/utils";
+
+import { ArticleCard } from "@/components/ArticleCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { localNewsSeed, weeklyCurated } from "@/dummy-data";
+import { cn } from "@/lib/utils";
 
 export const DiscoverPage = () => {
   const all = useMemo(() => [...weeklyCurated, ...localNewsSeed], []);

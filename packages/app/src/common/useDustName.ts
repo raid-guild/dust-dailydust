@@ -1,5 +1,5 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
-import { type Hex, getAddress } from "viem";
+import { getAddress, type Hex } from "viem";
 
 async function getDustName(userAddress: Hex): Promise<{
   username: string | null;
