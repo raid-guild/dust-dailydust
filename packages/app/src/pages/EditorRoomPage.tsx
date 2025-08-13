@@ -1,26 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 
-import { useDustClient } from "@/common/useDustClient";
-import { CollectionsTab } from "@/components/CollectionsTab";
-import { NoteEditor } from "@/components/NoteEditor";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WaypointsTab } from "@/components/WaypointsTab";
+import { PublishWizard } from "@/components/PublishWizard";
 import { useDrafts } from "@/hooks/useDrafts";
 import { useOnchainNotes } from "@/hooks/useOnchainNotes";
-import { cn } from "@/lib/utils";
+import { useDustClient } from "@/common/useDustClient";
+import { WaypointsTab } from "@/components/WaypointsTab";
+import { CollectionsTab } from "@/components/CollectionsTab";
 
 export function EditorRoomPage() {
-  type TabKey = "published" | "submit" | "collections" | "waypoints";
-  const [tab, setTab] = useState<TabKey>("submit");
+  type TabKey = 'published' | 'submit' | 'collections' | 'waypoints';
+  const [tab, setTab] = useState<TabKey>('submit');
 
-  const { getRecentDrafts, deleteDraft, createDraft } = useDrafts();
-  const {
-    notes: chainNotes,
-    loading: chainLoading,
-    error: chainError,
-    refetch,
-  } = useOnchainNotes({ limit: 200, offset: 0 });
+  const { getRecentDrafts, deleteDraft } = useDrafts();
+  const { notes: chainNotes, loading: chainLoading, error: chainError, refetch } = useOnchainNotes({ limit: 200, offset: 0 });
   const { data: dustClient } = useDustClient();
 
   // Selection state for editors within tabs
@@ -29,17 +21,15 @@ export function EditorRoomPage() {
 
   // Clear cross-tab selections when switching
   useEffect(() => {
-    if (tab === "submit") setSelectedNoteId(null);
-    if (tab === "published") setSelectedDraftId(null);
+    if (tab === 'submit') setSelectedNoteId(null);
+    if (tab === 'published') setSelectedDraftId(null);
   }, [tab]);
 
   const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
 
   const myPublished = useMemo(() => {
     if (!myAddress) return [] as typeof chainNotes;
-    return chainNotes.filter(
-      (n) => (n.owner || "").toLowerCase() === myAddress
-    );
+    return chainNotes.filter(n => (n.owner || "").toLowerCase() === myAddress);
   }, [chainNotes, myAddress]);
 
   const recentDrafts = getRecentDrafts();
@@ -59,21 +49,23 @@ export function EditorRoomPage() {
   };
 
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
-    <Button
-      className="border-neutral-900"
+    <button
       onClick={() => setTab(k)}
-      size="sm"
-      variant={tab === k ? "default" : "outline"}
+      className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+        tab === k
+          ? 'bg-brand-600 text-white border-brand-600'
+          : 'bg-neutral-100 text-text-secondary border-neutral-300 hover:bg-neutral-200'
+      }`}
     >
       {label}
-    </Button>
+    </button>
   );
 
   return (
-    <section className="gap-6 grid p-4 sm:p-6">
+    <section className="rounded-xl bg-panel border border-neutral-200 dark:border-neutral-800 p-6 space-y-6">
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 items-center">
-        <h1 className={cn("font-heading", "text-3xl")}>Editor Room</h1>
+        <span className="uppercase tracking-[.2em] text-xs text-neutral-500 font-accent">Editor Room</span>
         <div className="flex flex-wrap gap-2 ml-auto">
           <TabButton k="published" label="My Published Stories" />
           <TabButton k="submit" label="Submit Content" />
@@ -82,61 +74,105 @@ export function EditorRoomPage() {
         </div>
       </div>
 
-      {tab === "published" && (
-        <Card className="border-neutral-900">
+      {/* Content per tab */}
+      {tab === 'submit' && (
+        <div className="space-y-6">
+          {/* Submit New Content */}
+          <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-heading text-2xl">Submit New Content</h2>
+            </div>
+            <PublishWizard
+              draftId={selectedDraftId || undefined}
+              onDone={() => {
+                setSelectedDraftId(null);
+                void refetch();
+              }}
+              onCancel={() => setSelectedDraftId(null)}
+            />
+          </div>
+
+          {/* Your Drafts */}
+          <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+            <div className="flex itemsCenter justify-between mb-3">
+              <h2 className="font-heading text-2xl">Your Drafts</h2>
+              <span className="text-sm text-text-secondary">{recentDrafts.length}</span>
+            </div>
+            {recentDrafts.length === 0 ? (
+              <div className="text-text-secondary text-sm">No drafts yet. Use Save Draft in the form above.</div>
+            ) : (
+              <ul className="space-y-2">
+                {recentDrafts.map(d => (
+                  <li key={d.id} className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800">
+                    <button
+                      className="text-left flex-1 min-w-0"
+                      onClick={() => {
+                        setSelectedDraftId(d.id);
+                      }}
+                    >
+                      <div className="font-medium text-text-primary truncate">{d.title || "Untitled"}</div>
+                      <div className="text-xs text-text-secondary mt-0.5">Last saved {formatDate(d.lastSaved)}</div>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedDraftId(d.id)}
+                        className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => { if (confirm("Delete this draft?")) deleteDraft(d.id); }}
+                        className="px-2 py-1 text-xs text-danger border border-danger/30 rounded hover:bg-danger/10"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'published' && (
+        <div className="space-y-6">
           {/* My Published Stories */}
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              My Published Stories
-              <div className="flex gap-2 items-center">
-                <span className="text-sm text-text-secondary">
-                  {myPublished.length}
-                </span>
+          <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-heading text-2xl">My Published Stories</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary">{myPublished.length}</span>
                 <button
                   onClick={() => void refetch()}
-                  className="bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded text-text-secondary text-xs"
+                  className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
                 >
                   Refresh
                 </button>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
             {!myAddress ? (
-              <div className="text-text-secondary text-sm">
-                Connect your wallet to see your published stories.
-              </div>
+              <div className="text-text-secondary text-sm">Connect your wallet to see your published stories.</div>
             ) : chainLoading ? (
               <div className="text-text-secondary text-sm">Loading…</div>
             ) : chainError ? (
               <div className="text-danger text-sm">{String(chainError)}</div>
             ) : myPublished.length === 0 ? (
-              <div className="text-text-secondary text-sm">
-                No published stories yet.
-              </div>
+              <div className="text-text-secondary text-sm">No published stories yet.</div>
             ) : (
               <ul className="space-y-2">
-                {myPublished.map((n) => (
-                  <li
-                    key={n.id}
-                    className="border border-neutral-200 dark:border-neutral-800 dark:hover:bg-neutral-800 flex gap-3 hover:bg-neutral-50 items-center justify-between p-3 rounded-lg"
-                  >
+                {myPublished.map(n => (
+                  <li key={n.id} className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800">
                     <button
-                      className="flex-1 min-w-0 text-left"
+                      className="text-left flex-1 min-w-0"
                       onClick={() => setSelectedNoteId(n.id)}
                     >
-                      <div className="font-medium text-text-primary truncate">
-                        {n.title || "Untitled"}
-                      </div>
-                      <div className="mt-0.5 text-text-secondary text-xs">
-                        Updated {formatDate(n.updatedAt)}
-                      </div>
+                      <div className="font-medium text-text-primary truncate">{n.title || "Untitled"}</div>
+                      <div className="text-xs text-text-secondary mt-0.5">Updated {formatDate(n.updatedAt)}</div>
                     </button>
                     <button
-                      className="bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded text-text-secondary text-xs"
                       onClick={() => setSelectedNoteId(n.id)}
+                      className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
                     >
                       Edit
                     </button>
@@ -144,157 +180,37 @@ export function EditorRoomPage() {
                 ))}
               </ul>
             )}
+          </div>
 
-            {/* Inline editor when a published note is selected */}
-            {selectedNoteId && (
-              <div className="border border-neutral-300 dark:border-neutral-800 p-4 rounded-xl">
-                <h3 className="font-heading mb-3 text-xl">
-                  Edit Published Story
-                </h3>
-                <NoteEditor
-                  noteId={selectedNoteId}
-                  onCancel={() => setSelectedNoteId(null)}
-                  onSave={() => {
-                    setSelectedNoteId(null);
-                    void refetch();
-                  }}
-                  variant="bare"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Content per tab */}
-      {tab === "submit" && (
-        <>
-          <Card className="border-neutral-900">
-            {/* Submit New Content */}
-            <CardHeader>
-              <CardTitle
-                className={cn("font-heading", "flex justify-between text-xl")}
-              >
-                Submit New Content
-                <Button
-                  onClick={() => {
-                    const d = createDraft();
-                    setSelectedNoteId(null);
-                    setSelectedDraftId(d.id);
-                  }}
-                  className={cn("font-accent", "h-9 px-3 text-[10px]")}
-                >
-                  New Draft
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Only draft editing in Submit tab */}
-              <NoteEditor
-                variant="bare"
-                draftId={selectedDraftId || undefined}
-                onSave={() => {
-                  setSelectedDraftId(null);
+          {/* Inline editor when a published note is selected */}
+          {selectedNoteId && (
+            <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+              <h3 className="font-heading text-xl mb-3">Edit Published Story</h3>
+              <PublishWizard
+                noteId={selectedNoteId}
+                onDone={() => {
+                  setSelectedNoteId(null);
                   void refetch();
                 }}
-                onCancel={() => {
-                  setSelectedDraftId(null);
-                }}
+                onCancel={() => setSelectedNoteId(null)}
               />
-            </CardContent>
-          </Card>
-
-          {/* Your Drafts */}
-          <Card className="border-neutral-900">
-            <CardHeader>
-              <CardTitle
-                className={cn("font-heading", "flex justify-between text-xl")}
-              >
-                Your Drafts
-                <span className="text-sm text-text-secondary">
-                  {recentDrafts.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentDrafts.length === 0 ? (
-                <div className="text-text-secondary text-sm">
-                  No drafts yet. Create one to get started.
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {recentDrafts.map((d) => (
-                    <li
-                      key={d.id}
-                      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                    >
-                      <button
-                        className="text-left flex-1 min-w-0"
-                        onClick={() => {
-                          setSelectedDraftId(d.id);
-                        }}
-                      >
-                        <div className="font-medium text-text-primary truncate">
-                          {d.title || "Untitled"}
-                        </div>
-                        <div className="text-xs text-text-secondary mt-0.5">
-                          Last saved {formatDate(d.lastSaved)}
-                        </div>
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedDraftId(d.id)}
-                          className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm("Delete this draft?"))
-                              deleteDraft(d.id);
-                          }}
-                          className="px-2 py-1 text-xs text-danger border border-danger/30 rounded hover:bg-danger/10"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </>
+            </div>
+          )}
+        </div>
       )}
 
-      {tab === "collections" && (
-        <Card className="border-neutral-900">
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              Collections
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CollectionsTab />
-          </CardContent>
-        </Card>
+      {tab === 'collections' && (
+        <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+          <h2 className="font-heading text-2xl mb-3">Collections</h2>
+          <CollectionsTab />
+        </div>
       )}
 
-      {tab === "waypoints" && (
-        <Card className="border-neutral-900">
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              Waypoint Tools
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WaypointsTab />
-          </CardContent>
-        </Card>
+      {tab === 'waypoints' && (
+        <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
+          <h2 className="font-heading text-2xl mb-3">Waypoint Tools</h2>
+          <WaypointsTab />
+        </div>
       )}
     </section>
   );

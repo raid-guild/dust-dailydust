@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type TipSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_ab564f", name: "TipSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0001", name: "TipSystem" }))
 TipSystemType constant tipSystem = TipSystemType.wrap(
-  0x737972675f64645f616235363466000054697053797374656d00000000000000
+  0x737972675f64645f303030310000000054697053797374656d00000000000000
 );
 
 struct CallWrapper {

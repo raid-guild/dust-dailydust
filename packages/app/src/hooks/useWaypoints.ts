@@ -17,23 +17,61 @@ export interface Waypoint {
 const WAYPOINTS_STORAGE_KEY = "dailydust-waypoints";
 const OLD_WAYPOINTS_STORAGE_KEY = "dust-waypoints";
 
-// Generate the default waypoint for first-time users
-function getDefaultWaypoint(): Waypoint {
-  const x = 1272,
-    y = 154,
-    z = -930;
-  return {
-    id: "default-raidguild-forge",
-    name: "Raidguild Forge",
-    entityId: encodeBlock([x, y, z]),
-    description:
-      "The main RaidGuild Forge Hall - a central hub for crafting and community",
-    category: "Base",
-    createdAt: Date.now(),
-    x,
-    y,
-    z,
-  };
+// Generate the default waypoints for first-time users
+function getDefaultWaypoints(): Waypoint[] {
+  const defs = [
+    {
+      id: "default-raidguild-forge",
+      name: "Raidguild Forge",
+      coords: [1272, 154, -930] as const,
+      description: "The main RaidGuild Forge Hall - a central hub for crafting and community",
+      category: "Base",
+    },
+    {
+      id: "default-arena-eternal",
+      name: "Arena Eternal",
+      coords: [-22, 75, 101] as const,
+      description: "Community PvP arena",
+      category: "Arena",
+    },
+    {
+      id: "default-perm-town-market",
+      name: "Perm Town Market",
+      coords: [609, 149, -1509] as const,
+      description: "Trading hub in Perm Town",
+      category: "Trading",
+    },
+    {
+      id: "default-baby-yoda",
+      name: "Baby Yoda",
+      coords: [0, 0, 0] as const,
+      description: "Baby Yoda landmark",
+      category: "Landmark",
+    },
+    {
+      id: "default-ethereum-monument",
+      name: "Ethereum Monument",
+      coords: [57, 63, -87] as const,
+      description: "Ethereum monument",
+      category: "Monument",
+    },
+  ];
+
+  const createdAt = Date.now();
+  return defs.map(({ id, name, coords, description, category }) => {
+    const [x, y, z] = coords;
+    return {
+      id,
+      name,
+      entityId: encodeBlock([x, y, z]),
+      description,
+      category,
+      createdAt,
+      x,
+      y,
+      z,
+    } satisfies Waypoint;
+  });
 }
 
 export function useWaypoints() {
@@ -69,21 +107,17 @@ export function useWaypoints() {
             }
           }
         } else {
-          console.log(
-            "📂 No saved waypoints found in localStorage — seeding default waypoint"
-          );
-          setWaypoints([getDefaultWaypoint()]);
+          console.log("📂 No saved waypoints found in localStorage — seeding default waypoints");
+          setWaypoints(getDefaultWaypoints());
         }
       } else {
-        console.log(
-          "📂 No saved waypoints found in localStorage — seeding default waypoint"
-        );
-        setWaypoints([getDefaultWaypoint()]);
+        console.log("📂 No saved waypoints found in localStorage — seeding default waypoints");
+        setWaypoints(getDefaultWaypoints());
       }
     } catch (error) {
       console.error("Error loading waypoints:", error);
-      // Fallback: seed default so UI has something sensible
-      setWaypoints([getDefaultWaypoint()]);
+      // Fallback: seed defaults so UI has something sensible
+      setWaypoints(getDefaultWaypoints());
     }
     setIsLoaded(true);
   }, []);

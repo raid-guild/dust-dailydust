@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type WaypointSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_ab564f", name: "WaypointSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0001", name: "WaypointSystem" }))
 WaypointSystemType constant waypointSystem = WaypointSystemType.wrap(
-  0x737972675f64645f6162353634660000576179706f696e7453797374656d0000
+  0x737972675f64645f3030303100000000576179706f696e7453797374656d0000
 );
 
 struct CallWrapper {

@@ -24,19 +24,20 @@ struct CollectionData {
   string title;
   string description;
   string headerImageUrl;
+  string extra;
 }
 
 library Collection {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_ab564f", name: "Collection", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f6162353634660000436f6c6c656374696f6e000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "Collection", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000436f6c6c656374696f6e000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0025040314080801000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0025040414080801000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address, uint64, uint64, bool, string, string, string)
-  Schema constant _valueSchema = Schema.wrap(0x0025040361070760c5c5c5000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address, uint64, uint64, bool, string, string, string, string)
+  Schema constant _valueSchema = Schema.wrap(0x0025040461070760c5c5c5c50000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,7 +53,7 @@ library Collection {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](7);
+    fieldNames = new string[](8);
     fieldNames[0] = "owner";
     fieldNames[1] = "createdAt";
     fieldNames[2] = "updatedAt";
@@ -60,6 +61,7 @@ library Collection {
     fieldNames[4] = "title";
     fieldNames[5] = "description";
     fieldNames[6] = "headerImageUrl";
+    fieldNames[7] = "extra";
   }
 
   /**
@@ -731,6 +733,168 @@ library Collection {
   }
 
   /**
+   * @notice Get extra.
+   */
+  function getExtra(bytes32 collectionId) internal view returns (string memory extra) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 3);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Get extra.
+   */
+  function _getExtra(bytes32 collectionId) internal view returns (string memory extra) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 3);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Set extra.
+   */
+  function setExtra(bytes32 collectionId, string memory extra) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 3, bytes((extra)));
+  }
+
+  /**
+   * @notice Set extra.
+   */
+  function _setExtra(bytes32 collectionId, string memory extra) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 3, bytes((extra)));
+  }
+
+  /**
+   * @notice Get the length of extra.
+   */
+  function lengthExtra(bytes32 collectionId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 3);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of extra.
+   */
+  function _lengthExtra(bytes32 collectionId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 3);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of extra.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemExtra(bytes32 collectionId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 3, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of extra.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemExtra(bytes32 collectionId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 3, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to extra.
+   */
+  function pushExtra(bytes32 collectionId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 3, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to extra.
+   */
+  function _pushExtra(bytes32 collectionId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 3, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from extra.
+   */
+  function popExtra(bytes32 collectionId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 3, 1);
+  }
+
+  /**
+   * @notice Pop a slice from extra.
+   */
+  function _popExtra(bytes32 collectionId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 3, 1);
+  }
+
+  /**
+   * @notice Update a slice of extra at `_index`.
+   */
+  function updateExtra(bytes32 collectionId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 3, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of extra at `_index`.
+   */
+  function _updateExtra(bytes32 collectionId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = collectionId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 3, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(bytes32 collectionId) internal view returns (CollectionData memory _table) {
@@ -771,12 +935,13 @@ library Collection {
     bool featured,
     string memory title,
     string memory description,
-    string memory headerImageUrl
+    string memory headerImageUrl,
+    string memory extra
   ) internal {
     bytes memory _staticData = encodeStatic(owner, createdAt, updatedAt, featured);
 
-    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl);
-    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl);
+    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl, extra);
+    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl, extra);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = collectionId;
@@ -795,12 +960,13 @@ library Collection {
     bool featured,
     string memory title,
     string memory description,
-    string memory headerImageUrl
+    string memory headerImageUrl,
+    string memory extra
   ) internal {
     bytes memory _staticData = encodeStatic(owner, createdAt, updatedAt, featured);
 
-    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl);
-    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl);
+    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl, extra);
+    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl, extra);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = collectionId;
@@ -814,8 +980,13 @@ library Collection {
   function set(bytes32 collectionId, CollectionData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.owner, _table.createdAt, _table.updatedAt, _table.featured);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.title, _table.description, _table.headerImageUrl);
-    bytes memory _dynamicData = encodeDynamic(_table.title, _table.description, _table.headerImageUrl);
+    EncodedLengths _encodedLengths = encodeLengths(
+      _table.title,
+      _table.description,
+      _table.headerImageUrl,
+      _table.extra
+    );
+    bytes memory _dynamicData = encodeDynamic(_table.title, _table.description, _table.headerImageUrl, _table.extra);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = collectionId;
@@ -829,8 +1000,13 @@ library Collection {
   function _set(bytes32 collectionId, CollectionData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.owner, _table.createdAt, _table.updatedAt, _table.featured);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.title, _table.description, _table.headerImageUrl);
-    bytes memory _dynamicData = encodeDynamic(_table.title, _table.description, _table.headerImageUrl);
+    EncodedLengths _encodedLengths = encodeLengths(
+      _table.title,
+      _table.description,
+      _table.headerImageUrl,
+      _table.extra
+    );
+    bytes memory _dynamicData = encodeDynamic(_table.title, _table.description, _table.headerImageUrl, _table.extra);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = collectionId;
@@ -859,7 +1035,11 @@ library Collection {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory title, string memory description, string memory headerImageUrl) {
+  )
+    internal
+    pure
+    returns (string memory title, string memory description, string memory headerImageUrl, string memory extra)
+  {
     uint256 _start;
     uint256 _end;
     unchecked {
@@ -878,6 +1058,12 @@ library Collection {
       _end += _encodedLengths.atIndex(2);
     }
     headerImageUrl = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(3);
+    }
+    extra = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -893,7 +1079,10 @@ library Collection {
   ) internal pure returns (CollectionData memory _table) {
     (_table.owner, _table.createdAt, _table.updatedAt, _table.featured) = decodeStatic(_staticData);
 
-    (_table.title, _table.description, _table.headerImageUrl) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.title, _table.description, _table.headerImageUrl, _table.extra) = decodeDynamic(
+      _encodedLengths,
+      _dynamicData
+    );
   }
 
   /**
@@ -936,14 +1125,16 @@ library Collection {
   function encodeLengths(
     string memory title,
     string memory description,
-    string memory headerImageUrl
+    string memory headerImageUrl,
+    string memory extra
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
       _encodedLengths = EncodedLengthsLib.pack(
         bytes(title).length,
         bytes(description).length,
-        bytes(headerImageUrl).length
+        bytes(headerImageUrl).length,
+        bytes(extra).length
       );
     }
   }
@@ -955,9 +1146,10 @@ library Collection {
   function encodeDynamic(
     string memory title,
     string memory description,
-    string memory headerImageUrl
+    string memory headerImageUrl,
+    string memory extra
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((title)), bytes((description)), bytes((headerImageUrl)));
+    return abi.encodePacked(bytes((title)), bytes((description)), bytes((headerImageUrl)), bytes((extra)));
   }
 
   /**
@@ -973,12 +1165,13 @@ library Collection {
     bool featured,
     string memory title,
     string memory description,
-    string memory headerImageUrl
+    string memory headerImageUrl,
+    string memory extra
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(owner, createdAt, updatedAt, featured);
 
-    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl);
-    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl);
+    EncodedLengths _encodedLengths = encodeLengths(title, description, headerImageUrl, extra);
+    bytes memory _dynamicData = encodeDynamic(title, description, headerImageUrl, extra);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

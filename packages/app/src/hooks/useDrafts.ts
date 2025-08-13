@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface Draft {
   id: string;
@@ -7,7 +7,10 @@ export interface Draft {
   tags: string;
   headerImageUrl?: string; // new field for header image while drafting
   category?: string; // new field for single-select category while drafting
-  entityId?: string;
+  kicker?: string; // short teaser line shown above title
+  entityId?: string; // primary location entityId snapshot (optional)
+  selectedWaypointId?: string; // wizard location selection (by waypoint id)
+  routeSteps?: Array<{ waypointId: string; label?: string }>; // wizard route steps
   lastSaved: number;
   createdAt: number;
 }
@@ -19,9 +22,14 @@ const AUTOSAVE_DELAY = 1000; // 1 second
 export function useDrafts() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [autosaveTimeouts, setAutosaveTimeouts] = useState<Map<string, number>>(
-    new Map()
+
+  // Unique id per hook instance to prevent echo loops
+  const instanceIdRef = useRef<string>(
+    typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function'
+      ? (crypto as any).randomUUID()
+      : Math.random().toString(36).slice(2)
   );
+  const suppressBroadcastRef = useRef(false);
 
   // Load drafts from localStorage on mount
   useEffect(() => {
@@ -56,25 +64,60 @@ export function useDrafts() {
     setIsLoaded(true);
   }, []);
 
-  // Save drafts to localStorage whenever they change
+  // Save drafts to localStorage whenever they change and broadcast an update for other hook instances
   useEffect(() => {
-    // Only save after initial load to prevent overwriting with empty array
-    if (isLoaded) {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+      console.log("💾 Drafts saved to localStorage:", drafts.length);
+    } catch (error) {
+      console.error("Error saving drafts:", error);
+    }
+    // Broadcast to other hook instances (but avoid echoing our own syncs)
+    if (!suppressBroadcastRef.current) {
       try {
-        localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
-        console.log("💾 Drafts saved to localStorage:", drafts.length);
-      } catch (error) {
-        console.error("Error saving drafts:", error);
-      }
+        const evt = new CustomEvent('dailydust-drafts-updated', { detail: { source: instanceIdRef.current, ts: Date.now() } });
+        window.dispatchEvent(evt);
+      } catch {}
     }
   }, [drafts, isLoaded]);
 
-  // Cleanup autosave timeouts on unmount
+  // Listen for drafts updates from other instances and sync
   useEffect(() => {
-    return () => {
-      autosaveTimeouts.forEach((timeout) => clearTimeout(timeout));
+    const onUpdated = (e: Event) => {
+      const ce = e as CustomEvent<{ source?: string; ts?: number }>;
+      const from = ce.detail?.source;
+      if (!from || from === instanceIdRef.current) return; // ignore our own
+      try {
+        const stored = localStorage.getItem(DRAFTS_STORAGE_KEY);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        // Suppress broadcast while syncing to avoid feedback loop
+        suppressBroadcastRef.current = true;
+        setDrafts(parsed);
+        // release suppression after next tick
+        setTimeout(() => { suppressBroadcastRef.current = false; }, 0);
+      } catch {}
     };
-  }, [autosaveTimeouts]);
+    window.addEventListener('dailydust-drafts-updated', onUpdated as EventListener);
+    // Also listen to storage events (cross-tab)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== DRAFTS_STORAGE_KEY) return;
+      try {
+        const stored = localStorage.getItem(DRAFTS_STORAGE_KEY);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        suppressBroadcastRef.current = true;
+        setDrafts(parsed);
+        setTimeout(() => { suppressBroadcastRef.current = false; }, 0);
+      } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('dailydust-drafts-updated', onUpdated as EventListener);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const createDraft = useCallback((initialData?: Partial<Draft>) => {
     const now = Date.now();
@@ -85,6 +128,10 @@ export function useDrafts() {
       tags: "",
       headerImageUrl: "",
       category: "Editorial",
+      kicker: "",
+      entityId: initialData?.entityId,
+      selectedWaypointId: initialData?.selectedWaypointId,
+      routeSteps: initialData?.routeSteps ?? [],
       lastSaved: now,
       createdAt: now,
       ...initialData,
@@ -107,61 +154,13 @@ export function useDrafts() {
     []
   );
 
-  const updateDraftWithAutosave = useCallback(
-    (id: string, updates: Partial<Omit<Draft, "id" | "createdAt">>) => {
-      // Update the draft optimistically (without lastSaved update)
-      setDrafts((prev) =>
-        prev.map((draft) =>
-          draft.id === id ? { ...draft, ...updates } : draft
-        )
-      );
-
-      // Clear existing timeout for this draft
-      const existingTimeout = autosaveTimeouts.get(id);
-      if (existingTimeout) {
-        clearTimeout(existingTimeout);
-      }
-
-      // Set new autosave timeout
-      const newTimeout = setTimeout(() => {
-        updateDraftImmediate(id, { lastSaved: Date.now() });
-        setAutosaveTimeouts((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(id);
-          return newMap;
-        });
-      }, AUTOSAVE_DELAY);
-
-      setAutosaveTimeouts((prev) => new Map(prev.set(id, newTimeout)));
-    },
-    [autosaveTimeouts]
-  );
-
-  const deleteDraft = useCallback(
-    (id: string) => {
-      // Clear any pending autosave
-      const timeout = autosaveTimeouts.get(id);
-      if (timeout) {
-        clearTimeout(timeout);
-        setAutosaveTimeouts((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(id);
-          return newMap;
-        });
-      }
-
-      setDrafts((prev) => prev.filter((draft) => draft.id !== id));
-    },
-    [autosaveTimeouts]
-  );
+  const deleteDraft = useCallback((id: string) => {
+    setDrafts(prev => prev.filter(draft => draft.id !== id));
+  }, []);
 
   const clearAllDrafts = useCallback(() => {
-    // Clear all autosave timeouts
-    autosaveTimeouts.forEach((timeout) => clearTimeout(timeout));
-    setAutosaveTimeouts(new Map());
-
     setDrafts([]);
-  }, [autosaveTimeouts]);
+  }, []);
 
   const getDraft = useCallback(
     (id: string) => {
@@ -198,6 +197,7 @@ export function useDrafts() {
         .filter(Boolean),
       headerImageUrl: draft.headerImageUrl ?? "",
       category: draft.category || "Editorial",
+      kicker: draft.kicker ?? "",
       entityId: draft.entityId,
     };
   }, []);
@@ -207,7 +207,6 @@ export function useDrafts() {
     isLoaded,
     createDraft,
     updateDraftImmediate,
-    updateDraftWithAutosave,
     deleteDraft,
     clearAllDrafts,
     getDraft,

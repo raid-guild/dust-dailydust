@@ -14,8 +14,8 @@ function getForceField(EntityId target) view returns (EntityId, EntityId) {
 
   FragmentData memory fragmentData = Fragment.get(fragment);
 
-  bool isActive = fragmentData.forceField.exists()
-    && fragmentData.forceFieldCreatedAt == Machine.getCreatedAt(fragmentData.forceField);
+  bool isActive = fragmentData.forceField.exists() &&
+    fragmentData.forceFieldCreatedAt == Machine.getCreatedAt(fragmentData.forceField);
 
   return isActive ? (fragmentData.forceField, fragment) : (EntityId.wrap(0), fragment);
 }

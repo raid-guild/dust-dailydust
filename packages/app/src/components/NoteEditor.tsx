@@ -1,12 +1,14 @@
-import { resourceToHex } from "@latticexyz/common";
-import { useEffect, useState } from "react";
-import type { Abi } from "viem";
 
-import { useDustClient } from "@/common/useDustClient";
-import { worldAddress } from "@/common/worldAddress";
-import { WaypointNoteLinker } from "@/components/WaypointNoteLinker";
-import { useDrafts } from "@/hooks/useDrafts";
-import { useNotes } from "@/hooks/useNotes";
+import { useState, useEffect } from "react";
+import { useDrafts } from "../hooks/useDrafts";
+import { useNotes } from "../hooks/useNotes";
+import { WaypointNoteLinker } from "./WaypointNoteLinker";
+import { useDustClient } from "../common/useDustClient";
+import type { Abi } from "viem";
+import { resourceToHex } from "@latticexyz/common";
+import { worldAddress } from "../common/worldAddress";
+import { DUST_NAMESPACE } from "../common/namespace";
+
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [
@@ -36,8 +38,8 @@ const noteSystemAbi: Abi = [
   },
 ];
 
-// Hardcode deployed namespace to avoid importing contracts config
-const NAMESPACE = "rg_dd_ab564f";
+// Use centralized namespace
+const NAMESPACE = DUST_NAMESPACE;
 const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
 const TABLE = `${NAMESPACE}__Note`;
 
@@ -47,7 +49,19 @@ interface NoteEditorProps {
   onSave?: () => void;
   onCancel?: () => void;
   initialEntityId?: string;
-  variant?: "default" | "bare";
+  variant?: 'default' | 'bare';
+  // New: when used inside a stepper, hide action buttons and emit state upward
+  stepperMode?: boolean;
+  onStateChange?: (state: {
+    title: string;
+    headerImageUrl: string;
+    content: string;
+    tags: string; // csv
+    category: string;
+    kicker: string; // short teaser
+    effectiveDraftId: string | null;
+    noteId?: string;
+  }) => void;
 }
 
 function randomBytes32(): `0x${string}` {
@@ -59,54 +73,28 @@ function randomBytes32(): `0x${string}` {
   return `0x${hex}` as `0x${string}`;
 }
 
-export function NoteEditor({
-  draftId,
-  noteId,
-  onSave,
-  onCancel,
-  initialEntityId,
-  variant = "default",
-}: NoteEditorProps) {
-  const {
-    drafts,
-    updateDraftImmediate,
-    updateDraftWithAutosave,
-    deleteDraft,
-    createDraft,
-  } = useDrafts();
+export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default', stepperMode = false, onStateChange }: NoteEditorProps) {
+  const { drafts, updateDraftImmediate, deleteDraft, createDraft } = useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
+  
+  // Track an internal draft id when the editor creates one implicitly
+  const [internalDraftId, setInternalDraftId] = useState<string | null>(null);
+  const effectiveDraftId = draftId ?? internalDraftId ?? null;
 
   const [title, setTitle] = useState("");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
-  const [category, setCategory] = useState("Editorial"); // new single-select category
+  const [category, setCategory] = useState("Editorial");
+  const [kicker, setKicker] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [showWaypointLinker, setShowWaypointLinker] = useState(false);
   const [linkedWaypointsCount, setLinkedWaypointsCount] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
-  // Ensure we always have a draft when creating a new note for autosave
-  useEffect(() => {
-    if (!noteId && !draftId) {
-      const d = createDraft({
-        entityId: initialEntityId,
-        category: "Editorial",
-      });
-      // We can't change the prop, but we can load the created draft into state
-      // Consumers (NotesManager) now creates a draft, so this is just a safety net
-      const created = drafts.find((dr) => dr.id === d.id) ?? d;
-      setTitle(created.title);
-      setHeaderImageUrl(created.headerImageUrl || "");
-      setContent(created.content);
-      setTags(created.tags || "");
-      setCategory(created.category || "Editorial");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Check for linked waypoints
+  // Check for linked waypoints (use effectiveDraftId)
   useEffect(() => {
     const checkLinkedWaypoints = () => {
       const links =
@@ -114,13 +102,10 @@ export function NoteEditor({
         localStorage.getItem("waypoint-links");
       if (links) {
         const waypointLinks = JSON.parse(links);
-        const currentLinks = waypointLinks.filter(
-          (link: any) =>
-            (noteId && link.noteId === noteId) ||
-            (draftId && link.draftId === draftId)
+        const currentLinks = waypointLinks.filter((link: any) => 
+          (noteId && link.noteId === noteId) || (effectiveDraftId && link.draftId === effectiveDraftId)
         );
         setLinkedWaypointsCount(currentLinks.length);
-        // migrate on read
         try {
           localStorage.setItem(
             "dailydust-waypoint-links",
@@ -134,36 +119,30 @@ export function NoteEditor({
     };
 
     checkLinkedWaypoints();
+    if (!showWaypointLinker) checkLinkedWaypoints();
+  }, [noteId, effectiveDraftId, showWaypointLinker]);
 
-    // Re-check when the waypoint linker closes
-    if (!showWaypointLinker) {
-      checkLinkedWaypoints();
-    }
-  }, [noteId, draftId, showWaypointLinker]);
-
-  // Load existing draft or note (local)
+  // Load existing draft or note
   useEffect(() => {
     if (noteId) {
-      // Editing existing note from local store if available
-      const note = notes.find((n) => n.id === noteId);
+      const note = notes.find(n => n.id === noteId);
       if (note) {
         setTitle(note.title);
         setHeaderImageUrl(note.headerImageUrl || "");
         setContent(note.content);
         setTags(note.tags.join(", "));
         setCategory(note.category || "Editorial");
-        return;
+        setKicker(note.kicker || "");
       }
-    }
-    if (!noteId && draftId) {
-      // Editing existing draft
-      const draft = drafts.find((d) => d.id === draftId);
+    } else if (draftId) {
+      const draft = drafts.find(d => d.id === draftId);
       if (draft) {
         setTitle(draft.title);
         setHeaderImageUrl(draft.headerImageUrl || "");
         setContent(draft.content);
         setTags(draft.tags);
         setCategory(draft.category || "Editorial");
+        setKicker(draft.kicker || "");
       }
     }
   }, [noteId, draftId, notes, drafts]);
@@ -229,29 +208,18 @@ export function NoteEditor({
     };
   }, [noteId, notes]);
 
-  // Autosave to draft while editing
-  useEffect(() => {
-    if (draftId && !noteId) {
-      updateDraftWithAutosave(draftId, {
-        title,
-        headerImageUrl,
-        content,
-        tags,
-        category,
-        entityId: initialEntityId,
-      });
+  // Save draft explicitly
+  const handleSaveDraft = async () => {
+    let id = effectiveDraftId;
+    if (!id) {
+      const d = createDraft({ entityId: initialEntityId, category, title, headerImageUrl, content, tags, kicker });
+      setInternalDraftId(d.id);
+      id = d.id;
     }
-  }, [
-    draftId,
-    noteId,
-    title,
-    headerImageUrl,
-    content,
-    tags,
-    category,
-    initialEntityId,
-    updateDraftWithAutosave,
-  ]);
+    updateDraftImmediate(id!, { title, headerImageUrl, content, tags, category, kicker, entityId: initialEntityId });
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
 
   async function createOnchainNote(
     noteHexId: `0x${string}`,
@@ -339,6 +307,7 @@ export function NoteEditor({
           content: content.trim(),
           tags: tagArray,
           category,
+          kicker: kicker.trim(),
         });
       } else {
         // Create new note
@@ -358,38 +327,23 @@ export function NoteEditor({
           }
         }
 
+        const base = {
+          title: title.trim(),
+          headerImageUrl: headerImageUrl.trim(),
+          content: content.trim(),
+          tags: tagArray,
+          category,
+          kicker: kicker.trim(),
+          owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+          tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+          boostUntil: 0,
+          entityId: initialEntityId,
+        };
+
         if (createdId) {
-          await addNoteWithId(createdId, {
-            title: title.trim(),
-            headerImageUrl: headerImageUrl.trim(),
-            content: content.trim(),
-            tags: tagArray,
-            category,
-            owner:
-              dustClient?.appContext.userAddress ||
-              "0x0000000000000000000000000000000000000000",
-            tipJar:
-              dustClient?.appContext.userAddress ||
-              "0x0000000000000000000000000000000000000000",
-            boostUntil: 0,
-            entityId: initialEntityId,
-          });
+          await addNoteWithId(createdId, base);
         } else {
-          await addNote({
-            title: title.trim(),
-            headerImageUrl: headerImageUrl.trim(),
-            content: content.trim(),
-            tags: tagArray,
-            category,
-            owner:
-              dustClient?.appContext.userAddress ||
-              "0x0000000000000000000000000000000000000000",
-            tipJar:
-              dustClient?.appContext.userAddress ||
-              "0x0000000000000000000000000000000000000000",
-            boostUntil: 0,
-            entityId: initialEntityId,
-          });
+          await addNote(base);
         }
       }
 
@@ -524,47 +478,70 @@ export function NoteEditor({
       ? "flex flex-col h-full rounded-lg"
       : "flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm";
 
+  // Emit state to parent when used in stepper mode (avoid including onStateChange in deps)
+  useEffect(() => {
+    if (!stepperMode || !onStateChange) return;
+    onStateChange({
+      title,
+      headerImageUrl,
+      content,
+      tags,
+      category,
+      kicker,
+      effectiveDraftId,
+      noteId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, headerImageUrl, content, tags, category, kicker, effectiveDraftId, noteId, stepperMode]);
+
   return (
     <div className={containerClass}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
         <h2 className="text-lg font-semibold text-text-primary">
-          {noteId ? "Edit Note" : "New Note"}
+          {noteId ? "Edit Note" : "Note Editor"}
         </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowWaypointLinker(true)}
-            className={`px-3 py-1.5 text-sm rounded transition-colors ${
-              linkedWaypointsCount > 0
-                ? "text-brand-700 bg-brand-100 hover:bg-brand-200"
-                : "text-text-secondary bg-neutral-100 hover:bg-neutral-200"
-            }`}
-          >
-            🗺️{" "}
-            {linkedWaypointsCount > 0
-              ? `Waypoints (${linkedWaypointsCount})`
-              : "Link Waypoints"}
-          </button>
-          <button
-            onClick={() => setShowPreview((p) => !p)}
-            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
-          >
-            {showPreview ? "Edit" : "Preview"}
-          </button>
-          <button
-            onClick={handleCancel}
-            className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={isPublishing}
-            className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPublishing ? "Publishing…" : noteId ? "Update" : "Publish"}
-          </button>
-        </div>
+        {!stepperMode && (
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => setShowWaypointLinker(true)}
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                linkedWaypointsCount > 0 
+                  ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
+                  : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
+              }`}
+            >
+              🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
+            </button>
+            <button
+              onClick={() => setShowPreview(p => !p)}
+              className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+            >
+              {showPreview ? 'Edit' : 'Preview'}
+            </button>
+            {!noteId && (
+              <button
+                onClick={handleSaveDraft}
+                className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+              >
+                {justSaved ? 'Saved' : 'Save Draft'}
+              </button>
+            )}
+            <button
+              onClick={handleCancel}
+              className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Title & Meta */}
@@ -594,6 +571,12 @@ export function NoteEditor({
             <option>Other</option>
           </select>
         </div>
+        <input
+          value={kicker}
+          onChange={(e) => setKicker(e.target.value)}
+          placeholder="Kicker (short teaser above the title)"
+          className="w-full text-sm text-text-primary placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel"
+        />
       </div>
 
       {/* Tags */}
@@ -684,11 +667,7 @@ export function NoteEditor({
       </div>
 
       {showWaypointLinker && (
-        <WaypointNoteLinker
-          noteId={noteId}
-          draftId={draftId}
-          onClose={() => setShowWaypointLinker(false)}
-        />
+        <WaypointNoteLinker noteId={noteId} draftId={effectiveDraftId ?? undefined} onClose={() => setShowWaypointLinker(false)} />
       )}
     </div>
   );
