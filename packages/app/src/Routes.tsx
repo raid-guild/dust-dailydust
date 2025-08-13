@@ -1,11 +1,11 @@
 import { Route, Routes } from "react-router-dom";
 
-import { FrontPage } from "./pages/FrontPage";
+import { ArticlePage } from "./pages/ArticlePage";
 import { BackPage } from "./pages/BackPage";
 import { DiscoverPage } from "./pages/DiscoverPage";
 import { EditorRoomPage } from "./pages/EditorRoomPage";
+import { FrontPage } from "./pages/FrontPage";
 import { LocalPage } from "./pages/LocalPage";
-import { ArticlePage } from "./pages/ArticlePage";
 
 export const FRONT_PAGE_PATH = "/";
 export const LOCAL_PAGE_PATH = "/local";

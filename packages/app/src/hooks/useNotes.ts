@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface Note {
   id: string;
@@ -44,8 +44,12 @@ export function useNotes() {
         const normalized: Note[] = Array.isArray(parsed)
           ? parsed.map((n: any) => ({
               ...n,
-              category: typeof n?.category === "string" && n.category ? n.category : "Editorial",
-              headerImageUrl: typeof n?.headerImageUrl === "string" ? n.headerImageUrl : "",
+              category:
+                typeof n?.category === "string" && n.category
+                  ? n.category
+                  : "Editorial",
+              headerImageUrl:
+                typeof n?.headerImageUrl === "string" ? n.headerImageUrl : "",
             }))
           : [];
         setNotes(normalized);
@@ -81,7 +85,9 @@ export function useNotes() {
     }
   }, [notes, isLoaded]);
 
-  const addNote = (note: Omit<Note, "id" | "createdAt" | "updatedAt" | "totalTips">) => {
+  const addNote = (
+    note: Omit<Note, "id" | "createdAt" | "updatedAt" | "totalTips">
+  ) => {
     const now = Date.now();
     const newNote: Note = {
       ...note,
@@ -94,11 +100,14 @@ export function useNotes() {
       headerImageUrl: note.headerImageUrl ?? "",
       category: note.category || "Editorial",
     };
-    setNotes(prev => [...prev, newNote]);
+    setNotes((prev) => [...prev, newNote]);
     return newNote;
   };
 
-  const addNoteWithId = (id: string, note: Omit<Note, "id" | "createdAt" | "updatedAt" | "totalTips">) => {
+  const addNoteWithId = (
+    id: string,
+    note: Omit<Note, "id" | "createdAt" | "updatedAt" | "totalTips">
+  ) => {
     const now = Date.now();
     const newNote: Note = {
       ...note,
@@ -111,22 +120,23 @@ export function useNotes() {
       headerImageUrl: note.headerImageUrl ?? "",
       category: note.category || "Editorial",
     };
-    setNotes(prev => [...prev, newNote]);
+    setNotes((prev) => [...prev, newNote]);
     return newNote;
   };
 
-  const updateNote = (id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
-    setNotes(prev => 
-      prev.map(note => 
-        note.id === id 
-          ? { ...note, ...updates, updatedAt: Date.now() }
-          : note
+  const updateNote = (
+    id: string,
+    updates: Partial<Omit<Note, "id" | "createdAt">>
+  ) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === id ? { ...note, ...updates, updatedAt: Date.now() } : note
       )
     );
   };
 
   const deleteNote = (id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
+    setNotes((prev) => prev.filter((note) => note.id !== id));
   };
 
   const clearAllNotes = () => {
@@ -134,16 +144,20 @@ export function useNotes() {
   };
 
   // Get notes by category/filter
-  const getDraftNotes = () => notes.filter(note => note.isDraft);
-  const getPublishedNotes = () => notes.filter(note => !note.isDraft);
-  const getNotesByOwner = (owner: string) => notes.filter(note => note.owner === owner);
-  const getNotesByTag = (tag: string) => notes.filter(note => note.tags.includes(tag));
-  const getNotesLinkedToEntity = (entityId: string) => notes.filter(note => note.entityId === entityId);
-  const getNotesByCategory = (category: string) => notes.filter(note => note.category === category);
+  const getDraftNotes = () => notes.filter((note) => note.isDraft);
+  const getPublishedNotes = () => notes.filter((note) => !note.isDraft);
+  const getNotesByOwner = (owner: string) =>
+    notes.filter((note) => note.owner === owner);
+  const getNotesByTag = (tag: string) =>
+    notes.filter((note) => note.tags.includes(tag));
+  const getNotesLinkedToEntity = (entityId: string) =>
+    notes.filter((note) => note.entityId === entityId);
+  const getNotesByCategory = (category: string) =>
+    notes.filter((note) => note.category === category);
 
   // Get unique tags across all notes
   const getAllTags = () => {
-    const allTags = notes.flatMap(note => note.tags);
+    const allTags = notes.flatMap((note) => note.tags);
     return Array.from(new Set(allTags)).sort();
   };
 

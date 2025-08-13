@@ -1,7 +1,7 @@
 import {
+  type Abi,
   decodeErrorResult,
   parseEventLogs,
-  type Abi,
   type TransactionReceipt,
 } from "viem";
 import { entryPoint07Abi } from "viem/account-abstraction";

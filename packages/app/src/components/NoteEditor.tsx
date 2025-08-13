@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { resourceToHex } from "@latticexyz/common";
+import { useEffect, useState } from "react";
+import type { Abi } from "viem";
+
+import { useDustClient } from "../common/useDustClient";
+import { worldAddress } from "../common/worldAddress";
 import { useDrafts } from "../hooks/useDrafts";
 import { useNotes } from "../hooks/useNotes";
 import { WaypointNoteLinker } from "./WaypointNoteLinker";
-import { useDustClient } from "../common/useDustClient";
-import type { Abi } from "viem";
-import { resourceToHex } from "@latticexyz/common";
-import { worldAddress } from "../common/worldAddress";
 
 // Inline minimal ABI for NoteSystem methods we call
 const noteSystemAbi: Abi = [
@@ -46,7 +47,7 @@ interface NoteEditorProps {
   onSave?: () => void;
   onCancel?: () => void;
   initialEntityId?: string;
-  variant?: 'default' | 'bare';
+  variant?: "default" | "bare";
 }
 
 function randomBytes32(): `0x${string}` {
@@ -55,14 +56,27 @@ function randomBytes32(): `0x${string}` {
   const hex = Array.from(arr)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-  return (`0x${hex}`) as `0x${string}`;
+  return `0x${hex}` as `0x${string}`;
 }
 
-export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId, variant = 'default' }: NoteEditorProps) {
-  const { drafts, updateDraftImmediate, updateDraftWithAutosave, deleteDraft, createDraft } = useDrafts();
+export function NoteEditor({
+  draftId,
+  noteId,
+  onSave,
+  onCancel,
+  initialEntityId,
+  variant = "default",
+}: NoteEditorProps) {
+  const {
+    drafts,
+    updateDraftImmediate,
+    updateDraftWithAutosave,
+    deleteDraft,
+    createDraft,
+  } = useDrafts();
   const { notes, addNote, addNoteWithId, updateNote } = useNotes();
   const { data: dustClient } = useDustClient();
-  
+
   const [title, setTitle] = useState("");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [content, setContent] = useState("");
@@ -76,10 +90,13 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   // Ensure we always have a draft when creating a new note for autosave
   useEffect(() => {
     if (!noteId && !draftId) {
-      const d = createDraft({ entityId: initialEntityId, category: "Editorial" });
+      const d = createDraft({
+        entityId: initialEntityId,
+        category: "Editorial",
+      });
       // We can't change the prop, but we can load the created draft into state
       // Consumers (NotesManager) now creates a draft, so this is just a safety net
-      const created = drafts.find(dr => dr.id === d.id) ?? d;
+      const created = drafts.find((dr) => dr.id === d.id) ?? d;
       setTitle(created.title);
       setHeaderImageUrl(created.headerImageUrl || "");
       setContent(created.content);
@@ -92,17 +109,24 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   // Check for linked waypoints
   useEffect(() => {
     const checkLinkedWaypoints = () => {
-      const links = localStorage.getItem('dailydust-waypoint-links') || localStorage.getItem('waypoint-links');
+      const links =
+        localStorage.getItem("dailydust-waypoint-links") ||
+        localStorage.getItem("waypoint-links");
       if (links) {
         const waypointLinks = JSON.parse(links);
-        const currentLinks = waypointLinks.filter((link: any) => 
-          (noteId && link.noteId === noteId) || (draftId && link.draftId === draftId)
+        const currentLinks = waypointLinks.filter(
+          (link: any) =>
+            (noteId && link.noteId === noteId) ||
+            (draftId && link.draftId === draftId)
         );
         setLinkedWaypointsCount(currentLinks.length);
         // migrate on read
         try {
-          localStorage.setItem('dailydust-waypoint-links', JSON.stringify(waypointLinks));
-          localStorage.removeItem('waypoint-links');
+          localStorage.setItem(
+            "dailydust-waypoint-links",
+            JSON.stringify(waypointLinks)
+          );
+          localStorage.removeItem("waypoint-links");
         } catch {}
       } else {
         setLinkedWaypointsCount(0);
@@ -110,7 +134,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     };
 
     checkLinkedWaypoints();
-    
+
     // Re-check when the waypoint linker closes
     if (!showWaypointLinker) {
       checkLinkedWaypoints();
@@ -121,7 +145,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   useEffect(() => {
     if (noteId) {
       // Editing existing note from local store if available
-      const note = notes.find(n => n.id === noteId);
+      const note = notes.find((n) => n.id === noteId);
       if (note) {
         setTitle(note.title);
         setHeaderImageUrl(note.headerImageUrl || "");
@@ -133,7 +157,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     }
     if (!noteId && draftId) {
       // Editing existing draft
-      const draft = drafts.find(d => d.id === draftId);
+      const draft = drafts.find((d) => d.id === draftId);
       if (draft) {
         setTitle(draft.title);
         setHeaderImageUrl(draft.headerImageUrl || "");
@@ -153,9 +177,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         const res = await fetch(INDEXER_Q_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify([
-            { query: sql, address: worldAddress },
-          ]),
+          body: JSON.stringify([{ query: sql, address: worldAddress }]),
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -174,13 +196,20 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         let tagsArr: string[] = [];
         if (Array.isArray(rawTags)) tagsArr = rawTags.filter(Boolean);
         else if (typeof rawTags === "string") {
-          try { tagsArr = JSON.parse(rawTags); } catch { tagsArr = rawTags.split(',').map((t: string) => t.trim()).filter(Boolean); }
+          try {
+            tagsArr = JSON.parse(rawTags);
+          } catch {
+            tagsArr = rawTags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean);
+          }
         }
         if (!aborted) {
           setTitle((r.title as string) ?? "");
-          setHeaderImageUrl(((r.headerImageUrl as string) ?? ""));
+          setHeaderImageUrl((r.headerImageUrl as string) ?? "");
           setContent((r.content as string) ?? "");
-          setTags(tagsArr.join(', '));
+          setTags(tagsArr.join(", "));
           // category not on-chain yet; leave as current
         }
       } catch {
@@ -189,13 +218,15 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     }
 
     if (noteId) {
-      const existsLocally = notes.some(n => n.id === noteId);
+      const existsLocally = notes.some((n) => n.id === noteId);
       if (!existsLocally) {
         void fetchOnchainById(noteId);
       }
     }
 
-    return () => { aborted = true; };
+    return () => {
+      aborted = true;
+    };
   }, [noteId, notes]);
 
   // Autosave to draft while editing
@@ -210,11 +241,30 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         entityId: initialEntityId,
       });
     }
-  }, [draftId, noteId, title, headerImageUrl, content, tags, category, initialEntityId, updateDraftWithAutosave]);
+  }, [
+    draftId,
+    noteId,
+    title,
+    headerImageUrl,
+    content,
+    tags,
+    category,
+    initialEntityId,
+    updateDraftWithAutosave,
+  ]);
 
-  async function createOnchainNote(noteHexId: `0x${string}`, titleIn: string, contentIn: string, tagsCsv: string) {
+  async function createOnchainNote(
+    noteHexId: `0x${string}`,
+    titleIn: string,
+    contentIn: string,
+    tagsCsv: string
+  ) {
     if (!dustClient) throw new Error("No DUST client");
-    const systemId = resourceToHex({ type: "system", namespace: NAMESPACE, name: "NoteSystem" });
+    const systemId = resourceToHex({
+      type: "system",
+      namespace: NAMESPACE,
+      name: "NoteSystem",
+    });
     const res = await (dustClient as any).provider.request({
       method: "systemCall",
       params: [
@@ -229,9 +279,18 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     return res;
   }
 
-  async function updateOnchainNote(noteHexId: `0x${string}`, titleIn: string, contentIn: string, tagsCsv: string) {
+  async function updateOnchainNote(
+    noteHexId: `0x${string}`,
+    titleIn: string,
+    contentIn: string,
+    tagsCsv: string
+  ) {
     if (!dustClient) throw new Error("No DUST client");
-    const systemId = resourceToHex({ type: "system", namespace: NAMESPACE, name: "NoteSystem" });
+    const systemId = resourceToHex({
+      type: "system",
+      namespace: NAMESPACE,
+      name: "NoteSystem",
+    });
     const res = await (dustClient as any).provider.request({
       method: "systemCall",
       params: [
@@ -254,14 +313,22 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
 
     setIsPublishing(true);
     try {
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
-      const tagsCsv = tagArray.join(',');
+      const tagArray = tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+      const tagsCsv = tagArray.join(",");
 
       if (noteId) {
         // Update existing note
         try {
           if (dustClient && noteId.startsWith("0x") && noteId.length === 66) {
-            await updateOnchainNote(noteId as `0x${string}`, title.trim(), content.trim(), tagsCsv);
+            await updateOnchainNote(
+              noteId as `0x${string}`,
+              title.trim(),
+              content.trim(),
+              tagsCsv
+            );
           }
         } catch (e) {
           console.warn("On-chain update failed, updating locally only", e);
@@ -279,7 +346,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         if (dustClient) {
           try {
             const noteHexId = randomBytes32();
-            await createOnchainNote(noteHexId, title.trim(), content.trim(), tagsCsv);
+            await createOnchainNote(
+              noteHexId,
+              title.trim(),
+              content.trim(),
+              tagsCsv
+            );
             createdId = noteHexId;
           } catch (e) {
             console.warn("On-chain create failed, falling back to local", e);
@@ -293,8 +365,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
             content: content.trim(),
             tags: tagArray,
             category,
-            owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+            owner:
+              dustClient?.appContext.userAddress ||
+              "0x0000000000000000000000000000000000000000",
+            tipJar:
+              dustClient?.appContext.userAddress ||
+              "0x0000000000000000000000000000000000000000",
             boostUntil: 0,
             entityId: initialEntityId,
           });
@@ -305,8 +381,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
             content: content.trim(),
             tags: tagArray,
             category,
-            owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+            owner:
+              dustClient?.appContext.userAddress ||
+              "0x0000000000000000000000000000000000000000",
+            tipJar:
+              dustClient?.appContext.userAddress ||
+              "0x0000000000000000000000000000000000000000",
             boostUntil: 0,
             entityId: initialEntityId,
           });
@@ -353,44 +433,59 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   const handleAddTag = (newTag: string) => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag) return;
-    
-    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+
+    const currentTags = tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
     if (!currentTags.includes(trimmedTag)) {
-      const updatedTags = [...currentTags, trimmedTag].join(', ');
+      const updatedTags = [...currentTags, trimmedTag].join(", ");
       setTags(updatedTags);
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
-    const updatedTags = currentTags.filter(tag => tag !== tagToRemove).join(', ');
+    const currentTags = tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+    const updatedTags = currentTags
+      .filter((tag) => tag !== tagToRemove)
+      .join(", ");
     setTags(updatedTags);
   };
 
   // Minimal markdown controls
-  const applyFormatting = (syntax: 'bold' | 'italic' | 'code' | 'quote' | 'ul' | 'ol') => {
-    const textarea = document.getElementById('note-content-textarea') as HTMLTextAreaElement | null;
+  const applyFormatting = (
+    syntax: "bold" | "italic" | "code" | "quote" | "ul" | "ol"
+  ) => {
+    const textarea = document.getElementById(
+      "note-content-textarea"
+    ) as HTMLTextAreaElement | null;
     if (!textarea) return;
 
     const { selectionStart, selectionEnd, value } = textarea;
     const selected = value.substring(selectionStart, selectionEnd);
 
     const wrappers: Record<typeof syntax, [string, string]> = {
-      bold: ['**', '**'],
-      italic: ['*', '*'],
-      code: ['`', '`'],
-      quote: ['> ', ''],
-      ul: ['- ', ''],
-      ol: ['1. ', ''],
+      bold: ["**", "**"],
+      italic: ["*", "*"],
+      code: ["`", "`"],
+      quote: ["> ", ""],
+      ul: ["- ", ""],
+      ol: ["1. ", ""],
     } as const;
 
     const [prefix, suffix] = wrappers[syntax];
 
     // For list/quote, apply to each selected line
-    if (syntax === 'quote' || syntax === 'ul' || syntax === 'ol') {
+    if (syntax === "quote" || syntax === "ul" || syntax === "ol") {
       const before = value.substring(0, selectionStart);
       const after = value.substring(selectionEnd);
-      const lines = selected.split(/\n/).map(line => line ? prefix + line : line).join('\n');
+      const lines = selected
+        .split(/\n/)
+        .map((line) => (line ? prefix + line : line))
+        .join("\n");
       const newValue = before + lines + after;
       setContent(newValue);
       // Restore selection roughly
@@ -402,7 +497,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       return;
     }
 
-    const newValue = value.substring(0, selectionStart) + prefix + selected + suffix + value.substring(selectionEnd);
+    const newValue =
+      value.substring(0, selectionStart) +
+      prefix +
+      selected +
+      suffix +
+      value.substring(selectionEnd);
     setContent(newValue);
     // Restore selection around wrapped text
     requestAnimationFrame(() => {
@@ -414,12 +514,15 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
     });
   };
 
-  const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+  const tagArray = tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 
   const containerClass =
-    variant === 'bare'
-      ? 'flex flex-col h-full rounded-lg'
-      : 'flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm';
+    variant === "bare"
+      ? "flex flex-col h-full rounded-lg"
+      : "flex flex-col h-full bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm";
 
   return (
     <div className={containerClass}>
@@ -432,18 +535,21 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
           <button
             onClick={() => setShowWaypointLinker(true)}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${
-              linkedWaypointsCount > 0 
-                ? 'text-brand-700 bg-brand-100 hover:bg-brand-200' 
-                : 'text-text-secondary bg-neutral-100 hover:bg-neutral-200'
+              linkedWaypointsCount > 0
+                ? "text-brand-700 bg-brand-100 hover:bg-brand-200"
+                : "text-text-secondary bg-neutral-100 hover:bg-neutral-200"
             }`}
           >
-            🗺️ {linkedWaypointsCount > 0 ? `Waypoints (${linkedWaypointsCount})` : 'Link Waypoints'}
+            🗺️{" "}
+            {linkedWaypointsCount > 0
+              ? `Waypoints (${linkedWaypointsCount})`
+              : "Link Waypoints"}
           </button>
           <button
-            onClick={() => setShowPreview(p => !p)}
+            onClick={() => setShowPreview((p) => !p)}
             className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200 transition-colors"
           >
-            {showPreview ? 'Edit' : 'Preview'}
+            {showPreview ? "Edit" : "Preview"}
           </button>
           <button
             onClick={handleCancel}
@@ -456,7 +562,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
             disabled={isPublishing}
             className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isPublishing ? 'Publishing…' : (noteId ? 'Update' : 'Publish')}
+            {isPublishing ? "Publishing…" : noteId ? "Update" : "Publish"}
           </button>
         </div>
       </div>
@@ -495,25 +601,68 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {tagArray.slice(0, 6).map((tag) => (
-              <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-brand-100 text-brand-800 rounded-full">
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-brand-100 text-brand-800 rounded-full"
+              >
                 #{tag}
-                <button onClick={() => handleRemoveTag(tag)} className="text-brand-700 hover:text-brand-900">×</button>
+                <button
+                  onClick={() => handleRemoveTag(tag)}
+                  className="text-brand-700 hover:text-brand-900"
+                >
+                  ×
+                </button>
               </span>
             ))}
           </div>
-          <button onClick={() => handleAddTag(prompt('New tag') || '')} className="text-brand-600 hover:text-brand-800">+ Add tag</button>
+          <button
+            onClick={() => handleAddTag(prompt("New tag") || "")}
+            className="text-brand-600 hover:text-brand-800"
+          >
+            + Add tag
+          </button>
         </div>
       </div>
 
       {/* Toolbar */}
       <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => applyFormatting('bold')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Bold</button>
-          <button onClick={() => applyFormatting('italic')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Italic</button>
-          <button onClick={() => applyFormatting('code')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Code</button>
-          <button onClick={() => applyFormatting('quote')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">Quote</button>
-          <button onClick={() => applyFormatting('ul')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">• List</button>
-          <button onClick={() => applyFormatting('ol')} className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200">1. List</button>
+          <button
+            onClick={() => applyFormatting("bold")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            Bold
+          </button>
+          <button
+            onClick={() => applyFormatting("italic")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            Italic
+          </button>
+          <button
+            onClick={() => applyFormatting("code")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            Code
+          </button>
+          <button
+            onClick={() => applyFormatting("quote")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            Quote
+          </button>
+          <button
+            onClick={() => applyFormatting("ul")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            • List
+          </button>
+          <button
+            onClick={() => applyFormatting("ol")}
+            className="text-xs px-2 py-1 bg-neutral-100 rounded hover:bg-neutral-200"
+          >
+            1. List
+          </button>
         </div>
       </div>
 
@@ -521,7 +670,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       <div className="flex-1 p-4">
         {showPreview ? (
           <div className="prose max-w-none text-text-primary">
-            {content || 'Nothing to preview yet.'}
+            {content || "Nothing to preview yet."}
           </div>
         ) : (
           <textarea
@@ -535,7 +684,11 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       </div>
 
       {showWaypointLinker && (
-        <WaypointNoteLinker noteId={noteId} draftId={draftId} onClose={() => setShowWaypointLinker(false)} />
+        <WaypointNoteLinker
+          noteId={noteId}
+          draftId={draftId}
+          onClose={() => setShowWaypointLinker(false)}
+        />
       )}
     </div>
   );

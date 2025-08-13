@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface Draft {
   id: string;
@@ -19,7 +19,9 @@ const AUTOSAVE_DELAY = 1000; // 1 second
 export function useDrafts() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [autosaveTimeouts, setAutosaveTimeouts] = useState<Map<string, number>>(new Map());
+  const [autosaveTimeouts, setAutosaveTimeouts] = useState<Map<string, number>>(
+    new Map()
+  );
 
   // Load drafts from localStorage on mount
   useEffect(() => {
@@ -70,7 +72,7 @@ export function useDrafts() {
   // Cleanup autosave timeouts on unmount
   useEffect(() => {
     return () => {
-      autosaveTimeouts.forEach(timeout => clearTimeout(timeout));
+      autosaveTimeouts.forEach((timeout) => clearTimeout(timeout));
     };
   }, [autosaveTimeouts]);
 
@@ -87,76 +89,86 @@ export function useDrafts() {
       createdAt: now,
       ...initialData,
     };
-    
-    setDrafts(prev => [...prev, newDraft]);
+
+    setDrafts((prev) => [...prev, newDraft]);
     return newDraft;
   }, []);
 
-  const updateDraftImmediate = useCallback((id: string, updates: Partial<Omit<Draft, "id" | "createdAt">>) => {
-    setDrafts(prev => 
-      prev.map(draft => 
-        draft.id === id 
-          ? { ...draft, ...updates, lastSaved: Date.now() }
-          : draft
-      )
-    );
-  }, []);
+  const updateDraftImmediate = useCallback(
+    (id: string, updates: Partial<Omit<Draft, "id" | "createdAt">>) => {
+      setDrafts((prev) =>
+        prev.map((draft) =>
+          draft.id === id
+            ? { ...draft, ...updates, lastSaved: Date.now() }
+            : draft
+        )
+      );
+    },
+    []
+  );
 
-  const updateDraftWithAutosave = useCallback((id: string, updates: Partial<Omit<Draft, "id" | "createdAt">>) => {
-    // Update the draft optimistically (without lastSaved update)
-    setDrafts(prev => 
-      prev.map(draft => 
-        draft.id === id 
-          ? { ...draft, ...updates }
-          : draft
-      )
-    );
+  const updateDraftWithAutosave = useCallback(
+    (id: string, updates: Partial<Omit<Draft, "id" | "createdAt">>) => {
+      // Update the draft optimistically (without lastSaved update)
+      setDrafts((prev) =>
+        prev.map((draft) =>
+          draft.id === id ? { ...draft, ...updates } : draft
+        )
+      );
 
-    // Clear existing timeout for this draft
-    const existingTimeout = autosaveTimeouts.get(id);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-    }
+      // Clear existing timeout for this draft
+      const existingTimeout = autosaveTimeouts.get(id);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
 
-    // Set new autosave timeout
-    const newTimeout = setTimeout(() => {
-      updateDraftImmediate(id, { lastSaved: Date.now() });
-      setAutosaveTimeouts(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(id);
-        return newMap;
-      });
-    }, AUTOSAVE_DELAY);
+      // Set new autosave timeout
+      const newTimeout = setTimeout(() => {
+        updateDraftImmediate(id, { lastSaved: Date.now() });
+        setAutosaveTimeouts((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(id);
+          return newMap;
+        });
+      }, AUTOSAVE_DELAY);
 
-    setAutosaveTimeouts(prev => new Map(prev.set(id, newTimeout)));
-  }, [autosaveTimeouts]);
+      setAutosaveTimeouts((prev) => new Map(prev.set(id, newTimeout)));
+    },
+    [autosaveTimeouts]
+  );
 
-  const deleteDraft = useCallback((id: string) => {
-    // Clear any pending autosave
-    const timeout = autosaveTimeouts.get(id);
-    if (timeout) {
-      clearTimeout(timeout);
-      setAutosaveTimeouts(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(id);
-        return newMap;
-      });
-    }
+  const deleteDraft = useCallback(
+    (id: string) => {
+      // Clear any pending autosave
+      const timeout = autosaveTimeouts.get(id);
+      if (timeout) {
+        clearTimeout(timeout);
+        setAutosaveTimeouts((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(id);
+          return newMap;
+        });
+      }
 
-    setDrafts(prev => prev.filter(draft => draft.id !== id));
-  }, [autosaveTimeouts]);
+      setDrafts((prev) => prev.filter((draft) => draft.id !== id));
+    },
+    [autosaveTimeouts]
+  );
 
   const clearAllDrafts = useCallback(() => {
     // Clear all autosave timeouts
-    autosaveTimeouts.forEach(timeout => clearTimeout(timeout));
+    autosaveTimeouts.forEach((timeout) => clearTimeout(timeout));
     setAutosaveTimeouts(new Map());
-    
+
     setDrafts([]);
   }, [autosaveTimeouts]);
 
-  const getDraft = useCallback((id: string) => {
-    return drafts.find(draft => draft.id === id);
-  }, [drafts]);
+  const getDraft = useCallback(
+    (id: string) => {
+      return drafts.find((draft) => draft.id === id);
+    },
+    [drafts]
+  );
 
   // Get drafts sorted by last modified
   const getRecentDrafts = useCallback(() => {
@@ -164,20 +176,26 @@ export function useDrafts() {
   }, [drafts]);
 
   // Check if a draft has unsaved changes (lastSaved is older than a reasonable autosave delay)
-  const hasUnsavedChanges = useCallback((id: string) => {
-    const draft = getDraft(id);
-    if (!draft) return false;
-    
-    const timeSinceLastSave = Date.now() - draft.lastSaved;
-    return timeSinceLastSave > AUTOSAVE_DELAY * 2; // Give some buffer
-  }, [getDraft]);
+  const hasUnsavedChanges = useCallback(
+    (id: string) => {
+      const draft = getDraft(id);
+      if (!draft) return false;
+
+      const timeSinceLastSave = Date.now() - draft.lastSaved;
+      return timeSinceLastSave > AUTOSAVE_DELAY * 2; // Give some buffer
+    },
+    [getDraft]
+  );
 
   // Convert draft to note format (for publishing)
   const draftToNote = useCallback((draft: Draft) => {
     return {
       title: draft.title,
       content: draft.content,
-      tags: draft.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      tags: draft.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
       headerImageUrl: draft.headerImageUrl ?? "",
       category: draft.category || "Editorial",
       entityId: draft.entityId,

@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
-import { useNotes } from "../hooks/useNotes";
+import { useMemo, useState } from "react";
+
 import { useDrafts } from "../hooks/useDrafts";
+import { useNotes } from "../hooks/useNotes";
 import { useOnchainNotes } from "../hooks/useOnchainNotes";
 
 interface NoteListProps {
@@ -11,23 +12,28 @@ interface NoteListProps {
   searchQuery?: string;
 }
 
-export function NoteList({ 
-  onEditNote, 
-  onEditDraft, 
-  onCreateNew, 
-  selectedTags = [], 
-  searchQuery = "" 
+export function NoteList({
+  onEditNote,
+  onEditDraft,
+  onCreateNew,
+  selectedTags = [],
+  searchQuery = "",
 }: NoteListProps) {
   const { notes: localNotes, deleteNote } = useNotes();
   const { deleteDraft, getRecentDrafts } = useDrafts();
   const [showDrafts, setShowDrafts] = useState(true);
-  const { notes: chainNotes, loading: chainLoading, error: chainError, refetch } = useOnchainNotes({ limit: 200, offset: 0 });
+  const {
+    notes: chainNotes,
+    loading: chainLoading,
+    error: chainError,
+    refetch,
+  } = useOnchainNotes({ limit: 200, offset: 0 });
 
   // Merge on-chain with local cache (prefer on-chain for duplicates by id)
   const publishedCombined = useMemo(() => {
     const byId = new Map<string, ReturnType<typeof mapToUiNote>>();
-    chainNotes.forEach(n => byId.set(n.id, mapToUiNote(n)));
-    localNotes.forEach(n => {
+    chainNotes.forEach((n) => byId.set(n.id, mapToUiNote(n)));
+    localNotes.forEach((n) => {
       if (!byId.has(n.id)) byId.set(n.id, n);
     });
     return Array.from(byId.values());
@@ -35,19 +41,30 @@ export function NoteList({
 
   // Filter notes
   const filteredNotes = useMemo(() => {
-    const base = publishedCombined as Array<{ id: string; title: string; content: string; tags: string[]; updatedAt: number; totalTips?: number }>;
-    return base.filter(note => {
+    const base = publishedCombined as Array<{
+      id: string;
+      title: string;
+      content: string;
+      tags: string[];
+      updatedAt: number;
+      totalTips?: number;
+    }>;
+    return base.filter((note) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesTitle = note.title.toLowerCase().includes(query);
         const matchesContent = note.content.toLowerCase().includes(query);
-        const matchesTags = note.tags.some((tag: string) => tag.toLowerCase().includes(query));
+        const matchesTags = note.tags.some((tag: string) =>
+          tag.toLowerCase().includes(query)
+        );
         if (!matchesTitle && !matchesContent && !matchesTags) return false;
       }
       // Tag filter
       if (selectedTags.length > 0) {
-        const hasSelectedTag = selectedTags.some((selectedTag: string) => note.tags.includes(selectedTag));
+        const hasSelectedTag = selectedTags.some((selectedTag: string) =>
+          note.tags.includes(selectedTag)
+        );
         if (!hasSelectedTag) return false;
       }
       return true;
@@ -55,7 +72,10 @@ export function NoteList({
   }, [publishedCombined, searchQuery, selectedTags]);
 
   // Sort notes by updatedAt (most recent first)
-  const sortedNotes = useMemo(() => [...filteredNotes].sort((a, b) => b.updatedAt - a.updatedAt), [filteredNotes]);
+  const sortedNotes = useMemo(
+    () => [...filteredNotes].sort((a, b) => b.updatedAt - a.updatedAt),
+    [filteredNotes]
+  );
   const recentDrafts = getRecentDrafts();
 
   const formatDate = (timestamp: number) => {
@@ -70,7 +90,7 @@ export function NoteList({
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -106,8 +126,8 @@ export function NoteList({
         <button
           onClick={() => setShowDrafts(false)}
           className={`px-4 py-2 text-sm font-medium ${
-            !showDrafts 
-              ? "text-brand-600 border-b-2 border-brand-600" 
+            !showDrafts
+              ? "text-brand-600 border-b-2 border-brand-600"
               : "text-text-secondary hover:text-text-primary"
           }`}
         >
@@ -116,8 +136,8 @@ export function NoteList({
         <button
           onClick={() => setShowDrafts(true)}
           className={`px-4 py-2 text-sm font-medium ${
-            showDrafts 
-              ? "text-brand-600 border-b-2 border-brand-600" 
+            showDrafts
+              ? "text-brand-600 border-b-2 border-brand-600"
               : "text-text-secondary hover:text-text-primary"
           }`}
         >
@@ -133,7 +153,9 @@ export function NoteList({
             {recentDrafts.length === 0 ? (
               <div className="text-center py-8 text-text-secondary">
                 <p>No drafts yet</p>
-                <p className="text-sm">Start writing to create your first draft</p>
+                <p className="text-sm">
+                  Start writing to create your first draft
+                </p>
               </div>
             ) : (
               recentDrafts.map((draft) => (
@@ -158,14 +180,19 @@ export function NoteList({
                         </span>
                         {draft.tags && (
                           <div className="flex gap-1">
-                            {draft.tags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3).map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                            {draft.tags
+                              .split(",")
+                              .map((tag) => tag.trim())
+                              .filter(Boolean)
+                              .slice(0, 3)
+                              .map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -190,15 +217,21 @@ export function NoteList({
           // Published Notes List
           <div className="p-4 space-y-3">
             {chainLoading && (
-              <div className="text-center py-8 text-text-secondary">Loading on-chain notes…</div>
+              <div className="text-center py-8 text-text-secondary">
+                Loading on-chain notes…
+              </div>
             )}
             {chainError && (
-              <div className="text-center py-2 text-danger text-sm">{String(chainError)}</div>
+              <div className="text-center py-2 text-danger text-sm">
+                {String(chainError)}
+              </div>
             )}
             {!chainLoading && sortedNotes.length === 0 ? (
               <div className="text-center py-8 text-text-secondary">
                 <p>No published notes yet</p>
-                <p className="text-sm">Publish your first note to see it here</p>
+                <p className="text-sm">
+                  Publish your first note to see it here
+                </p>
               </div>
             ) : (
               sortedNotes.map((note) => (
@@ -236,11 +269,12 @@ export function NoteList({
                             )}
                           </div>
                         )}
-                        {typeof note.totalTips === 'number' && note.totalTips > 0 && (
-                          <span className="text-xs text-success font-medium">
-                            ${note.totalTips} tips
-                          </span>
-                        )}
+                        {typeof note.totalTips === "number" &&
+                          note.totalTips > 0 && (
+                            <span className="text-xs text-success font-medium">
+                              ${note.totalTips} tips
+                            </span>
+                          )}
                       </div>
                     </div>
                     <button
@@ -267,6 +301,21 @@ export function NoteList({
 
 function mapToUiNote(n: any) {
   // Minimal adapter for OnchainNote -> local Note shape used by list
-  if (Array.isArray(n.tags)) return n as { id: string; title: string; content: string; tags: string[]; updatedAt: number; totalTips?: number };
-  return { ...n, tags: [] as string[] } as { id: string; title: string; content: string; tags: string[]; updatedAt: number; totalTips?: number };
+  if (Array.isArray(n.tags))
+    return n as {
+      id: string;
+      title: string;
+      content: string;
+      tags: string[];
+      updatedAt: number;
+      totalTips?: number;
+    };
+  return { ...n, tags: [] as string[] } as {
+    id: string;
+    title: string;
+    content: string;
+    tags: string[];
+    updatedAt: number;
+    totalTips?: number;
+  };
 }

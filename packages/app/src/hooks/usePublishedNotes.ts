@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { worldAddress } from "../common/worldAddress";
 
 export interface PublishedNoteUI {
@@ -19,7 +20,10 @@ const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
 const NAMESPACE = "rg_dd_ab564f";
 const TABLE = `${NAMESPACE}__Note`;
 
-export function usePublishedNotes(params?: { limit?: number; offset?: number }) {
+export function usePublishedNotes(params?: {
+  limit?: number;
+  offset?: number;
+}) {
   const { limit = 200, offset = 0 } = params ?? {};
   const [notes, setNotes] = useState<PublishedNoteUI[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +52,9 @@ export function usePublishedNotes(params?: { limit?: number; offset?: number }) 
         throw new Error(text || `HTTP ${res.status}`);
       }
       const data = await res.json();
-      const rows: any[] = Array.isArray(data) ? (data[0]?.rows ?? []) : (data?.rows ?? []);
+      const rows: any[] = Array.isArray(data)
+        ? data[0]?.rows ?? []
+        : data?.rows ?? [];
       const mapped = rows.map((r: any) => {
         const rawTags = r.tags;
         let tags: string[] = [];
@@ -57,12 +63,16 @@ export function usePublishedNotes(params?: { limit?: number; offset?: number }) 
           try {
             tags = JSON.parse(rawTags);
           } catch {
-            tags = rawTags.split(",").map((t: string) => t.trim()).filter(Boolean);
+            tags = rawTags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean);
           }
         }
         return {
           id: r.noteId as string,
-          owner: (r.owner as string) ?? "0x0000000000000000000000000000000000000000",
+          owner:
+            (r.owner as string) ?? "0x0000000000000000000000000000000000000000",
           createdAt: Number(r.createdAt ?? 0),
           updatedAt: Number(r.updatedAt ?? 0),
           tipJar: (r.tipJar as string) ?? null,

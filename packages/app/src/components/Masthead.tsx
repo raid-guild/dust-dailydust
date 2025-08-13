@@ -1,6 +1,7 @@
-import { cn } from "../lib/utils";
 import { Newspaper } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import { cn } from "../lib/utils";
 import {
   BACK_PAGE_PATH,
   DISCOVER_PAGE_PATH,

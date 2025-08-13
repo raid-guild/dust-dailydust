@@ -1,8 +1,9 @@
-import { PixelDivider } from "../components/PixelDivider";
-import { type Article, ArticleCard } from "../components/ArticleCard";
-import { cn } from "../lib/utils";
-import { weeklyCurated } from "../dummy-data";
 import { Link } from "react-router-dom";
+
+import { type Article, ArticleCard } from "../components/ArticleCard";
+import { PixelDivider } from "../components/PixelDivider";
+import { weeklyCurated } from "../dummy-data";
+import { cn } from "../lib/utils";
 import { ARTICLE_PAGE_PATH } from "../Routes";
 
 export const FrontPage = () => {

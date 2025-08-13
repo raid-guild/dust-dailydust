@@ -1,5 +1,6 @@
-import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
+
+import { cn } from "../lib/utils";
 import { ARTICLE_PAGE_PATH } from "../Routes";
 
 export type Article = {

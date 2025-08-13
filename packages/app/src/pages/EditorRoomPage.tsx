@@ -1,11 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
-import { NoteEditor } from "../components/NoteEditor";
-import { WaypointsTab } from "../components/WaypointsTab";
-import { CollectionsTab } from "../components/CollectionsTab";
-import { useDrafts } from "../hooks/useDrafts";
-import { useOnchainNotes } from "../hooks/useOnchainNotes";
+import { useEffect, useMemo, useState } from "react";
+
 import { useDustClient } from "../common/useDustClient";
-import { cn } from "../lib/utils";
+import { CollectionsTab } from "../components/CollectionsTab";
+import { NoteEditor } from "../components/NoteEditor";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -13,6 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { WaypointsTab } from "../components/WaypointsTab";
+import { useDrafts } from "../hooks/useDrafts";
+import { useOnchainNotes } from "../hooks/useOnchainNotes";
+import { cn } from "../lib/utils";
 
 export function EditorRoomPage() {
   type TabKey = "published" | "submit" | "collections" | "waypoints";
