@@ -1,30 +1,111 @@
-export function BackPage() {
+import type React from "react";
+
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { useState } from "react";
+import { cn } from "../lib/utils";
+import { classifiedsSeed } from "../dummy-data";
+
+type Post = { id: string; type: string; title: string; body: string };
+
+export const BackPage = () => {
+  const [posts, setPosts] = useState<Post[]>(classifiedsSeed);
+  const [form, setForm] = useState({ type: "Offer", title: "", body: "" });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title || !form.body) return;
+    setPosts((p) => [
+      { id: Math.random().toString(36).slice(2), ...form },
+      ...p,
+    ]);
+    setForm({ type: "Offer", title: "", body: "" });
+  };
+
   return (
-    <section className="rounded-xl bg-panel border border-neutral-200 dark:border-neutral-800 p-6">
-      <h2 className="font-heading text-3xl mb-4">Back Page — Classifieds</h2>
-      <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
-        <div className="grid md:grid-cols-[160px_1fr] gap-3">
-          <select className="px-3 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel">
-            <option>Offer</option>
-            <option>Request</option>
-            <option>Service</option>
-          </select>
-          <input placeholder="Title" className="px-3 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel" />
-          <textarea placeholder="Details..." rows={4} className="md:col-span-2 px-3 py-2 rounded border border-neutral-300 dark:border-neutral-800 bg-panel" />
-          <div className="md:col-span-2">
-            <button className="w-full px-3 py-2 bg-neutral-900 text-white rounded font-accent">Submit Listing</button>
-          </div>
-        </div>
+    <div className="gap-6 grid p-4 sm:p-6">
+      <div>
+        <h1 className={cn("font-heading", "text-3xl")}>
+          Back Page — Classifieds
+        </h1>
+        <p
+          className={cn(
+            "font-accent",
+            "text-[10px] text-neutral-700 tracking-widest uppercase"
+          )}
+        >
+          Looking for something, offering a service, or asking for a story
+        </p>
       </div>
-      <div className="grid md:grid-cols-3 gap-4 mt-6">
-        {["OFFER","WANTED","SERVICE"].map((k,i) => (
-          <article key={i} className="bg-panel border border-neutral-300 dark:border-neutral-800 p-4 rounded">
-            <div className="uppercase tracking-[.2em] text-xs text-neutral-500 font-accent">{k}</div>
-            <h3 className="font-heading text-xl">Free Cats (untamed)</h3>
-            <p className="text-text-secondary">Bring fish and patience. Coords: 88 69 -12.</p>
-          </article>
+
+      <Card className="border-neutral-900">
+        <CardHeader>
+          <CardTitle className={cn("font-heading", "text-xl")}>
+            Post a Listing
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="gap-3 grid" onSubmit={submit}>
+            <div className="gap-2 grid sm:grid-cols-3">
+              <select
+                aria-label="Type"
+                className="bg-neutral-50 border border-neutral-900 px-2 py-2 rounded-md"
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                value={form.type}
+              >
+                <option>Offer</option>
+                <option>Wanted</option>
+                <option>Service</option>
+              </select>
+              <Input
+                className="border-neutral-900 sm:col-span-2"
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="Title"
+                value={form.title}
+              />
+            </div>
+            <Textarea
+              className="border-neutral-900 min-h-28"
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              placeholder="Details..."
+              value={form.body}
+            />
+            <Button
+              className={cn("font-accent", "h-9 px-3 text-[10px]")}
+              type="submit"
+            >
+              Submit Listing
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <div className="gap-6 grid md:grid-cols-3">
+        {posts.map((p) => (
+          <div
+            key={p.id}
+            className="bg-neutral-50 border border-neutral-900 p-3"
+          >
+            <div
+              className={cn(
+                "font-accent",
+                "text-[10px] text-neutral-700 tracking-widest uppercase"
+              )}
+            >
+              {p.type}
+            </div>
+            <h3 className={cn("font-heading", "text-xl")}>{p.title}</h3>
+            <p className={"text-[15px] leading-relaxed"}>{p.body}</p>
+          </div>
         ))}
       </div>
-    </section>
+    </div>
   );
-}
+};

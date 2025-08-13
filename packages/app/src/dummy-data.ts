@@ -138,3 +138,24 @@ export const localNewsSeed: Article[] = [
     title: "Enderman Art Fair Returns",
   },
 ];
+
+export const classifiedsSeed = [
+  {
+    id: "c1",
+    type: "Offer",
+    title: "Free Cats (untamed)",
+    body: "Bring fish and patience. Coords: 88 69 -12.",
+  },
+  {
+    id: "c2",
+    type: "Wanted",
+    title: "Looking for Silk Touch Hoe",
+    body: "Yes, it exists. Trade for name tags.",
+  },
+  {
+    id: "c3",
+    type: "Service",
+    title: "Story Wanted",
+    body: "Report on rail line expansions near Blockhaven.",
+  },
+];
