@@ -9,7 +9,7 @@ import { ArticlePage } from "./pages/ArticlePage";
 
 export const FRONT_PAGE_PATH = "/";
 export const LOCAL_PAGE_PATH = "/local";
-export const CLASSIFIEDS_PAGE_PATH = "/classifieds";
+export const BACK_PAGE_PATH = "/back-page";
 export const DISCOVER_PAGE_PATH = "/discover";
 export const EDITOR_PAGE_PATH = "/editor";
 export const ARTICLE_PAGE_PATH = "/article/";
@@ -19,7 +19,7 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path={FRONT_PAGE_PATH} element={<FrontPage />} />
       <Route path={LOCAL_PAGE_PATH} element={<LocalPage />} />
-      <Route path={CLASSIFIEDS_PAGE_PATH} element={<BackPage />} />
+      <Route path={BACK_PAGE_PATH} element={<BackPage />} />
       <Route path={DISCOVER_PAGE_PATH} element={<DiscoverPage />} />
       <Route path={EDITOR_PAGE_PATH} element={<EditorRoomPage />} />
       <Route path={`${ARTICLE_PAGE_PATH}:id`} element={<ArticlePage />} />

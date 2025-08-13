@@ -2,7 +2,7 @@ import { cn } from "../lib/utils";
 import { Newspaper } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
-  CLASSIFIEDS_PAGE_PATH,
+  BACK_PAGE_PATH,
   DISCOVER_PAGE_PATH,
   EDITOR_PAGE_PATH,
   FRONT_PAGE_PATH,
@@ -12,7 +12,7 @@ import {
 const nav = [
   { href: FRONT_PAGE_PATH, label: "Front Page" },
   { href: LOCAL_PAGE_PATH, label: "Local" },
-  { href: CLASSIFIEDS_PAGE_PATH, label: "Back Page" },
+  { href: BACK_PAGE_PATH, label: "Back Page" },
   { href: DISCOVER_PAGE_PATH, label: "Discover" },
   { href: EDITOR_PAGE_PATH, label: "Editor Room" },
 ];
