@@ -95,7 +95,7 @@ export function EditorRoomPage() {
       {/* Content per tab */}
       {tab === "submit" && (
         <>
-          <Card className="bg-white border-neutral-900">
+          <Card className="border-neutral-900">
             {/* Submit New Content */}
             <CardHeader>
               <CardTitle
@@ -131,7 +131,7 @@ export function EditorRoomPage() {
           </Card>
 
           {/* Your Drafts */}
-          <Card className="bg-white border-neutral-900">
+          <Card className="border-neutral-900">
             <CardHeader>
               <CardTitle
                 className={cn("font-heading", "flex justify-between text-xl")}

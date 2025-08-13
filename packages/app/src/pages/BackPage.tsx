@@ -45,7 +45,7 @@ export const BackPage = () => {
         </p>
       </div>
 
-      <Card className="bg-white border-neutral-900">
+      <Card className="border-neutral-900">
         <CardHeader>
           <CardTitle className={cn("font-heading", "text-xl")}>
             Post a Listing
