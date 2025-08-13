@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 export interface Note {
   id: string;
   title: string;
+  kicker?: string; // short teaser above title
   content: string;
   tags: string[];
   owner: string;

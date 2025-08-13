@@ -57,6 +57,7 @@ interface NoteEditorProps {
     content: string;
     tags: string; // csv
     category: string;
+    kicker: string; // short teaser
     effectiveDraftId: string | null;
     noteId?: string;
   }) => void;
@@ -85,6 +86,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
   const [category, setCategory] = useState("Editorial");
+  const [kicker, setKicker] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [showWaypointLinker, setShowWaypointLinker] = useState(false);
   const [linkedWaypointsCount, setLinkedWaypointsCount] = useState(0);
@@ -124,6 +126,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         setContent(note.content);
         setTags(note.tags.join(", "));
         setCategory(note.category || "Editorial");
+        setKicker(note.kicker || "");
       }
     } else if (draftId) {
       const draft = drafts.find(d => d.id === draftId);
@@ -133,6 +136,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
         setContent(draft.content);
         setTags(draft.tags);
         setCategory(draft.category || "Editorial");
+        setKicker(draft.kicker || "");
       }
     }
   }, [noteId, draftId, notes, drafts]);
@@ -195,11 +199,11 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
   const handleSaveDraft = async () => {
     let id = effectiveDraftId;
     if (!id) {
-      const d = createDraft({ entityId: initialEntityId, category, title, headerImageUrl, content, tags });
+      const d = createDraft({ entityId: initialEntityId, category, title, headerImageUrl, content, tags, kicker });
       setInternalDraftId(d.id);
       id = d.id;
     }
-    updateDraftImmediate(id!, { title, headerImageUrl, content, tags, category, entityId: initialEntityId });
+    updateDraftImmediate(id!, { title, headerImageUrl, content, tags, category, kicker, entityId: initialEntityId });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
   };
@@ -264,6 +268,7 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
           content: content.trim(),
           tags: tagArray,
           category,
+          kicker: kicker.trim(),
         });
       } else {
         // Create new note
@@ -278,30 +283,23 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
           }
         }
 
+        const base = {
+          title: title.trim(),
+          headerImageUrl: headerImageUrl.trim(),
+          content: content.trim(),
+          tags: tagArray,
+          category,
+          kicker: kicker.trim(),
+          owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+          tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
+          boostUntil: 0,
+          entityId: initialEntityId,
+        };
+
         if (createdId) {
-          await addNoteWithId(createdId, {
-            title: title.trim(),
-            headerImageUrl: headerImageUrl.trim(),
-            content: content.trim(),
-            tags: tagArray,
-            category,
-            owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            boostUntil: 0,
-            entityId: initialEntityId,
-          });
+          await addNoteWithId(createdId, base);
         } else {
-          await addNote({
-            title: title.trim(),
-            headerImageUrl: headerImageUrl.trim(),
-            content: content.trim(),
-            tags: tagArray,
-            category,
-            owner: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            tipJar: dustClient?.appContext.userAddress || "0x0000000000000000000000000000000000000000",
-            boostUntil: 0,
-            entityId: initialEntityId,
-          });
+          await addNote(base);
         }
       }
 
@@ -422,18 +420,19 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
       content,
       tags,
       category,
+      kicker,
       effectiveDraftId,
       noteId,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, headerImageUrl, content, tags, category, effectiveDraftId, noteId, stepperMode]);
+  }, [title, headerImageUrl, content, tags, category, kicker, effectiveDraftId, noteId, stepperMode]);
 
   return (
     <div className={containerClass}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
         <h2 className="text-lg font-semibold text-text-primary">
-          {noteId ? "Edit Note" : "New Note"}
+          {noteId ? "Edit Note" : "Note Editor"}
         </h2>
         {!stepperMode && (
           <div className="flex gap-2 items-center">
@@ -505,6 +504,12 @@ export function NoteEditor({ draftId, noteId, onSave, onCancel, initialEntityId,
             <option>Other</option>
           </select>
         </div>
+        <input
+          value={kicker}
+          onChange={(e) => setKicker(e.target.value)}
+          placeholder="Kicker (short teaser above the title)"
+          className="w-full text-sm text-text-primary placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-panel"
+        />
       </div>
 
       {/* Tags */}

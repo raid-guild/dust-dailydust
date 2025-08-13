@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { NoteEditor } from "../NoteEditor";
 import { WaypointsTab } from "../WaypointsTab";
 import { CollectionsTab } from "../CollectionsTab";
 import { PublishWizard } from "../PublishWizard";
@@ -11,7 +10,7 @@ export function EditorRoomPage() {
   type TabKey = 'published' | 'submit' | 'collections' | 'waypoints';
   const [tab, setTab] = useState<TabKey>('submit');
 
-  const { getRecentDrafts, deleteDraft, createDraft } = useDrafts();
+  const { getRecentDrafts, deleteDraft } = useDrafts();
   const { notes: chainNotes, loading: chainLoading, error: chainError, refetch } = useOnchainNotes({ limit: 200, offset: 0 });
   const { data: dustClient } = useDustClient();
 
@@ -81,18 +80,6 @@ export function EditorRoomPage() {
           <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-heading text-2xl">Submit New Content</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const d = createDraft();
-                    setSelectedNoteId(null);
-                    setSelectedDraftId(d.id);
-                  }}
-                  className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded hover:bg-brand-700 transition-colors"
-                >
-                  New Draft
-                </button>
-              </div>
             </div>
             <PublishWizard
               draftId={selectedDraftId || undefined}
@@ -111,7 +98,7 @@ export function EditorRoomPage() {
               <span className="text-sm text-text-secondary">{recentDrafts.length}</span>
             </div>
             {recentDrafts.length === 0 ? (
-              <div className="text-text-secondary text-sm">No drafts yet. Create one to get started.</div>
+              <div className="text-text-secondary text-sm">No drafts yet. Use Save Draft in the form above.</div>
             ) : (
               <ul className="space-y-2">
                 {recentDrafts.map(d => (
@@ -198,10 +185,9 @@ export function EditorRoomPage() {
           {selectedNoteId && (
             <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
               <h3 className="font-heading text-xl mb-3">Edit Published Story</h3>
-              <NoteEditor
-                variant="bare"
+              <PublishWizard
                 noteId={selectedNoteId}
-                onSave={() => {
+                onDone={() => {
                   setSelectedNoteId(null);
                   void refetch();
                 }}

@@ -7,7 +7,10 @@ export interface Draft {
   tags: string;
   headerImageUrl?: string; // new field for header image while drafting
   category?: string; // new field for single-select category while drafting
-  entityId?: string;
+  kicker?: string; // short teaser line shown above title
+  entityId?: string; // primary location entityId snapshot (optional)
+  selectedWaypointId?: string; // wizard location selection (by waypoint id)
+  routeSteps?: Array<{ waypointId: string; label?: string }>; // wizard route steps
   lastSaved: number;
   createdAt: number;
 }
@@ -125,6 +128,10 @@ export function useDrafts() {
       tags: "",
       headerImageUrl: "",
       category: "Editorial",
+      kicker: "",
+      entityId: initialData?.entityId,
+      selectedWaypointId: initialData?.selectedWaypointId,
+      routeSteps: initialData?.routeSteps ?? [],
       lastSaved: now,
       createdAt: now,
       ...initialData,
@@ -178,6 +185,7 @@ export function useDrafts() {
       tags: draft.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       headerImageUrl: draft.headerImageUrl ?? "",
       category: draft.category || "Editorial",
+      kicker: draft.kicker ?? "",
       entityId: draft.entityId,
     };
   }, []);

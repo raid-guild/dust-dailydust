@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NoteEditor } from "./NoteEditor";
-import { useWaypoints } from "../hooks/useWaypoints";
+import { useWaypoints, type Waypoint } from "../hooks/useWaypoints";
 import { encodeBlock } from "@dust/world/internal";
 import { useDustClient } from "../common/useDustClient";
 import type { Abi } from "viem";
 import { resourceToHex } from "@latticexyz/common";
 import { DUST_NAMESPACE } from "../common/namespace";
 import { useDrafts } from "../hooks/useDrafts";
+import { worldAddress } from "../common/worldAddress";
+
+const INDEXER_Q_URL = "https://indexer.mud.redstonechain.com/q";
+// Table names for indexer queries
+const TABLE_NOTE_LINK = `${DUST_NAMESPACE}__NoteLink`;
+const TABLE_WP_STEP = `${DUST_NAMESPACE}__WaypointStep`;
 
 // Minimal ABIs for the systems we call
 const noteSystemAbi: Abi = [
@@ -95,13 +101,15 @@ function randomBytes32(): `0x${string}` {
 interface PublishWizardProps {
   // Optional existing draftId to start with
   draftId?: string;
+  // Optional existing noteId to edit
+  noteId?: string;
   // Called when publish is completed successfully
   onDone?: () => void;
   // Cancel handler
   onCancel?: () => void;
 }
 
-export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps) {
+export function PublishWizard({ draftId, noteId, onDone, onCancel }: PublishWizardProps) {
   type Step = 1 | 2 | 3;
   const [step, setStep] = useState<Step>(1);
 
@@ -112,26 +120,140 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
     content: "",
     tags: "",
     category: "Editorial",
+    kicker: "",
     effectiveDraftId: null as string | null,
     noteId: undefined as string | undefined,
   });
+
+  const isEditing = useMemo(() => !!(noteId || contentState.noteId), [noteId, contentState.noteId]);
 
   // Step 2: single required location selection
   const [selectedWaypointId, setSelectedWaypointId] = useState<string | null>(null);
 
   // Step 3: route builder
-  const { waypoints } = useWaypoints();
+  const { waypoints, addWaypoint } = useWaypoints();
   type RouteStep = { waypointId: string; label?: string };
   const [routeSteps, setRouteSteps] = useState<RouteStep[]>([]);
   const [addStepWaypointId, setAddStepWaypointId] = useState<string | null>(null);
 
-  // Prefill route with the single location if not already added when moving to Step 3
+  // Moved up: hooks used by effects below
+  const { data: dustClient } = useDustClient();
+  const { createDraft, updateDraftImmediate, deleteDraft, getDraft } = useDrafts();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [wizardDraftId, setWizardDraftId] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+
+  // Hydrate Location and Route when editing a published note by querying the indexer for NoteLink and WaypointStep
+  const [hasHydratedFromChain, setHasHydratedFromChain] = useState(false);
   useEffect(() => {
-    if (step === 3 && selectedWaypointId && routeSteps.length === 0) {
-      setRouteSteps([{ waypointId: selectedWaypointId }]);
-      setAddStepWaypointId(selectedWaypointId);
+    if (!noteId || hasHydratedFromChain) return;
+
+    let aborted = false;
+
+    const isHex32 = (s: string) => /^0x[0-9a-fA-F]{64}$/.test(s);
+
+    const ensureWaypoint = (entityId: string, x?: number, y?: number, z?: number, name?: string) => {
+      const existing = waypoints.find((w) => w.entityId.toLowerCase() === entityId.toLowerCase());
+      if (existing) return existing.id;
+      // If coords are not provided, can't add a meaningful waypoint; fallback to name only
+      const label = name || `Imported ${entityId.slice(0, 10)}…`;
+      const w = addWaypoint({
+        name: label,
+        entityId: entityId as string,
+        description: "Imported from chain",
+        category: "Imported",
+        x: typeof x === "number" ? Math.trunc(x) : undefined,
+        y: typeof y === "number" ? Math.trunc(y) : undefined,
+        z: typeof z === "number" ? Math.trunc(z) : undefined,
+      });
+      return w.id;
+    };
+
+    async function hydrate() {
+      try {
+        // Fetch primary location (first NoteLink row for this note)
+        const sql1 = `SELECT "entityId","coordX","coordY","coordZ" FROM "${TABLE_NOTE_LINK}" WHERE "noteId"='${noteId}' LIMIT 1`;
+        // Fetch all steps for any route group for this note (ordered by group/index)
+        const sql2 = `SELECT "groupId","index","x","y","z","label" FROM "${TABLE_WP_STEP}" WHERE "noteId"='${noteId}' ORDER BY "groupId" ASC, "index" ASC`;
+        const body = JSON.stringify([
+          { query: sql1, address: worldAddress },
+          { query: sql2, address: worldAddress },
+        ]);
+        const res = await fetch(INDEXER_Q_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+        if (!res.ok) return;
+        const data = await res.json();
+        const [noteLinkResult, stepsResult] = (data?.result ?? []) as any[];
+
+        // Parse helper
+        const unpack = (result: any): { columns: string[]; rows: any[][] } => {
+          if (!Array.isArray(result) || result.length < 2) return { columns: [], rows: [] };
+          const [columns, ...rows] = result;
+          return { columns, rows } as any;
+        };
+
+        // Hydrate location
+        const { columns: c1, rows: r1 } = unpack(noteLinkResult);
+        if (!aborted && r1[0]) {
+          const col = (name: string) => c1.indexOf(name);
+          const row = r1[0];
+          const entityId = String(row[col("entityId")] ?? "");
+          const cx = Number(row[col("coordX")] ?? 0);
+          const cy = Number(row[col("coordY")] ?? 0);
+          const cz = Number(row[col("coordZ")] ?? 0);
+          if (entityId && isHex32(entityId)) {
+            const selId = ensureWaypoint(entityId, cx, cy, cz, "Imported Location");
+            setSelectedWaypointId(selId);
+          }
+        }
+
+        // Hydrate route steps
+        const { columns: c2, rows: r2 } = unpack(stepsResult);
+        if (!aborted && Array.isArray(r2) && r2.length > 0) {
+          const col2 = (name: string) => c2.indexOf(name);
+          const steps = r2
+            .map((row: any) => {
+              const x = Number(row[col2("x")] ?? 0);
+              const y = Number(row[col2("y")] ?? 0);
+              const z = Number(row[col2("z")] ?? 0);
+              const label = String(row[col2("label")] ?? "");
+              try {
+                const eid = encodeBlock([Math.trunc(x), Math.trunc(y), Math.trunc(z)]) as string;
+                const wid = ensureWaypoint(eid, x, y, z);
+                return { waypointId: wid, label: label || undefined };
+              } catch {
+                return null;
+              }
+            })
+            .filter(Boolean) as { waypointId: string; label?: string }[];
+          if (steps.length > 0) {
+            setRouteSteps(steps);
+            setAddStepWaypointId(steps[0]!.waypointId);
+          }
+        }
+
+        if (!aborted) setHasHydratedFromChain(true);
+      } catch (e) {
+        // ignore failures; user can still select new location/route
+        console.warn("Failed to hydrate location/route for note", noteId, e);
+      }
     }
-  }, [step, selectedWaypointId, routeSteps.length]);
+
+    void hydrate();
+    return () => {
+      aborted = true;
+    };
+  }, [noteId, waypoints, hasHydratedFromChain, addWaypoint]);
+
+  // When a draftId exists, optionally prefill selectedWaypointId/routeSteps from it in Step 1 mount
+  useEffect(() => {
+    const id = contentState.effectiveDraftId || wizardDraftId || draftId || null;
+    if (!id) return;
+    const d = getDraft(id);
+    if (!d) return;
+    if (selectedWaypointId === null && d.selectedWaypointId) setSelectedWaypointId(d.selectedWaypointId);
+    if (routeSteps.length === 0 && Array.isArray(d.routeSteps) && d.routeSteps.length > 0) setRouteSteps(d.routeSteps as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentState.effectiveDraftId, wizardDraftId, draftId]);
 
   const canContinueFromStep1 = useMemo(() => {
     return contentState.title.trim().length > 0 && contentState.content.trim().length > 0;
@@ -139,11 +261,30 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
 
   const canContinueFromStep2 = useMemo(() => !!selectedWaypointId, [selectedWaypointId]);
 
-  const handlePrev = () => setStep((s) => ((Math.max(1, (s as number) - 1)) as Step));
-  const handleNext = () => setStep((s) => ((Math.min(3, (s as number) + 1)) as Step));
-  const { data: dustClient } = useDustClient();
-  const { deleteDraft } = useDrafts();
-  const [isPublishing, setIsPublishing] = useState(false);
+  // Save Draft from wizard (works even in stepperMode)
+  const handleSaveDraft = () => {
+    const payload = {
+      title: contentState.title,
+      headerImageUrl: contentState.headerImageUrl,
+      content: contentState.content,
+      tags: contentState.tags,
+      category: contentState.category,
+      kicker: contentState.kicker,
+      selectedWaypointId,
+      routeSteps,
+    } as const;
+
+    let id = contentState.effectiveDraftId || wizardDraftId || draftId || null;
+    if (!id) {
+      const d = createDraft(payload as any);
+      id = d.id;
+      setWizardDraftId(d.id);
+    } else {
+      updateDraftImmediate(id, payload as any);
+    }
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
 
   const handleDone = async () => {
     if (!canContinueFromStep1) {
@@ -164,7 +305,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
       // Prepare
       const title = contentState.title.trim();
       const body = contentState.content.trim();
-      const tagsCsv = contentState.tags.split(',').map((t) => t.trim()).filter(Boolean).join(',');
+      const tagsCsv = contentState.tags.split(",").map((t) => t.trim()).filter(Boolean).join(",");
 
       // Create or update the note on-chain
       const noteHexId: `0x${string}` = (contentState.noteId && contentState.noteId.startsWith("0x") && contentState.noteId.length === 66)
@@ -245,7 +386,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
       }
 
       // Cleanup draft
-      const dId = contentState.effectiveDraftId || draftId || null;
+      const dId = contentState.effectiveDraftId || wizardDraftId || draftId || null;
       if (dId) {
         try { deleteDraft(dId); } catch {}
       }
@@ -266,6 +407,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
     content: string;
     tags: string;
     category: string;
+    kicker: string;
     effectiveDraftId: string | null;
     noteId?: string;
   }) => {
@@ -276,6 +418,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
         prev.content === s.content &&
         prev.tags === s.tags &&
         prev.category === s.category &&
+        prev.kicker === s.kicker &&
         prev.effectiveDraftId === s.effectiveDraftId &&
         prev.noteId === s.noteId
       ) {
@@ -320,11 +463,17 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
         </div>
         <div className="flex items-center gap-2">
           {step > 1 && (
-            <button onClick={handlePrev} className="px-3 py-1.5 text-sm bg-neutral-100 rounded hover:bg-neutral-200">Back</button>
+            <button onClick={() => setStep((s) => ((Math.max(1, (s as number) - 1)) as Step))} className="px-3 py-1.5 text-sm bg-neutral-100 rounded hover:bg-neutral-200">Back</button>
+          )}
+          {/* Save Draft available on all steps unless editing an existing note */}
+          {!isEditing && (
+            <button onClick={handleSaveDraft} className="px-3 py-1.5 text-sm bg-neutral-100 rounded hover:bg-neutral-200">
+              {justSaved ? 'Saved' : 'Save Draft'}
+            </button>
           )}
           {step < 3 && (
             <button
-              onClick={handleNext}
+              onClick={() => setStep((s) => ((Math.min(3, (s as number) + 1)) as Step))}
               disabled={(step === 1 && !canContinueFromStep1) || (step === 2 && !canContinueFromStep2)}
               className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded disabled:opacity-50"
             >
@@ -332,7 +481,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
             </button>
           )}
           {step === 3 && (
-            <button onClick={handleDone} disabled={isPublishing} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded disabled:opacity-50">{isPublishing ? 'Publishing…' : 'Publish'}</button>
+            <button onClick={handleDone} disabled={isPublishing} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded disabled:opacity-50">{isPublishing ? 'Publishing…' : (isEditing ? 'Update' : 'Publish')}</button>
           )}
           <button onClick={onCancel} className="px-3 py-1.5 text-sm text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200">Cancel</button>
         </div>
@@ -342,7 +491,8 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
         {step === 1 && (
           <NoteEditor
             variant="bare"
-            draftId={draftId}
+            draftId={draftId || wizardDraftId || undefined}
+            noteId={noteId}
             stepperMode
             onStateChange={handleEditorState}
           />
@@ -351,7 +501,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
         {step === 2 && (
           <div className="space-y-4">
             <p className="text-sm text-text-secondary">Choose the single location where this story lives.</p>
-            <WaypointPicker selectedId={selectedWaypointId} onChange={setSelectedWaypointId} />
+            <WaypointPicker waypoints={waypoints} selectedId={selectedWaypointId} onChange={setSelectedWaypointId} />
           </div>
         )}
 
@@ -420,8 +570,7 @@ export function PublishWizard({ draftId, onDone, onCancel }: PublishWizardProps)
   );
 }
 
-function WaypointPicker({ selectedId, onChange }: { selectedId: string | null; onChange: (id: string | null) => void }) {
-  const { waypoints } = useWaypoints();
+function WaypointPicker({ waypoints, selectedId, onChange }: { waypoints: Waypoint[]; selectedId: string | null; onChange: (id: string | null) => void }) {
   return (
     <div className="space-y-2">
       {waypoints.length === 0 ? (
