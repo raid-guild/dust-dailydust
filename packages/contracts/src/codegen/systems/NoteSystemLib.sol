@@ -40,28 +40,76 @@ library NoteSystemLib {
   function createNote(
     NoteSystemType self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
-    return CallWrapper(self.toResourceId(), address(0)).createNote(title, content);
+    return CallWrapper(self.toResourceId(), address(0)).createNote(title, content, categoryName);
   }
 
-  function updateNote(NoteSystemType self, bytes32 noteId, string memory title, string memory content) internal {
-    return CallWrapper(self.toResourceId(), address(0)).updateNote(noteId, title, content);
+  function createNoteWithAnchor(
+    NoteSystemType self,
+    string memory title,
+    string memory content,
+    string memory categoryName,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
+    return
+      CallWrapper(self.toResourceId(), address(0)).createNoteWithAnchor(
+        title,
+        content,
+        categoryName,
+        entityId,
+        coordX,
+        coordY,
+        coordZ
+      );
   }
 
-  function deleteNote(NoteSystemType self, bytes32 noteId) internal {
+  function updateNote(
+    NoteSystemType self,
+    bytes32 noteId,
+    string memory title,
+    string memory content,
+    string memory categoryName
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).updateNote(noteId, title, content, categoryName);
+  }
+
+  function deleteNote(NoteSystemType self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
     return CallWrapper(self.toResourceId(), address(0)).deleteNote(noteId);
+  }
+
+  function createNoteAnchor(
+    NoteSystemType self,
+    bytes32 noteId,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).createNoteAnchor(noteId, entityId, coordX, coordY, coordZ);
+  }
+
+  function removeNoteAnchor(NoteSystemType self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).removeNoteAnchor(noteId);
   }
 
   function createNote(
     CallWrapper memory self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
 
-    bytes memory systemCall = abi.encodeCall(_createNote_string_string.createNote, (title, content));
+    bytes memory systemCall = abi.encodeCall(
+      _createNote_string_string_string.createNote,
+      (title, content, categoryName)
+    );
 
     bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
@@ -72,32 +120,144 @@ library NoteSystemLib {
     }
   }
 
-  function updateNote(CallWrapper memory self, bytes32 noteId, string memory title, string memory content) internal {
+  function createNoteWithAnchor(
+    CallWrapper memory self,
+    string memory title,
+    string memory content,
+    string memory categoryName,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
 
-    bytes memory systemCall = abi.encodeCall(_updateNote_bytes32_string_string.updateNote, (noteId, title, content));
-    self.from == address(0)
+    bytes memory systemCall = abi.encodeCall(
+      _createNoteWithAnchor_string_string_string_bytes32_int32_int32_int32.createNoteWithAnchor,
+      (title, content, categoryName, entityId, coordX, coordY, coordZ)
+    );
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function deleteNote(CallWrapper memory self, bytes32 noteId) internal {
+  function updateNote(
+    CallWrapper memory self,
+    bytes32 noteId,
+    string memory title,
+    string memory content,
+    string memory categoryName
+  ) internal returns (bytes32 __auxRet0) {
+    // if the contract calling this function is a root system, it should use `callAsRoot`
+    if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
+
+    bytes memory systemCall = abi.encodeCall(
+      _updateNote_bytes32_string_string_string.updateNote,
+      (noteId, title, content, categoryName)
+    );
+
+    bytes memory result = self.from == address(0)
+      ? _world().call(self.systemId, systemCall)
+      : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function deleteNote(CallWrapper memory self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(_deleteNote_bytes32.deleteNote, (noteId));
-    self.from == address(0)
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function createNoteAnchor(
+    CallWrapper memory self,
+    bytes32 noteId,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
+    // if the contract calling this function is a root system, it should use `callAsRoot`
+    if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
+
+    bytes memory systemCall = abi.encodeCall(
+      _createNoteAnchor_bytes32_bytes32_int32_int32_int32.createNoteAnchor,
+      (noteId, entityId, coordX, coordY, coordZ)
+    );
+
+    bytes memory result = self.from == address(0)
+      ? _world().call(self.systemId, systemCall)
+      : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function removeNoteAnchor(CallWrapper memory self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
+    // if the contract calling this function is a root system, it should use `callAsRoot`
+    if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
+
+    bytes memory systemCall = abi.encodeCall(_removeNoteAnchor_bytes32.removeNoteAnchor, (noteId));
+
+    bytes memory result = self.from == address(0)
+      ? _world().call(self.systemId, systemCall)
+      : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function createNote(
     RootCallWrapper memory self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
-    bytes memory systemCall = abi.encodeCall(_createNote_string_string.createNote, (title, content));
+    bytes memory systemCall = abi.encodeCall(
+      _createNote_string_string_string.createNote,
+      (title, content, categoryName)
+    );
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function createNoteWithAnchor(
+    RootCallWrapper memory self,
+    string memory title,
+    string memory content,
+    string memory categoryName,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
+    bytes memory systemCall = abi.encodeCall(
+      _createNoteWithAnchor_string_string_string_bytes32_int32_int32_int32.createNoteWithAnchor,
+      (title, content, categoryName, entityId, coordX, coordY, coordZ)
+    );
 
     bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
     // skip decoding an empty result, which can happen after expectRevert
@@ -110,15 +270,59 @@ library NoteSystemLib {
     RootCallWrapper memory self,
     bytes32 noteId,
     string memory title,
-    string memory content
-  ) internal {
-    bytes memory systemCall = abi.encodeCall(_updateNote_bytes32_string_string.updateNote, (noteId, title, content));
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    string memory content,
+    string memory categoryName
+  ) internal returns (bytes32 __auxRet0) {
+    bytes memory systemCall = abi.encodeCall(
+      _updateNote_bytes32_string_string_string.updateNote,
+      (noteId, title, content, categoryName)
+    );
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function deleteNote(RootCallWrapper memory self, bytes32 noteId) internal {
+  function deleteNote(RootCallWrapper memory self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(_deleteNote_bytes32.deleteNote, (noteId));
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function createNoteAnchor(
+    RootCallWrapper memory self,
+    bytes32 noteId,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) internal returns (bytes32 __auxRet0) {
+    bytes memory systemCall = abi.encodeCall(
+      _createNoteAnchor_bytes32_bytes32_int32_int32_int32.createNoteAnchor,
+      (noteId, entityId, coordX, coordY, coordZ)
+    );
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
+  }
+
+  function removeNoteAnchor(RootCallWrapper memory self, bytes32 noteId) internal returns (bytes32 __auxRet0) {
+    bytes memory systemCall = abi.encodeCall(_removeNoteAnchor_bytes32.removeNoteAnchor, (noteId));
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function callFrom(NoteSystemType self, address from) internal pure returns (CallWrapper memory) {
@@ -159,16 +363,36 @@ library NoteSystemLib {
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
 
-interface _createNote_string_string {
-  function createNote(string memory title, string memory content) external;
+interface _createNote_string_string_string {
+  function createNote(string memory title, string memory content, string memory categoryName) external;
 }
 
-interface _updateNote_bytes32_string_string {
-  function updateNote(bytes32 noteId, string memory title, string memory content) external;
+interface _createNoteWithAnchor_string_string_string_bytes32_int32_int32_int32 {
+  function createNoteWithAnchor(
+    string memory title,
+    string memory content,
+    string memory categoryName,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) external;
+}
+
+interface _updateNote_bytes32_string_string_string {
+  function updateNote(bytes32 noteId, string memory title, string memory content, string memory categoryName) external;
 }
 
 interface _deleteNote_bytes32 {
   function deleteNote(bytes32 noteId) external;
+}
+
+interface _createNoteAnchor_bytes32_bytes32_int32_int32_int32 {
+  function createNoteAnchor(bytes32 noteId, bytes32 entityId, int32 coordX, int32 coordY, int32 coordZ) external;
+}
+
+interface _removeNoteAnchor_bytes32 {
+  function removeNoteAnchor(bytes32 noteId) external;
 }
 
 using NoteSystemLib for NoteSystemType global;

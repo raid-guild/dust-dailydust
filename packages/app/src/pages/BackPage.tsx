@@ -19,7 +19,11 @@ import { stash, tables } from "@/mud/stash";
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
 
-  const [form, setForm] = useState({ type: "Offer", title: "", content: "" });
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    category: "",
+  });
 
   const notes = useRecords({
     stash,
@@ -32,9 +36,20 @@ export const BackPage = () => {
           table: tables.IsNote,
           key: { id: r.id as `0x${string}` },
         })?.value ?? false;
+      let category = null;
+
+      if (r.categories[0]) {
+        category =
+          getRecord({
+            stash,
+            table: tables.Category,
+            key: { id: r.categories[0] as `0x${string}` },
+          })?.value ?? null;
+      }
+
       return {
         id: r.id,
-        categories: r.categories,
+        categories: [category],
         content: r.content,
         isNote: isNote,
         title: r.title,
@@ -42,22 +57,30 @@ export const BackPage = () => {
     })
     .filter((r) => r.isNote);
 
-  const noteCategories = useRecord({
+  const noteCategories = (useRecord({
     stash,
     table: tables.NoteCategories,
     key: {},
   })
-    ?.value.map((c) => {
+    ?.value?.map((c) => {
       return getRecord({
         stash,
         table: tables.Category,
         key: { id: c },
       })?.value;
     })
-    .filter((c): c is string => !!c) as string[];
+    .filter((c): c is string => !!c) ?? []) as string[];
 
   const createNote = useMutation({
-    mutationFn: ({ title, content }: { title: string; content: string }) => {
+    mutationFn: ({
+      title,
+      content,
+      category,
+    }: {
+      title: string;
+      content: string;
+      category: string;
+    }) => {
       if (!dustClient) throw new Error("Dust client not connected");
       return dustClient.provider.request({
         method: "systemCall",
@@ -70,7 +93,7 @@ export const BackPage = () => {
             }),
             abi: NoteSystemAbi as Abi,
             functionName: "createNote",
-            args: [title, content],
+            args: [title, content, category],
           },
         ],
       });
@@ -82,11 +105,12 @@ export const BackPage = () => {
       e.preventDefault();
       if (!form.title || !form.content) return;
 
-      setForm({ type: "Offer", title: "", content: "" });
+      setForm({ category: "Offer", title: "", content: "" });
       try {
         await createNote.mutateAsync({
           title: form.title,
           content: form.content,
+          category: form.category,
         });
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -134,8 +158,8 @@ export const BackPage = () => {
                   "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
                   "md:text-sm"
                 )}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-                value={form.type}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                value={form.category}
               >
                 {noteCategories.map((c) => (
                   <option key={c} value={c}>
