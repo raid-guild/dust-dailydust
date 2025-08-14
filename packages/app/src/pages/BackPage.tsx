@@ -1,6 +1,6 @@
 import { resourceToHex } from "@latticexyz/common";
 import { getRecord } from "@latticexyz/stash/internal";
-import { useRecords } from "@latticexyz/stash/react";
+import { useRecord, useRecords } from "@latticexyz/stash/react";
 import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
@@ -42,7 +42,19 @@ export const BackPage = () => {
     })
     .filter((r) => r.isNote);
 
-  console.log(notes);
+  const noteCategories = useRecord({
+    stash,
+    table: tables.NoteCategories,
+    key: {},
+  })
+    ?.value.map((c) => {
+      return getRecord({
+        stash,
+        table: tables.Category,
+        key: { id: c },
+      })?.value;
+    })
+    .filter((c): c is string => !!c) as string[];
 
   const createNote = useMutation({
     mutationFn: ({ title, content }: { title: string; content: string }) => {
@@ -71,13 +83,13 @@ export const BackPage = () => {
       if (!form.title || !form.content) return;
 
       setForm({ type: "Offer", title: "", content: "" });
-      console.log("test");
       try {
         await createNote.mutateAsync({
           title: form.title,
           content: form.content,
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error creating note:", error);
       }
     },
@@ -125,9 +137,11 @@ export const BackPage = () => {
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
                 value={form.type}
               >
-                <option>Offer</option>
-                <option>Wanted</option>
-                <option>Service</option>
+                {noteCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
               <Input
                 className="border-neutral-900 sm:col-span-2"

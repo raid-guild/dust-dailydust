@@ -26,6 +26,7 @@ export default tseslint.config([
     rules: {
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
+      "no-console": "error",
     },
     settings: {
       "import/resolver": {
