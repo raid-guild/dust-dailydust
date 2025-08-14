@@ -6,13 +6,13 @@ export default defineWorld({
   },
   // Replace this with a unique namespace (<= 14 chars)
   // rg: raidguild dd: dailydust deployer: ab564f
-  namespace: "rg_dd_0002",
+  namespace: "rg_dd_0003",
   systems: {
-    NoteSystem: {
+    ArticleSystem: {
       openAccess: true,
       deploy: { registerWorldFunctions: false },
     },
-    WaypointSystem: {
+    NoteSystem: {
       openAccess: true,
       deploy: { registerWorldFunctions: false },
     },
@@ -31,18 +31,6 @@ export default defineWorld({
         dataStruct: false,
       },
     },
-    ArticleMetadata: {
-      schema: {
-        id: "bytes32", // Post ID
-        createdAt: "uint64",
-        owner: "address",
-        updatedAt: "uint64",
-        content: "string", // markdown content, ~4-8KB limit
-        title: "string",
-        coverImage: "string", // optional cover image URL
-      },
-      key: ["id"],
-    },
     Category: "string", // ID is keccak256 hash of the category name
     Collection: {
       schema: {
@@ -50,6 +38,7 @@ export default defineWorld({
         createdAt: "uint64",
         owner: "address",
         updatedAt: "uint64",
+        coverImage: "string", // optional cover image URL
         description: "string",
         title: "string",
       },
@@ -63,6 +52,8 @@ export default defineWorld({
       },
       key: ["collectionId", "noteId"],
     },
+    IsArticle: "bool", // ID is Post ID
+    IsNote: "bool", // ID is Post ID
     NoteCategories: {
       schema: {
         value: "bytes32[]",
@@ -72,18 +63,6 @@ export default defineWorld({
         dataStruct: false,
       },
     },
-    NoteLink: {
-      schema: {
-        noteId: "bytes32",
-        entityId: "bytes32",
-        coordX: "int32", // optional coord cache for proximity
-        coordY: "int32",
-        coordZ: "int32",
-        linkType: "uint8", // 0=anchor, 1=mirror, 2=embed, etc.
-        extra: "string", // optional JSON/metadata (projection, offsets, etc.)
-      },
-      key: ["noteId", "entityId"],
-    },
     Post: {
       // Used for both a Note and Article
       schema: {
@@ -92,33 +71,21 @@ export default defineWorld({
         owner: "address",
         updatedAt: "uint64",
         content: "string", // textarea string for Note; markdown content for Article, ~4-8KB limit
+        coverImage: "string", // optional cover image URL
         title: "string",
         categories: "bytes32[]",
       },
       key: ["id"],
     },
-    WaypointGroup: {
+    PostAnchor: {
       schema: {
-        noteId: "bytes32",
-        color: "uint24", // hex color for UI hints
-        groupId: "uint16",
-        isPublic: "bool",
-        description: "string", // optional group description/deck
-        name: "string",
+        id: "bytes32", // Post ID
+        entityId: "bytes32", // X,Y,Z coordinates
+        coordX: "int32", // optional coord cache for proximity
+        coordY: "int32",
+        coordZ: "int32",
       },
-      key: ["noteId", "groupId"],
-    },
-    WaypointStep: {
-      schema: {
-        noteId: "bytes32",
-        groupId: "uint16",
-        index: "uint16",
-        x: "int32",
-        y: "int32",
-        z: "int32",
-        label: "string",
-      },
-      key: ["noteId", "groupId", "index"],
+      key: ["id"],
     },
   },
 });

@@ -21,21 +21,22 @@ struct PostData {
   address owner;
   uint64 updatedAt;
   string content;
+  string coverImage;
   string title;
   bytes32[] categories;
 }
 
 library Post {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "Post", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303200000000506f7374000000000000000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0003", name: "Post", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303300000000506f7374000000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0024030308140800000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0024030408140800000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint64, address, uint64, string, string, bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x00240303076107c5c5c100000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint64, address, uint64, string, string, string, bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x00240304076107c5c5c5c1000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -51,13 +52,14 @@ library Post {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](7);
     fieldNames[0] = "createdAt";
     fieldNames[1] = "owner";
     fieldNames[2] = "updatedAt";
     fieldNames[3] = "content";
-    fieldNames[4] = "title";
-    fieldNames[5] = "categories";
+    fieldNames[4] = "coverImage";
+    fieldNames[5] = "title";
+    fieldNames[6] = "categories";
   }
 
   /**
@@ -363,13 +365,175 @@ library Post {
   }
 
   /**
+   * @notice Get coverImage.
+   */
+  function getCoverImage(bytes32 id) internal view returns (string memory coverImage) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Get coverImage.
+   */
+  function _getCoverImage(bytes32 id) internal view returns (string memory coverImage) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Set coverImage.
+   */
+  function setCoverImage(bytes32 id, string memory coverImage) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((coverImage)));
+  }
+
+  /**
+   * @notice Set coverImage.
+   */
+  function _setCoverImage(bytes32 id, string memory coverImage) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((coverImage)));
+  }
+
+  /**
+   * @notice Get the length of coverImage.
+   */
+  function lengthCoverImage(bytes32 id) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of coverImage.
+   */
+  function _lengthCoverImage(bytes32 id) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of coverImage.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemCoverImage(bytes32 id, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of coverImage.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemCoverImage(bytes32 id, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to coverImage.
+   */
+  function pushCoverImage(bytes32 id, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to coverImage.
+   */
+  function _pushCoverImage(bytes32 id, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from coverImage.
+   */
+  function popCoverImage(bytes32 id) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Pop a slice from coverImage.
+   */
+  function _popCoverImage(bytes32 id) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Update a slice of coverImage at `_index`.
+   */
+  function updateCoverImage(bytes32 id, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of coverImage at `_index`.
+   */
+  function _updateCoverImage(bytes32 id, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get title.
    */
   function getTitle(bytes32 id) internal view returns (string memory title) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 2);
     return (string(_blob));
   }
 
@@ -380,7 +544,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 2);
     return (string(_blob));
   }
 
@@ -391,7 +555,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((title)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 2, bytes((title)));
   }
 
   /**
@@ -401,7 +565,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((title)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 2, bytes((title)));
   }
 
   /**
@@ -411,7 +575,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 2);
     unchecked {
       return _byteLength / 1;
     }
@@ -424,7 +588,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 2);
     unchecked {
       return _byteLength / 1;
     }
@@ -439,7 +603,7 @@ library Post {
     _keyTuple[0] = id;
 
     unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 1, (_index + 1) * 1);
       return (string(_blob));
     }
   }
@@ -453,7 +617,7 @@ library Post {
     _keyTuple[0] = id;
 
     unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 1, (_index + 1) * 1);
       return (string(_blob));
     }
   }
@@ -465,7 +629,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 2, bytes((_slice)));
   }
 
   /**
@@ -475,7 +639,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 2, bytes((_slice)));
   }
 
   /**
@@ -485,7 +649,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 2, 1);
   }
 
   /**
@@ -495,7 +659,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 2, 1);
   }
 
   /**
@@ -507,7 +671,7 @@ library Post {
 
     unchecked {
       bytes memory _encoded = bytes((_slice));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 1), uint40(_encoded.length), _encoded);
     }
   }
 
@@ -520,7 +684,7 @@ library Post {
 
     unchecked {
       bytes memory _encoded = bytes((_slice));
-      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 1), uint40(_encoded.length), _encoded);
     }
   }
 
@@ -531,7 +695,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 2);
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 3);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
@@ -542,7 +706,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 2);
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 3);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
@@ -553,7 +717,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 2, EncodeArray.encode((categories)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((categories)));
   }
 
   /**
@@ -563,7 +727,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 2, EncodeArray.encode((categories)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((categories)));
   }
 
   /**
@@ -573,7 +737,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 2);
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 3);
     unchecked {
       return _byteLength / 32;
     }
@@ -586,7 +750,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 2);
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 3);
     unchecked {
       return _byteLength / 32;
     }
@@ -601,7 +765,7 @@ library Post {
     _keyTuple[0] = id;
 
     unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 32, (_index + 1) * 32);
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 3, _index * 32, (_index + 1) * 32);
       return (bytes32(_blob));
     }
   }
@@ -615,7 +779,7 @@ library Post {
     _keyTuple[0] = id;
 
     unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 32, (_index + 1) * 32);
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 3, _index * 32, (_index + 1) * 32);
       return (bytes32(_blob));
     }
   }
@@ -627,7 +791,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 2, abi.encodePacked((_element)));
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 3, abi.encodePacked((_element)));
   }
 
   /**
@@ -637,7 +801,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 2, abi.encodePacked((_element)));
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 3, abi.encodePacked((_element)));
   }
 
   /**
@@ -647,7 +811,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 2, 32);
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 3, 32);
   }
 
   /**
@@ -657,7 +821,7 @@ library Post {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 2, 32);
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 3, 32);
   }
 
   /**
@@ -669,7 +833,7 @@ library Post {
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 32), uint40(_encoded.length), _encoded);
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 3, uint40(_index * 32), uint40(_encoded.length), _encoded);
     }
   }
 
@@ -682,7 +846,7 @@ library Post {
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
-      StoreCore.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 32), uint40(_encoded.length), _encoded);
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 3, uint40(_index * 32), uint40(_encoded.length), _encoded);
     }
   }
 
@@ -725,13 +889,14 @@ library Post {
     address owner,
     uint64 updatedAt,
     string memory content,
+    string memory coverImage,
     string memory title,
     bytes32[] memory categories
   ) internal {
     bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
-    bytes memory _dynamicData = encodeDynamic(content, title, categories);
+    EncodedLengths _encodedLengths = encodeLengths(content, coverImage, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, coverImage, title, categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -748,13 +913,14 @@ library Post {
     address owner,
     uint64 updatedAt,
     string memory content,
+    string memory coverImage,
     string memory title,
     bytes32[] memory categories
   ) internal {
     bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
-    bytes memory _dynamicData = encodeDynamic(content, title, categories);
+    EncodedLengths _encodedLengths = encodeLengths(content, coverImage, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, coverImage, title, categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -768,8 +934,8 @@ library Post {
   function set(bytes32 id, PostData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.title, _table.categories);
-    bytes memory _dynamicData = encodeDynamic(_table.content, _table.title, _table.categories);
+    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.coverImage, _table.title, _table.categories);
+    bytes memory _dynamicData = encodeDynamic(_table.content, _table.coverImage, _table.title, _table.categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -783,8 +949,8 @@ library Post {
   function _set(bytes32 id, PostData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.title, _table.categories);
-    bytes memory _dynamicData = encodeDynamic(_table.content, _table.title, _table.categories);
+    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.coverImage, _table.title, _table.categories);
+    bytes memory _dynamicData = encodeDynamic(_table.content, _table.coverImage, _table.title, _table.categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -809,7 +975,11 @@ library Post {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory content, string memory title, bytes32[] memory categories) {
+  )
+    internal
+    pure
+    returns (string memory content, string memory coverImage, string memory title, bytes32[] memory categories)
+  {
     uint256 _start;
     uint256 _end;
     unchecked {
@@ -821,11 +991,17 @@ library Post {
     unchecked {
       _end += _encodedLengths.atIndex(1);
     }
-    title = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+    coverImage = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
 
     _start = _end;
     unchecked {
       _end += _encodedLengths.atIndex(2);
+    }
+    title = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(3);
     }
     categories = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
@@ -843,7 +1019,7 @@ library Post {
   ) internal pure returns (PostData memory _table) {
     (_table.createdAt, _table.owner, _table.updatedAt) = decodeStatic(_staticData);
 
-    (_table.content, _table.title, _table.categories) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.content, _table.coverImage, _table.title, _table.categories) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -880,12 +1056,18 @@ library Post {
    */
   function encodeLengths(
     string memory content,
+    string memory coverImage,
     string memory title,
     bytes32[] memory categories
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(content).length, bytes(title).length, categories.length * 32);
+      _encodedLengths = EncodedLengthsLib.pack(
+        bytes(content).length,
+        bytes(coverImage).length,
+        bytes(title).length,
+        categories.length * 32
+      );
     }
   }
 
@@ -895,10 +1077,11 @@ library Post {
    */
   function encodeDynamic(
     string memory content,
+    string memory coverImage,
     string memory title,
     bytes32[] memory categories
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((content)), bytes((title)), EncodeArray.encode((categories)));
+    return abi.encodePacked(bytes((content)), bytes((coverImage)), bytes((title)), EncodeArray.encode((categories)));
   }
 
   /**
@@ -912,13 +1095,14 @@ library Post {
     address owner,
     uint64 updatedAt,
     string memory content,
+    string memory coverImage,
     string memory title,
     bytes32[] memory categories
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
-    bytes memory _dynamicData = encodeDynamic(content, title, categories);
+    EncodedLengths _encodedLengths = encodeLengths(content, coverImage, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, coverImage, title, categories);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

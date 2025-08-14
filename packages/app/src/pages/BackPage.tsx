@@ -1,4 +1,5 @@
 import { resourceToHex } from "@latticexyz/common";
+import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
@@ -23,7 +24,25 @@ export const BackPage = () => {
   const notes = useRecords({
     stash,
     table: tables.Post,
-  });
+  })
+    .map((r) => {
+      const isNote =
+        getRecord({
+          stash,
+          table: tables.IsNote,
+          key: { id: r.id as `0x${string}` },
+        })?.value ?? false;
+      return {
+        id: r.id,
+        categories: r.categories,
+        content: r.content,
+        isNote: isNote,
+        title: r.title,
+      };
+    })
+    .filter((r) => r.isNote);
+
+  console.log(notes);
 
   const createNote = useMutation({
     mutationFn: ({ title, content }: { title: string; content: string }) => {

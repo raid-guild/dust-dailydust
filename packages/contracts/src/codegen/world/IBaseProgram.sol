@@ -11,11 +11,11 @@ import { HookContext } from "@dust/world/src/ProgramHooks.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IBaseProgram {
-  function rg_dd_0002__onAttachProgram(HookContext calldata ctx) external;
+  function rg_dd_0003__onAttachProgram(HookContext calldata ctx) external;
 
-  function rg_dd_0002__onDetachProgram(HookContext calldata ctx) external;
+  function rg_dd_0003__onDetachProgram(HookContext calldata ctx) external;
 
-  function rg_dd_0002___msgSender() external view returns (address);
+  function rg_dd_0003___msgSender() external view returns (address);
 
-  function rg_dd_0002___msgValue() external view returns (uint256);
+  function rg_dd_0003___msgValue() external view returns (uint256);
 }

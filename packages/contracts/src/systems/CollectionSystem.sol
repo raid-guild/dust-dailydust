@@ -9,27 +9,19 @@ contract CollectionSystem is System {
   /**
    * @dev Create a new collection owned by msg.sender
    */
-  function createCollection(
-    bytes32 collectionId,
-    string memory title,
-    string memory description
-  ) public {
+  function createCollection(bytes32 collectionId, string memory title, string memory description) public {
     // Ensure the collection does not already exist (owner == address(0) sentinel)
     require(Collection.getOwner(collectionId) == address(0), "Collection already exists");
 
     uint64 ts = uint64(block.timestamp);
 
-    Collection.set(collectionId, ts, _msgSender(), ts, description, title);
+    Collection.set(collectionId, ts, _msgSender(), ts, "", description, title);
   }
 
   /**
    * @dev Update collection metadata (owner only)
    */
-  function updateCollection(
-    bytes32 collectionId,
-    string memory title,
-    string memory description
-  ) public {
+  function updateCollection(bytes32 collectionId, string memory title, string memory description) public {
     address owner = Collection.getOwner(collectionId);
     require(owner != address(0), "Collection does not exist");
     require(owner == _msgSender(), "Only owner can update collection");
