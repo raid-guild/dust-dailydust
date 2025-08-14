@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type CollectionSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0001", name: "CollectionSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0002", name: "CollectionSystem" }))
 CollectionSystemType constant collectionSystem = CollectionSystemType.wrap(
-  0x737972675f64645f3030303100000000436f6c6c656374696f6e53797374656d
+  0x737972675f64645f3030303200000000436f6c6c656374696f6e53797374656d
 );
 
 struct CallWrapper {
@@ -41,36 +41,18 @@ library CollectionSystemLib {
     CollectionSystemType self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
-    return
-      CallWrapper(self.toResourceId(), address(0)).createCollection(
-        collectionId,
-        title,
-        description,
-        headerImageUrl,
-        featured
-      );
+    return CallWrapper(self.toResourceId(), address(0)).createCollection(collectionId, title, description);
   }
 
   function updateCollection(
     CollectionSystemType self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
-    return
-      CallWrapper(self.toResourceId(), address(0)).updateCollection(
-        collectionId,
-        title,
-        description,
-        headerImageUrl,
-        featured
-      );
+    return CallWrapper(self.toResourceId(), address(0)).updateCollection(collectionId, title, description);
   }
 
   function deleteCollection(CollectionSystemType self, bytes32 collectionId) internal {
@@ -93,16 +75,14 @@ library CollectionSystemLib {
     CallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _createCollection_bytes32_string_string_string_bool.createCollection,
-      (collectionId, title, description, headerImageUrl, featured)
+      _createCollection_bytes32_string_string.createCollection,
+      (collectionId, title, description)
     );
     self.from == address(0)
       ? _world().call(self.systemId, systemCall)
@@ -113,16 +93,14 @@ library CollectionSystemLib {
     CallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _updateCollection_bytes32_string_string_string_bool.updateCollection,
-      (collectionId, title, description, headerImageUrl, featured)
+      _updateCollection_bytes32_string_string.updateCollection,
+      (collectionId, title, description)
     );
     self.from == address(0)
       ? _world().call(self.systemId, systemCall)
@@ -182,13 +160,11 @@ library CollectionSystemLib {
     RootCallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
     bytes memory systemCall = abi.encodeCall(
-      _createCollection_bytes32_string_string_string_bool.createCollection,
-      (collectionId, title, description, headerImageUrl, featured)
+      _createCollection_bytes32_string_string.createCollection,
+      (collectionId, title, description)
     );
     SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
   }
@@ -197,13 +173,11 @@ library CollectionSystemLib {
     RootCallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) internal {
     bytes memory systemCall = abi.encodeCall(
-      _updateCollection_bytes32_string_string_string_bool.updateCollection,
-      (collectionId, title, description, headerImageUrl, featured)
+      _updateCollection_bytes32_string_string.updateCollection,
+      (collectionId, title, description)
     );
     SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
   }
@@ -280,24 +254,12 @@ library CollectionSystemLib {
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
 
-interface _createCollection_bytes32_string_string_string_bool {
-  function createCollection(
-    bytes32 collectionId,
-    string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
-  ) external;
+interface _createCollection_bytes32_string_string {
+  function createCollection(bytes32 collectionId, string memory title, string memory description) external;
 }
 
-interface _updateCollection_bytes32_string_string_string_bool {
-  function updateCollection(
-    bytes32 collectionId,
-    string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
-  ) external;
+interface _updateCollection_bytes32_string_string {
+  function updateCollection(bytes32 collectionId, string memory title, string memory description) external;
 }
 
 interface _deleteCollection_bytes32 {

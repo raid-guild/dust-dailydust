@@ -358,11 +358,6 @@ export function PublishWizard({
       // Prepare
       const title = contentState.title.trim();
       const body = contentState.content.trim();
-      const tagsCsv = contentState.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .join(",");
 
       // Create or update the note on-chain
       const noteHexId: `0x${string}` =
@@ -387,7 +382,7 @@ export function PublishWizard({
               systemId: noteSystemId,
               abi: noteSystemAbi,
               functionName: "updateNote",
-              args: [noteHexId, title, body, tagsCsv],
+              args: [noteHexId, title, body],
             },
           ],
         });
@@ -399,7 +394,7 @@ export function PublishWizard({
               systemId: noteSystemId,
               abi: noteSystemAbi,
               functionName: "createNote",
-              args: [noteHexId, title, body, tagsCsv],
+              args: [noteHexId, title, body],
             },
           ],
         });

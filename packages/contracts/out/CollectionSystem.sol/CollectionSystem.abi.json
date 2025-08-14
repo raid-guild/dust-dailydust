@@ -79,16 +79,6 @@
         "name": "description",
         "type": "string",
         "internalType": "string"
-      },
-      {
-        "name": "headerImageUrl",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "featured",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "outputs": [],
@@ -180,16 +170,6 @@
         "name": "description",
         "type": "string",
         "internalType": "string"
-      },
-      {
-        "name": "headerImageUrl",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "featured",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "outputs": [],

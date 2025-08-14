@@ -2,9 +2,7 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { Note, NoteData } from "../codegen/tables/Note.sol";
-import { WaypointGroup, WaypointGroupData } from "../codegen/tables/WaypointGroup.sol";
-import { WaypointStep, WaypointStepData } from "../codegen/tables/WaypointStep.sol";
+import { Post, PostData, WaypointGroup, WaypointGroupData, WaypointStep, WaypointStepData } from "../codegen/index.sol";
 
 contract WaypointSystem is System {
   /**
@@ -17,7 +15,7 @@ contract WaypointSystem is System {
    */
   function createWaypointGroup(bytes32 noteId, uint16 groupId, string memory name, uint24 color, bool isPublic) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     // Ensure group doesn't exist (check if name is empty)
@@ -40,7 +38,7 @@ contract WaypointSystem is System {
    */
   function updateWaypointGroup(bytes32 noteId, uint16 groupId, string memory name, uint24 color, bool isPublic) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     // Verify group exists
@@ -58,7 +56,7 @@ contract WaypointSystem is System {
    */
   function deleteWaypointGroup(bytes32 noteId, uint16 groupId) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     // Delete the group (steps would need to be deleted separately in a real implementation)
@@ -85,7 +83,7 @@ contract WaypointSystem is System {
     string memory label
   ) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     // Verify group exists
@@ -117,7 +115,7 @@ contract WaypointSystem is System {
     string memory label
   ) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     // Verify step exists
@@ -137,7 +135,7 @@ contract WaypointSystem is System {
    */
   function removeWaypointStep(bytes32 noteId, uint16 groupId, uint16 index) public {
     // Verify note exists and caller is owner
-    NoteData memory note = Note.get(noteId);
+    PostData memory note = Post.get(noteId);
     require(note.owner == _msgSender(), "Not owner");
 
     WaypointStep.deleteRecord(noteId, groupId, index);

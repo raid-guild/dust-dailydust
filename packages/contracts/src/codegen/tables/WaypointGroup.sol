@@ -19,13 +19,13 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 struct WaypointGroupData {
   uint24 color;
   bool isPublic;
-  string name;
   string description;
+  string name;
 }
 
 library WaypointGroup {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000576179706f696e7447726f7570000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303200000000576179706f696e7447726f7570000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0004020203010000000000000000000000000000000000000000000000000000);
@@ -53,8 +53,8 @@ library WaypointGroup {
     fieldNames = new string[](4);
     fieldNames[0] = "color";
     fieldNames[1] = "isPublic";
-    fieldNames[2] = "name";
-    fieldNames[3] = "description";
+    fieldNames[2] = "description";
+    fieldNames[3] = "name";
   }
 
   /**
@@ -164,182 +164,6 @@ library WaypointGroup {
   }
 
   /**
-   * @notice Get name.
-   */
-  function getName(bytes32 noteId, uint16 groupId) internal view returns (string memory name) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
-    return (string(_blob));
-  }
-
-  /**
-   * @notice Get name.
-   */
-  function _getName(bytes32 noteId, uint16 groupId) internal view returns (string memory name) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
-    return (string(_blob));
-  }
-
-  /**
-   * @notice Set name.
-   */
-  function setName(bytes32 noteId, uint16 groupId, string memory name) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((name)));
-  }
-
-  /**
-   * @notice Set name.
-   */
-  function _setName(bytes32 noteId, uint16 groupId, string memory name) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((name)));
-  }
-
-  /**
-   * @notice Get the length of name.
-   */
-  function lengthName(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get the length of name.
-   */
-  function _lengthName(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get an item of name.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function getItemName(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
-      return (string(_blob));
-    }
-  }
-
-  /**
-   * @notice Get an item of name.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function _getItemName(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
-      return (string(_blob));
-    }
-  }
-
-  /**
-   * @notice Push a slice to name.
-   */
-  function pushName(bytes32 noteId, uint16 groupId, string memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
-  }
-
-  /**
-   * @notice Push a slice to name.
-   */
-  function _pushName(bytes32 noteId, uint16 groupId, string memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
-  }
-
-  /**
-   * @notice Pop a slice from name.
-   */
-  function popName(bytes32 noteId, uint16 groupId) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 1);
-  }
-
-  /**
-   * @notice Pop a slice from name.
-   */
-  function _popName(bytes32 noteId, uint16 groupId) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 1);
-  }
-
-  /**
-   * @notice Update a slice of name at `_index`.
-   */
-  function updateName(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
-   * @notice Update a slice of name at `_index`.
-   */
-  function _updateName(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = bytes32(uint256(groupId));
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreCore.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
    * @notice Get description.
    */
   function getDescription(bytes32 noteId, uint16 groupId) internal view returns (string memory description) {
@@ -347,7 +171,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
     return (string(_blob));
   }
 
@@ -359,7 +183,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
     return (string(_blob));
   }
 
@@ -371,7 +195,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((description)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((description)));
   }
 
   /**
@@ -382,7 +206,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((description)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((description)));
   }
 
   /**
@@ -393,7 +217,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
       return _byteLength / 1;
     }
@@ -407,7 +231,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
       return _byteLength / 1;
     }
@@ -423,7 +247,7 @@ library WaypointGroup {
     _keyTuple[1] = bytes32(uint256(groupId));
 
     unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
       return (string(_blob));
     }
   }
@@ -438,7 +262,7 @@ library WaypointGroup {
     _keyTuple[1] = bytes32(uint256(groupId));
 
     unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
       return (string(_blob));
     }
   }
@@ -451,7 +275,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
   }
 
   /**
@@ -462,7 +286,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
   }
 
   /**
@@ -473,7 +297,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 1);
   }
 
   /**
@@ -484,7 +308,7 @@ library WaypointGroup {
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
 
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 1);
   }
 
   /**
@@ -497,7 +321,7 @@ library WaypointGroup {
 
     unchecked {
       bytes memory _encoded = bytes((_slice));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
     }
   }
 
@@ -505,6 +329,182 @@ library WaypointGroup {
    * @notice Update a slice of description at `_index`.
    */
   function _updateDescription(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Get name.
+   */
+  function getName(bytes32 noteId, uint16 groupId) internal view returns (string memory name) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Get name.
+   */
+  function _getName(bytes32 noteId, uint16 groupId) internal view returns (string memory name) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Set name.
+   */
+  function setName(bytes32 noteId, uint16 groupId, string memory name) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((name)));
+  }
+
+  /**
+   * @notice Set name.
+   */
+  function _setName(bytes32 noteId, uint16 groupId, string memory name) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((name)));
+  }
+
+  /**
+   * @notice Get the length of name.
+   */
+  function lengthName(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of name.
+   */
+  function _lengthName(bytes32 noteId, uint16 groupId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of name.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemName(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of name.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemName(bytes32 noteId, uint16 groupId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to name.
+   */
+  function pushName(bytes32 noteId, uint16 groupId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to name.
+   */
+  function _pushName(bytes32 noteId, uint16 groupId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from name.
+   */
+  function popName(bytes32 noteId, uint16 groupId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Pop a slice from name.
+   */
+  function _popName(bytes32 noteId, uint16 groupId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Update a slice of name at `_index`.
+   */
+  function updateName(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = bytes32(uint256(groupId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of name at `_index`.
+   */
+  function _updateName(bytes32 noteId, uint16 groupId, uint256 _index, string memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
     _keyTuple[1] = bytes32(uint256(groupId));
@@ -555,13 +555,13 @@ library WaypointGroup {
     uint16 groupId,
     uint24 color,
     bool isPublic,
-    string memory name,
-    string memory description
+    string memory description,
+    string memory name
   ) internal {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name, description);
-    bytes memory _dynamicData = encodeDynamic(name, description);
+    EncodedLengths _encodedLengths = encodeLengths(description, name);
+    bytes memory _dynamicData = encodeDynamic(description, name);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -578,13 +578,13 @@ library WaypointGroup {
     uint16 groupId,
     uint24 color,
     bool isPublic,
-    string memory name,
-    string memory description
+    string memory description,
+    string memory name
   ) internal {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name, description);
-    bytes memory _dynamicData = encodeDynamic(name, description);
+    EncodedLengths _encodedLengths = encodeLengths(description, name);
+    bytes memory _dynamicData = encodeDynamic(description, name);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -599,8 +599,8 @@ library WaypointGroup {
   function set(bytes32 noteId, uint16 groupId, WaypointGroupData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.color, _table.isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.description);
-    bytes memory _dynamicData = encodeDynamic(_table.name, _table.description);
+    EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.name);
+    bytes memory _dynamicData = encodeDynamic(_table.description, _table.name);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -615,8 +615,8 @@ library WaypointGroup {
   function _set(bytes32 noteId, uint16 groupId, WaypointGroupData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.color, _table.isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.description);
-    bytes memory _dynamicData = encodeDynamic(_table.name, _table.description);
+    EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.name);
+    bytes memory _dynamicData = encodeDynamic(_table.description, _table.name);
 
     bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = noteId;
@@ -640,19 +640,19 @@ library WaypointGroup {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory name, string memory description) {
+  ) internal pure returns (string memory description, string memory name) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    name = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+    description = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
 
     _start = _end;
     unchecked {
       _end += _encodedLengths.atIndex(1);
     }
-    description = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+    name = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -668,7 +668,7 @@ library WaypointGroup {
   ) internal pure returns (WaypointGroupData memory _table) {
     (_table.color, _table.isPublic) = decodeStatic(_staticData);
 
-    (_table.name, _table.description) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.description, _table.name) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -706,12 +706,12 @@ library WaypointGroup {
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
   function encodeLengths(
-    string memory name,
-    string memory description
+    string memory description,
+    string memory name
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(name).length, bytes(description).length);
+      _encodedLengths = EncodedLengthsLib.pack(bytes(description).length, bytes(name).length);
     }
   }
 
@@ -719,8 +719,8 @@ library WaypointGroup {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(string memory name, string memory description) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((name)), bytes((description)));
+  function encodeDynamic(string memory description, string memory name) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((description)), bytes((name)));
   }
 
   /**
@@ -732,13 +732,13 @@ library WaypointGroup {
   function encode(
     uint24 color,
     bool isPublic,
-    string memory name,
-    string memory description
+    string memory description,
+    string memory name
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(color, isPublic);
 
-    EncodedLengths _encodedLengths = encodeLengths(name, description);
-    bytes memory _dynamicData = encodeDynamic(name, description);
+    EncodedLengths _encodedLengths = encodeLengths(description, name);
+    bytes memory _dynamicData = encodeDynamic(description, name);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }
