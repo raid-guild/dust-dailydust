@@ -16,26 +16,27 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-struct CollectionData {
+struct PostData {
   uint64 createdAt;
   address owner;
   bool published;
   uint64 updatedAt;
-  string description;
+  string content;
   string title;
+  bytes32[] categories;
 }
 
-library Collection {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "Collection", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000436f6c6c656374696f6e000000000000);
+library Post {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "Post", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000506f7374000000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0025040208140108000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0025040308140108000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint64, address, bool, uint64, string, string)
-  Schema constant _valueSchema = Schema.wrap(0x0025040207616007c5c500000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint64, address, bool, uint64, string, string, bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x0025040307616007c5c5c1000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -51,13 +52,14 @@ library Collection {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](7);
     fieldNames[0] = "createdAt";
     fieldNames[1] = "owner";
     fieldNames[2] = "published";
     fieldNames[3] = "updatedAt";
-    fieldNames[4] = "description";
+    fieldNames[4] = "content";
     fieldNames[5] = "title";
+    fieldNames[6] = "categories";
   }
 
   /**
@@ -243,9 +245,9 @@ library Collection {
   }
 
   /**
-   * @notice Get description.
+   * @notice Get content.
    */
-  function getDescription(bytes32 id) internal view returns (string memory description) {
+  function getContent(bytes32 id) internal view returns (string memory content) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -254,9 +256,9 @@ library Collection {
   }
 
   /**
-   * @notice Get description.
+   * @notice Get content.
    */
-  function _getDescription(bytes32 id) internal view returns (string memory description) {
+  function _getContent(bytes32 id) internal view returns (string memory content) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -265,29 +267,29 @@ library Collection {
   }
 
   /**
-   * @notice Set description.
+   * @notice Set content.
    */
-  function setDescription(bytes32 id, string memory description) internal {
+  function setContent(bytes32 id, string memory content) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((description)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((content)));
   }
 
   /**
-   * @notice Set description.
+   * @notice Set content.
    */
-  function _setDescription(bytes32 id, string memory description) internal {
+  function _setContent(bytes32 id, string memory content) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((description)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((content)));
   }
 
   /**
-   * @notice Get the length of description.
+   * @notice Get the length of content.
    */
-  function lengthDescription(bytes32 id) internal view returns (uint256) {
+  function lengthContent(bytes32 id) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -298,9 +300,9 @@ library Collection {
   }
 
   /**
-   * @notice Get the length of description.
+   * @notice Get the length of content.
    */
-  function _lengthDescription(bytes32 id) internal view returns (uint256) {
+  function _lengthContent(bytes32 id) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -311,10 +313,10 @@ library Collection {
   }
 
   /**
-   * @notice Get an item of description.
+   * @notice Get an item of content.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemDescription(bytes32 id, uint256 _index) internal view returns (string memory) {
+  function getItemContent(bytes32 id, uint256 _index) internal view returns (string memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -325,10 +327,10 @@ library Collection {
   }
 
   /**
-   * @notice Get an item of description.
+   * @notice Get an item of content.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemDescription(bytes32 id, uint256 _index) internal view returns (string memory) {
+  function _getItemContent(bytes32 id, uint256 _index) internal view returns (string memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -339,9 +341,9 @@ library Collection {
   }
 
   /**
-   * @notice Push a slice to description.
+   * @notice Push a slice to content.
    */
-  function pushDescription(bytes32 id, string memory _slice) internal {
+  function pushContent(bytes32 id, string memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -349,9 +351,9 @@ library Collection {
   }
 
   /**
-   * @notice Push a slice to description.
+   * @notice Push a slice to content.
    */
-  function _pushDescription(bytes32 id, string memory _slice) internal {
+  function _pushContent(bytes32 id, string memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -359,9 +361,9 @@ library Collection {
   }
 
   /**
-   * @notice Pop a slice from description.
+   * @notice Pop a slice from content.
    */
-  function popDescription(bytes32 id) internal {
+  function popContent(bytes32 id) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -369,9 +371,9 @@ library Collection {
   }
 
   /**
-   * @notice Pop a slice from description.
+   * @notice Pop a slice from content.
    */
-  function _popDescription(bytes32 id) internal {
+  function _popContent(bytes32 id) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -379,9 +381,9 @@ library Collection {
   }
 
   /**
-   * @notice Update a slice of description at `_index`.
+   * @notice Update a slice of content at `_index`.
    */
-  function updateDescription(bytes32 id, uint256 _index, string memory _slice) internal {
+  function updateContent(bytes32 id, uint256 _index, string memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -392,9 +394,9 @@ library Collection {
   }
 
   /**
-   * @notice Update a slice of description at `_index`.
+   * @notice Update a slice of content at `_index`.
    */
-  function _updateDescription(bytes32 id, uint256 _index, string memory _slice) internal {
+  function _updateContent(bytes32 id, uint256 _index, string memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -567,9 +569,171 @@ library Collection {
   }
 
   /**
+   * @notice Get categories.
+   */
+  function getCategories(bytes32 id) internal view returns (bytes32[] memory categories) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 2);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
+  }
+
+  /**
+   * @notice Get categories.
+   */
+  function _getCategories(bytes32 id) internal view returns (bytes32[] memory categories) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 2);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
+  }
+
+  /**
+   * @notice Set categories.
+   */
+  function setCategories(bytes32 id, bytes32[] memory categories) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 2, EncodeArray.encode((categories)));
+  }
+
+  /**
+   * @notice Set categories.
+   */
+  function _setCategories(bytes32 id, bytes32[] memory categories) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 2, EncodeArray.encode((categories)));
+  }
+
+  /**
+   * @notice Get the length of categories.
+   */
+  function lengthCategories(bytes32 id) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 2);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get the length of categories.
+   */
+  function _lengthCategories(bytes32 id) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 2);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get an item of categories.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemCategories(bytes32 id, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of categories.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemCategories(bytes32 id, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Push an element to categories.
+   */
+  function pushCategories(bytes32 id, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 2, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Push an element to categories.
+   */
+  function _pushCategories(bytes32 id, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 2, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Pop an element from categories.
+   */
+  function popCategories(bytes32 id) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 2, 32);
+  }
+
+  /**
+   * @notice Pop an element from categories.
+   */
+  function _popCategories(bytes32 id) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 2, 32);
+  }
+
+  /**
+   * @notice Update an element of categories at `_index`.
+   */
+  function updateCategories(bytes32 id, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update an element of categories at `_index`.
+   */
+  function _updateCategories(bytes32 id, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get the full data.
    */
-  function get(bytes32 id) internal view returns (CollectionData memory _table) {
+  function get(bytes32 id) internal view returns (PostData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -584,7 +748,7 @@ library Collection {
   /**
    * @notice Get the full data.
    */
-  function _get(bytes32 id) internal view returns (CollectionData memory _table) {
+  function _get(bytes32 id) internal view returns (PostData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
@@ -605,13 +769,14 @@ library Collection {
     address owner,
     bool published,
     uint64 updatedAt,
-    string memory description,
-    string memory title
+    string memory content,
+    string memory title,
+    bytes32[] memory categories
   ) internal {
     bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(description, title);
-    bytes memory _dynamicData = encodeDynamic(description, title);
+    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, title, categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -628,13 +793,14 @@ library Collection {
     address owner,
     bool published,
     uint64 updatedAt,
-    string memory description,
-    string memory title
+    string memory content,
+    string memory title,
+    bytes32[] memory categories
   ) internal {
     bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(description, title);
-    bytes memory _dynamicData = encodeDynamic(description, title);
+    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, title, categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -645,11 +811,11 @@ library Collection {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(bytes32 id, CollectionData memory _table) internal {
+  function set(bytes32 id, PostData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.published, _table.updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.title);
-    bytes memory _dynamicData = encodeDynamic(_table.description, _table.title);
+    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.title, _table.categories);
+    bytes memory _dynamicData = encodeDynamic(_table.content, _table.title, _table.categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -660,11 +826,11 @@ library Collection {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(bytes32 id, CollectionData memory _table) internal {
+  function _set(bytes32 id, PostData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.published, _table.updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.title);
-    bytes memory _dynamicData = encodeDynamic(_table.description, _table.title);
+    EncodedLengths _encodedLengths = encodeLengths(_table.content, _table.title, _table.categories);
+    bytes memory _dynamicData = encodeDynamic(_table.content, _table.title, _table.categories);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -693,19 +859,25 @@ library Collection {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory description, string memory title) {
+  ) internal pure returns (string memory content, string memory title, bytes32[] memory categories) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    description = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+    content = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
 
     _start = _end;
     unchecked {
       _end += _encodedLengths.atIndex(1);
     }
     title = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(2);
+    }
+    categories = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
 
   /**
@@ -718,10 +890,10 @@ library Collection {
     bytes memory _staticData,
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
-  ) internal pure returns (CollectionData memory _table) {
+  ) internal pure returns (PostData memory _table) {
     (_table.createdAt, _table.owner, _table.published, _table.updatedAt) = decodeStatic(_staticData);
 
-    (_table.description, _table.title) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.content, _table.title, _table.categories) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -762,12 +934,13 @@ library Collection {
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
   function encodeLengths(
-    string memory description,
-    string memory title
+    string memory content,
+    string memory title,
+    bytes32[] memory categories
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(description).length, bytes(title).length);
+      _encodedLengths = EncodedLengthsLib.pack(bytes(content).length, bytes(title).length, categories.length * 32);
     }
   }
 
@@ -775,8 +948,12 @@ library Collection {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(string memory description, string memory title) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((description)), bytes((title)));
+  function encodeDynamic(
+    string memory content,
+    string memory title,
+    bytes32[] memory categories
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((content)), bytes((title)), EncodeArray.encode((categories)));
   }
 
   /**
@@ -790,13 +967,14 @@ library Collection {
     address owner,
     bool published,
     uint64 updatedAt,
-    string memory description,
-    string memory title
+    string memory content,
+    string memory title,
+    bytes32[] memory categories
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
 
-    EncodedLengths _encodedLengths = encodeLengths(description, title);
-    bytes memory _dynamicData = encodeDynamic(description, title);
+    EncodedLengths _encodedLengths = encodeLengths(content, title, categories);
+    bytes memory _dynamicData = encodeDynamic(content, title, categories);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

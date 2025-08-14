@@ -56,11 +56,6 @@
         "name": "content",
         "type": "string",
         "internalType": "string"
-      },
-      {
-        "name": "tags",
-        "type": "string",
-        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -156,24 +151,6 @@
   },
   {
     "type": "function",
-    "name": "updateHeaderImageUrl",
-    "inputs": [
-      {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newUrl",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "updateNote",
     "inputs": [
       {
@@ -190,29 +167,6 @@
         "name": "content",
         "type": "string",
         "internalType": "string"
-      },
-      {
-        "name": "tags",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateTipJar",
-    "inputs": [
-      {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newTipJar",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "outputs": [],

@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
 import { Collection } from "../codegen/tables/Collection.sol";
-import { CollectionNote } from "../codegen/tables/CollectionNote.sol";
+import { CollectionPost } from "../codegen/tables/CollectionPost.sol";
 
 contract CollectionSystem is System {
   /**
@@ -12,16 +12,14 @@ contract CollectionSystem is System {
   function createCollection(
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) public {
     // Ensure the collection does not already exist (owner == address(0) sentinel)
     require(Collection.getOwner(collectionId) == address(0), "Collection already exists");
 
     uint64 ts = uint64(block.timestamp);
 
-    Collection.set(collectionId, _msgSender(), ts, ts, featured, title, description, headerImageUrl, "");
+    Collection.set(collectionId, ts, _msgSender(), false, ts, description, title);
   }
 
   /**
@@ -30,9 +28,7 @@ contract CollectionSystem is System {
   function updateCollection(
     bytes32 collectionId,
     string memory title,
-    string memory description,
-    string memory headerImageUrl,
-    bool featured
+    string memory description
   ) public {
     address owner = Collection.getOwner(collectionId);
     require(owner != address(0), "Collection does not exist");
@@ -40,8 +36,6 @@ contract CollectionSystem is System {
 
     Collection.setTitle(collectionId, title);
     Collection.setDescription(collectionId, description);
-    Collection.setHeaderImageUrl(collectionId, headerImageUrl);
-    Collection.setFeatured(collectionId, featured);
     Collection.setUpdatedAt(collectionId, uint64(block.timestamp));
   }
 
@@ -53,7 +47,7 @@ contract CollectionSystem is System {
     require(owner != address(0), "Collection does not exist");
     require(owner == _msgSender(), "Only owner can delete collection");
 
-    // Note: Any existing CollectionNote entries remain; a cleanup routine could be added if needed.
+    // Note: Any existing CollectionPost entries remain; a cleanup routine could be added if needed.
     Collection.deleteRecord(collectionId);
   }
 
@@ -66,7 +60,7 @@ contract CollectionSystem is System {
     require(owner == _msgSender(), "Only owner can modify collection");
 
     // Idempotent upsert; no uniqueness guard beyond (collectionId, noteId) key
-    CollectionNote.setIndex(collectionId, noteId, index);
+    CollectionPost.setIndex(collectionId, noteId, index);
 
     // Touch updatedAt for the collection
     Collection.setUpdatedAt(collectionId, uint64(block.timestamp));
@@ -80,7 +74,7 @@ contract CollectionSystem is System {
     require(owner != address(0), "Collection does not exist");
     require(owner == _msgSender(), "Only owner can modify collection");
 
-    CollectionNote.deleteRecord(collectionId, noteId);
+    CollectionPost.deleteRecord(collectionId, noteId);
     Collection.setUpdatedAt(collectionId, uint64(block.timestamp));
   }
 

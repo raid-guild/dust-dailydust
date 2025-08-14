@@ -10,7 +10,7 @@ import { WaypointSystem } from "../src/systems/WaypointSystem.sol";
 
 import { noteSystem } from "../src/codegen/systems/NoteSystemLib.sol";
 import { waypointSystem } from "../src/codegen/systems/WaypointSystemLib.sol";
-import { Note, NoteData } from "../src/codegen/tables/Note.sol";
+import { Post, PostData } from "../src/codegen/tables/Post.sol";
 import { WaypointGroup, WaypointGroupData } from "../src/codegen/tables/WaypointGroup.sol";
 import { WaypointStep, WaypointStepData } from "../src/codegen/tables/WaypointStep.sol";
 import { IWorld } from "../src/codegen/world/IWorld.sol";
@@ -44,7 +44,7 @@ contract WaypointSystemTest is MudTest {
     // First create a note
     IWorld(worldAddress).call(
       noteSystem.toResourceId(),
-      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content", "tag1,tag2"))
+      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content"))
     );
     
     // Create a waypoint group
@@ -68,7 +68,7 @@ contract WaypointSystemTest is MudTest {
     // Create note and waypoint group first
     IWorld(worldAddress).call(
       noteSystem.toResourceId(),
-      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content", "tag1,tag2"))
+      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content"))
     );
     
     IWorld(worldAddress).call(
@@ -98,7 +98,7 @@ contract WaypointSystemTest is MudTest {
     // Setup: create note, group, and step
     IWorld(worldAddress).call(
       noteSystem.toResourceId(),
-      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content", "tag1,tag2"))
+      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content"))
     );
     
     IWorld(worldAddress).call(
@@ -133,7 +133,7 @@ contract WaypointSystemTest is MudTest {
     // Create note as player1
     IWorld(worldAddress).call(
       noteSystem.toResourceId(),
-      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content", "tag1,tag2"))
+      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content"))
     );
     
     vm.stopPrank();
@@ -155,7 +155,7 @@ contract WaypointSystemTest is MudTest {
     // Setup: create note, group, and step
     IWorld(worldAddress).call(
       noteSystem.toResourceId(),
-      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content", "tag1,tag2"))
+      abi.encodeCall(noteSystemContract.createNote, (testNoteId, "Test Note", "Content"))
     );
     
     IWorld(worldAddress).call(

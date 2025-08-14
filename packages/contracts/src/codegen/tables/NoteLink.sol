@@ -17,10 +17,10 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct NoteLinkData {
-  uint8 linkType;
   int32 coordX;
   int32 coordY;
   int32 coordZ;
+  uint8 linkType;
   string extra;
 }
 
@@ -29,12 +29,12 @@ library NoteLink {
   ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f30303031000000004e6f74654c696e6b0000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x000d040101040404000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x000d040104040401000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32, bytes32)
   Schema constant _keySchema = Schema.wrap(0x004002005f5f0000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8, int32, int32, int32, string)
-  Schema constant _valueSchema = Schema.wrap(0x000d040100232323c50000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int32, int32, int32, uint8, string)
+  Schema constant _valueSchema = Schema.wrap(0x000d040123232300c50000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,10 +52,10 @@ library NoteLink {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](5);
-    fieldNames[0] = "linkType";
-    fieldNames[1] = "coordX";
-    fieldNames[2] = "coordY";
-    fieldNames[3] = "coordZ";
+    fieldNames[0] = "coordX";
+    fieldNames[1] = "coordY";
+    fieldNames[2] = "coordZ";
+    fieldNames[3] = "linkType";
     fieldNames[4] = "extra";
   }
 
@@ -74,52 +74,6 @@ library NoteLink {
   }
 
   /**
-   * @notice Get linkType.
-   */
-  function getLinkType(bytes32 noteId, bytes32 entityId) internal view returns (uint8 linkType) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = entityId;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint8(bytes1(_blob)));
-  }
-
-  /**
-   * @notice Get linkType.
-   */
-  function _getLinkType(bytes32 noteId, bytes32 entityId) internal view returns (uint8 linkType) {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = entityId;
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint8(bytes1(_blob)));
-  }
-
-  /**
-   * @notice Set linkType.
-   */
-  function setLinkType(bytes32 noteId, bytes32 entityId, uint8 linkType) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = entityId;
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((linkType)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set linkType.
-   */
-  function _setLinkType(bytes32 noteId, bytes32 entityId, uint8 linkType) internal {
-    bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = noteId;
-    _keyTuple[1] = entityId;
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((linkType)), _fieldLayout);
-  }
-
-  /**
    * @notice Get coordX.
    */
   function getCoordX(bytes32 noteId, bytes32 entityId) internal view returns (int32 coordX) {
@@ -127,7 +81,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -139,7 +93,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -151,7 +105,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((coordX)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((coordX)), _fieldLayout);
   }
 
   /**
@@ -162,7 +116,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((coordX)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((coordX)), _fieldLayout);
   }
 
   /**
@@ -173,7 +127,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -185,7 +139,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -197,7 +151,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((coordY)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((coordY)), _fieldLayout);
   }
 
   /**
@@ -208,7 +162,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((coordY)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((coordY)), _fieldLayout);
   }
 
   /**
@@ -219,7 +173,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -231,7 +185,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int32(uint32(bytes4(_blob))));
   }
 
@@ -243,7 +197,7 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((coordZ)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((coordZ)), _fieldLayout);
   }
 
   /**
@@ -254,7 +208,53 @@ library NoteLink {
     _keyTuple[0] = noteId;
     _keyTuple[1] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((coordZ)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((coordZ)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get linkType.
+   */
+  function getLinkType(bytes32 noteId, bytes32 entityId) internal view returns (uint8 linkType) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get linkType.
+   */
+  function _getLinkType(bytes32 noteId, bytes32 entityId) internal view returns (uint8 linkType) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set linkType.
+   */
+  function setLinkType(bytes32 noteId, bytes32 entityId, uint8 linkType) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((linkType)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set linkType.
+   */
+  function _setLinkType(bytes32 noteId, bytes32 entityId, uint8 linkType) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = noteId;
+    _keyTuple[1] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((linkType)), _fieldLayout);
   }
 
   /**
@@ -471,13 +471,13 @@ library NoteLink {
   function set(
     bytes32 noteId,
     bytes32 entityId,
-    uint8 linkType,
     int32 coordX,
     int32 coordY,
     int32 coordZ,
+    uint8 linkType,
     string memory extra
   ) internal {
-    bytes memory _staticData = encodeStatic(linkType, coordX, coordY, coordZ);
+    bytes memory _staticData = encodeStatic(coordX, coordY, coordZ, linkType);
 
     EncodedLengths _encodedLengths = encodeLengths(extra);
     bytes memory _dynamicData = encodeDynamic(extra);
@@ -495,13 +495,13 @@ library NoteLink {
   function _set(
     bytes32 noteId,
     bytes32 entityId,
-    uint8 linkType,
     int32 coordX,
     int32 coordY,
     int32 coordZ,
+    uint8 linkType,
     string memory extra
   ) internal {
-    bytes memory _staticData = encodeStatic(linkType, coordX, coordY, coordZ);
+    bytes memory _staticData = encodeStatic(coordX, coordY, coordZ, linkType);
 
     EncodedLengths _encodedLengths = encodeLengths(extra);
     bytes memory _dynamicData = encodeDynamic(extra);
@@ -517,7 +517,7 @@ library NoteLink {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 noteId, bytes32 entityId, NoteLinkData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.linkType, _table.coordX, _table.coordY, _table.coordZ);
+    bytes memory _staticData = encodeStatic(_table.coordX, _table.coordY, _table.coordZ, _table.linkType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.extra);
     bytes memory _dynamicData = encodeDynamic(_table.extra);
@@ -533,7 +533,7 @@ library NoteLink {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 noteId, bytes32 entityId, NoteLinkData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.linkType, _table.coordX, _table.coordY, _table.coordZ);
+    bytes memory _staticData = encodeStatic(_table.coordX, _table.coordY, _table.coordZ, _table.linkType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.extra);
     bytes memory _dynamicData = encodeDynamic(_table.extra);
@@ -550,14 +550,14 @@ library NoteLink {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (uint8 linkType, int32 coordX, int32 coordY, int32 coordZ) {
-    linkType = (uint8(Bytes.getBytes1(_blob, 0)));
+  ) internal pure returns (int32 coordX, int32 coordY, int32 coordZ, uint8 linkType) {
+    coordX = (int32(uint32(Bytes.getBytes4(_blob, 0))));
 
-    coordX = (int32(uint32(Bytes.getBytes4(_blob, 1))));
+    coordY = (int32(uint32(Bytes.getBytes4(_blob, 4))));
 
-    coordY = (int32(uint32(Bytes.getBytes4(_blob, 5))));
+    coordZ = (int32(uint32(Bytes.getBytes4(_blob, 8))));
 
-    coordZ = (int32(uint32(Bytes.getBytes4(_blob, 9))));
+    linkType = (uint8(Bytes.getBytes1(_blob, 12)));
   }
 
   /**
@@ -586,7 +586,7 @@ library NoteLink {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (NoteLinkData memory _table) {
-    (_table.linkType, _table.coordX, _table.coordY, _table.coordZ) = decodeStatic(_staticData);
+    (_table.coordX, _table.coordY, _table.coordZ, _table.linkType) = decodeStatic(_staticData);
 
     (_table.extra) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -617,8 +617,8 @@ library NoteLink {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(uint8 linkType, int32 coordX, int32 coordY, int32 coordZ) internal pure returns (bytes memory) {
-    return abi.encodePacked(linkType, coordX, coordY, coordZ);
+  function encodeStatic(int32 coordX, int32 coordY, int32 coordZ, uint8 linkType) internal pure returns (bytes memory) {
+    return abi.encodePacked(coordX, coordY, coordZ, linkType);
   }
 
   /**
@@ -647,13 +647,13 @@ library NoteLink {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    uint8 linkType,
     int32 coordX,
     int32 coordY,
     int32 coordZ,
+    uint8 linkType,
     string memory extra
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(linkType, coordX, coordY, coordZ);
+    bytes memory _staticData = encodeStatic(coordX, coordY, coordZ, linkType);
 
     EncodedLengths _encodedLengths = encodeLengths(extra);
     bytes memory _dynamicData = encodeDynamic(extra);
