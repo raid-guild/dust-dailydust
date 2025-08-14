@@ -3,9 +3,10 @@ import { resourceToHex } from "@latticexyz/common";
 import mudConfig from "contracts/mud.config";
 import ArticleSystemAbi from "contracts/out/ArticleSystem.sol/ArticleSystem.abi.json";
 import { useDustClient } from "@/common/useDustClient";
+import { getRecord } from "@latticexyz/stash/internal";
+import { stash, tables } from "@/mud/stash";
+import { encodeBlock } from "@dust/world/internal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { runSql, sql } from "@/api/dustIndexer";
-import { tableName } from "@/common/namespace";
 
 interface Props {
   draftId?: string;
@@ -164,6 +165,8 @@ export const ArticleWizard: React.FC<Props> = ({ draftId, articleId, onDone, onC
   const [isPublishing, setIsPublishing] = useState(false);
   const [draftLocalId, setDraftLocalId] = useState(draftId ?? null);
   const [justSaved, setJustSaved] = useState(false);
+  // Anchor position (block coords) shown in preview and used for best-effort anchor creation
+  const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; z: number } | null>(null);
 
   useEffect(() => {
     // hydrate from draft or articleId (basic)
@@ -175,37 +178,51 @@ export const ArticleWizard: React.FC<Props> = ({ draftId, articleId, onDone, onC
         setContent(d.content);
         setDraftLocalId(d.id);
       }
+      return;
     }
 
-    // If editing an on-chain article and there's no local draft, fetch the Post row from indexer to prefill
-    if (articleId && !draftId) {
-      let aborted = false;
-      (async () => {
-        try {
-          const query = `SELECT "id","owner","createdAt","updatedAt","title","content","coverImage" FROM ${sql.ident(
-            tableName("Post")
-          )} WHERE "id" = ${sql.hex32(articleId)} LIMIT 1`;
-          const rows = await runSql<any>(query);
-          if (rows.length && !aborted) {
-            const r = rows[0];
-            setTitle((r.title as string) ?? "");
-            setCoverImage((r.coverImage as string) ?? "");
-            setContent((r.content as string) ?? "");
-            // We're editing the on-chain version, so clear any ephemeral draft id
-            setDraftLocalId(null);
-          }
-        } catch (e) {
-          // Non-fatal: fall back to blank editor
-          // eslint-disable-next-line no-console
-          console.warn("Failed to fetch on-chain article for editing", e);
+    // If an on-chain article id is provided, load it from the Post table
+    if (articleId) {
+      try {
+        // cast articleId to the expected hex literal type for stash/getRecord
+        const rec = getRecord({ stash, table: tables.Post, key: { id: articleId as unknown as `0x${string}` } }) as any | null;
+        if (rec) {
+          setTitle(rec.title ?? "");
+          setCoverImage(rec.coverImage ?? "");
+          setContent(rec.content ?? "");
+          setDraftLocalId(null);
         }
-      })();
-
-      return () => {
-        aborted = true;
-      };
+      } catch (err) {
+        console.warn("Failed to load article for editing", err);
+      }
+      return;
     }
   }, [draftId, articleId]);
+
+  // Fetch current player position (best-effort) to show anchor in preview when creating a new article
+  useEffect(() => {
+    if (articleId) return; // editing existing article - skip
+    if (!dustClient) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const pos = await (dustClient as any).provider.request({
+          method: "getPlayerPosition",
+          params: { entity: (dustClient as any).appContext?.userAddress },
+        });
+        if (cancelled) return;
+        setAnchorPos({ x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) });
+      } catch (e) {
+        // noop - preview anchor is optional
+        console.warn("Could not fetch player position for preview anchor", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dustClient, articleId]);
 
   // Simple markdown formatting helper (applies to textarea with id 'article-content-textarea')
   const applyFormatting = (action: "h1" | "h2" | "h3" | "bold" | "italic") => {
@@ -282,8 +299,9 @@ export const ArticleWizard: React.FC<Props> = ({ draftId, articleId, onDone, onC
     try {
       const articleSystemId = resourceToHex({ type: "system", namespace: mudConfig.namespace, name: "ArticleSystem" });
 
+      // If creating a new article, capture the returned articleId and create an anchor at the player's current block.
       if (articleId) {
-        // update
+        // update existing article
         await (dustClient as any).provider.request({
           method: "systemCall",
           params: [
@@ -296,18 +314,93 @@ export const ArticleWizard: React.FC<Props> = ({ draftId, articleId, onDone, onC
           ],
         });
       } else {
-        // create
-        await (dustClient as any).provider.request({
-          method: "systemCall",
-          params: [
-            {
-              systemId: articleSystemId,
-              abi: ArticleSystemAbi as any,
-              functionName: "createArticle",
-              args: [title, content],
-            },
-          ],
-        });
+        // Use the previewed anchor position if available, otherwise try to fetch it now (best-effort)
+        let playerPos: any = null;
+        if (anchorPos) {
+          playerPos = { x: anchorPos.x, y: anchorPos.y, z: anchorPos.z };
+        } else {
+          try {
+            const pos = await (dustClient as any).provider.request({
+              method: "getPlayerPosition",
+              params: { entity: (dustClient as any).appContext?.userAddress },
+            });
+            playerPos = { x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) };
+          } catch (e) {
+            console.warn("Failed to get player position for article anchor", e);
+          }
+        }
+
+        // Create the article. If we have a player position, create the article + anchor in a single call.
+        let createResult: any = null;
+
+        // if we have player position, compute block coords and entityId and call createArticleWithAnchor
+        if (playerPos) {
+          try {
+            const bx = Math.floor(playerPos.x);
+            const by = Math.floor(playerPos.y);
+            const bz = Math.floor(playerPos.z);
+            const entityId = encodeBlock([bx, by, bz]);
+
+            console.log("Creating article with anchor at", { entityId, bx, by, bz });
+
+            createResult = await (dustClient as any).provider.request({
+              method: "systemCall",
+              params: [
+                {
+                  systemId: articleSystemId,
+                  abi: ArticleSystemAbi as any,
+                  functionName: "createArticleWithAnchor",
+                  args: [title, content, entityId, bx, by, bz],
+                },
+              ],
+            });
+          } catch (e) {
+            console.error("Failed to create article with anchor, falling back to createArticle", e);
+            // fall through to create without anchor
+          }
+        }
+
+        // If createResult is still null (no playerPos or previous call failed), create article normally
+        if (!createResult) {
+          createResult = await (dustClient as any).provider.request({
+            method: "systemCall",
+            params: [
+              {
+                systemId: articleSystemId,
+                abi: ArticleSystemAbi as any,
+                functionName: "createArticle",
+                args: [title, content],
+              },
+            ],
+          });
+        }
+
+        // Optional: try to log the created article id for debugging (best-effort)
+        const extractBytes32 = (res: any): string | null => {
+          if (!res) return null;
+          const hexRegex = /0x[0-9a-fA-F]{64}/g;
+          const seen = new Set<any>();
+          const stack: any[] = [res];
+          while (stack.length) {
+            const cur = stack.pop();
+            if (!cur || typeof cur === "function") continue;
+            if (typeof cur === "string") {
+              const m = cur.match(hexRegex);
+              if (m) return m[0];
+              continue;
+            }
+            if (typeof cur === "object") {
+              if (seen.has(cur)) continue;
+              seen.add(cur);
+              for (const k of Object.keys(cur)) stack.push(cur[k]);
+            }
+          }
+          return null;
+        };
+
+        console.log("Create result", createResult);
+        const newArticleIdHex = extractBytes32(createResult);
+        console.log("Extracted new article id", newArticleIdHex);
       }
 
       // remove draft locally if exists
@@ -388,6 +481,10 @@ export const ArticleWizard: React.FC<Props> = ({ draftId, articleId, onDone, onC
             {coverImage && <img src={coverImage} alt="cover" className="w-full h-40 object-cover rounded mt-2" />}
             <h2 className="mt-2 text-2xl font-heading">{title || "Untitled"}</h2>
             <div className="prose max-w-none whitespace-pre-wrap mt-2" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
+            {/* Show planned anchor position if available */}
+            {anchorPos && (
+              <div className="mt-3 text-sm text-text-secondary">Anchor position: x:{anchorPos.x} y:{anchorPos.y} z:{anchorPos.z}</div>
+            )}
           </div>
         )}
         {step === 3 && (
