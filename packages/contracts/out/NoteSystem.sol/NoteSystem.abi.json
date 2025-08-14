@@ -43,11 +43,6 @@
     "name": "createNote",
     "inputs": [
       {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
         "name": "title",
         "type": "string",
         "internalType": "string"
@@ -58,7 +53,13 @@
         "internalType": "string"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {

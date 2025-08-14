@@ -26,8 +26,8 @@ struct ArticleMetadataData {
 }
 
 library ArticleMetadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "ArticleMetadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f303030310000000041727469636c654d6574616461746100);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "ArticleMetadata", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f303030320000000041727469636c654d6574616461746100);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0024030308140800000000000000000000000000000000000000000000000000);

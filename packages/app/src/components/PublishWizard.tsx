@@ -387,7 +387,7 @@ export function PublishWizard({
               systemId: noteSystemId,
               abi: noteSystemAbi,
               functionName: "updateNote",
-              args: [noteHexId, title, body, tagsCsv],
+              args: [noteHexId, title, body],
             },
           ],
         });
@@ -399,7 +399,7 @@ export function PublishWizard({
               systemId: noteSystemId,
               abi: noteSystemAbi,
               functionName: "createNote",
-              args: [noteHexId, title, body, tagsCsv],
+              args: [noteHexId, title, body],
             },
           ],
         });

@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type NoteSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0001", name: "NoteSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0002", name: "NoteSystem" }))
 NoteSystemType constant noteSystem = NoteSystemType.wrap(
-  0x737972675f64645f30303031000000004e6f746553797374656d000000000000
+  0x737972675f64645f30303032000000004e6f746553797374656d000000000000
 );
 
 struct CallWrapper {
@@ -37,8 +37,12 @@ struct RootCallWrapper {
 library NoteSystemLib {
   error NoteSystemLib_CallingFromRootSystem();
 
-  function createNote(NoteSystemType self, bytes32 noteId, string memory title, string memory content) internal {
-    return CallWrapper(self.toResourceId(), address(0)).createNote(noteId, title, content);
+  function createNote(
+    NoteSystemType self,
+    string memory title,
+    string memory content
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).createNote(title, content);
   }
 
   function updateNote(NoteSystemType self, bytes32 noteId, string memory title, string memory content) internal {
@@ -66,14 +70,23 @@ library NoteSystemLib {
     return CallWrapper(self.toResourceId(), address(0)).removeNoteLink(noteId, entityId);
   }
 
-  function createNote(CallWrapper memory self, bytes32 noteId, string memory title, string memory content) internal {
+  function createNote(
+    CallWrapper memory self,
+    string memory title,
+    string memory content
+  ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
 
-    bytes memory systemCall = abi.encodeCall(_createNote_bytes32_string_string.createNote, (noteId, title, content));
-    self.from == address(0)
+    bytes memory systemCall = abi.encodeCall(_createNote_string_string.createNote, (title, content));
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function updateNote(CallWrapper memory self, bytes32 noteId, string memory title, string memory content) internal {
@@ -129,12 +142,16 @@ library NoteSystemLib {
 
   function createNote(
     RootCallWrapper memory self,
-    bytes32 noteId,
     string memory title,
     string memory content
-  ) internal {
-    bytes memory systemCall = abi.encodeCall(_createNote_bytes32_string_string.createNote, (noteId, title, content));
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+  ) internal returns (bytes32 __auxRet0) {
+    bytes memory systemCall = abi.encodeCall(_createNote_string_string.createNote, (title, content));
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function updateNote(
@@ -211,8 +228,8 @@ library NoteSystemLib {
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
 
-interface _createNote_bytes32_string_string {
-  function createNote(bytes32 noteId, string memory title, string memory content) external;
+interface _createNote_string_string {
+  function createNote(string memory title, string memory content) external;
 }
 
 interface _updateNote_bytes32_string_string {

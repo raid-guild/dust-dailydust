@@ -1,28 +1,74 @@
+import { resourceToHex } from "@latticexyz/common";
+import { useRecords } from "@latticexyz/stash/react";
+import { useMutation } from "@tanstack/react-query";
+import mudConfig from "contracts/mud.config";
+import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
 import type React from "react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
+import { useDustClient } from "@/common/useDustClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { classifiedsSeed } from "@/dummy-data";
 import { cn } from "@/lib/utils";
-
-type Post = { id: string; type: string; title: string; body: string };
+import { stash, tables } from "@/mud/stash";
 
 export const BackPage = () => {
-  const [posts, setPosts] = useState<Post[]>(classifiedsSeed);
-  const [form, setForm] = useState({ type: "Offer", title: "", body: "" });
+  const { data: dustClient } = useDustClient();
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.title || !form.body) return;
-    setPosts((p) => [
-      { id: Math.random().toString(36).slice(2), ...form },
-      ...p,
-    ]);
-    setForm({ type: "Offer", title: "", body: "" });
-  };
+  const [form, setForm] = useState({ type: "Offer", title: "", content: "" });
+
+  const notes = useRecords({
+    stash,
+    table: tables.Post,
+  });
+
+  console.log(notes);
+
+  const createNote = useMutation({
+    mutationFn: ({ title, content }: { title: string; content: string }) => {
+      if (!dustClient) throw new Error("Dust client not connected");
+      return dustClient.provider.request({
+        method: "systemCall",
+        params: [
+          {
+            systemId: resourceToHex({
+              type: "system",
+              namespace: mudConfig.namespace,
+              name: "NoteSystem",
+            }),
+            abi: NoteSystemAbi,
+            functionName: "createNote",
+            args: [title, content],
+          },
+        ],
+      });
+    },
+  });
+
+  const onSubmitListing = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!form.title || !form.content) return;
+
+      setForm({ type: "Offer", title: "", content: "" });
+      console.log("test");
+      try {
+        await createNote.mutateAsync({
+          title: form.title,
+          content: form.content,
+        });
+      } catch (error) {
+        console.error("Error creating note:", error);
+      }
+    },
+    [createNote, form]
+  );
+
+  const isDisabled = useMemo(() => {
+    return createNote.isPending || !form.title || !form.content;
+  }, [createNote.isPending, form.title, form.content]);
 
   return (
     <section className="gap-6 grid p-4 sm:p-6">
@@ -47,7 +93,7 @@ export const BackPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="gap-3 grid" onSubmit={submit}>
+          <form className="gap-3 grid" onSubmit={onSubmitListing}>
             <div className="gap-2 grid sm:grid-cols-3">
               <select
                 aria-label="Type"
@@ -74,24 +120,25 @@ export const BackPage = () => {
             </div>
             <Textarea
               className="border-neutral-900 min-h-28"
-              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
               placeholder="Details..."
-              value={form.body}
+              value={form.content}
             />
             <Button
               className={cn("font-accent", "h-9 px-3 text-[10px]")}
+              disabled={isDisabled}
               type="submit"
             >
-              Submit Listing
+              {createNote.isPending ? "Submitting..." : "Submit Listing"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       <div className="gap-6 grid md:grid-cols-3">
-        {posts.map((p) => (
+        {notes.map((n) => (
           <div
-            key={p.id}
+            key={n.id}
             className="bg-neutral-50 border border-neutral-900 p-3"
           >
             <div
@@ -100,10 +147,10 @@ export const BackPage = () => {
                 "text-[10px] text-neutral-700 tracking-widest uppercase"
               )}
             >
-              {p.type}
+              {n.categories.join(", ")}
             </div>
-            <h3 className={cn("font-heading", "text-xl")}>{p.title}</h3>
-            <p className={"text-[15px] leading-relaxed"}>{p.body}</p>
+            <h3 className={cn("font-heading", "text-xl")}>{n.title}</h3>
+            <p className={"text-[15px] leading-relaxed"}>{n.content}</p>
           </div>
         ))}
       </div>

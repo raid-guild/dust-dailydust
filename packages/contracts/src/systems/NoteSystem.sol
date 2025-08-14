@@ -7,11 +7,12 @@ import { NoteLink, Post, PostData } from "../codegen/index.sol";
 contract NoteSystem is System {
   /**
    * @dev Create a new note
-   * @param noteId Unique identifier for the note
    * @param title Note title
    * @param content Note content in markdown
    */
-  function createNote(bytes32 noteId, string memory title, string memory content) public {
+  function createNote(string memory title, string memory content) public returns (bytes32) {
+    bytes32 noteId = keccak256(abi.encodePacked(_msgSender(), block.timestamp, title));
+
     // Ensure note doesn't exist (check if owner is zero address)
     require(Post.getOwner(noteId) == address(0), "Note exists");
 
@@ -22,13 +23,14 @@ contract NoteSystem is System {
       PostData({
         createdAt: timestamp,
         owner: _msgSender(),
-        published: false,
         updatedAt: timestamp,
         content: content,
         title: title,
         categories: new bytes32[](0)
       })
     );
+
+    return noteId;
   }
 
   /**

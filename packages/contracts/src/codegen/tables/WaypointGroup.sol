@@ -24,8 +24,8 @@ struct WaypointGroupData {
 }
 
 library WaypointGroup {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000576179706f696e7447726f7570000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "WaypointGroup", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303200000000576179706f696e7447726f7570000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0004020203010000000000000000000000000000000000000000000000000000);

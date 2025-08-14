@@ -19,23 +19,22 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 struct CollectionData {
   uint64 createdAt;
   address owner;
-  bool published;
   uint64 updatedAt;
   string description;
   string title;
 }
 
 library Collection {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "Collection", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303100000000436f6c6c656374696f6e000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "Collection", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303200000000436f6c6c656374696f6e000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0025040208140108000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0024030208140800000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint64, address, bool, uint64, string, string)
-  Schema constant _valueSchema = Schema.wrap(0x0025040207616007c5c500000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint64, address, uint64, string, string)
+  Schema constant _valueSchema = Schema.wrap(0x00240302076107c5c50000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -51,13 +50,12 @@ library Collection {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](5);
     fieldNames[0] = "createdAt";
     fieldNames[1] = "owner";
-    fieldNames[2] = "published";
-    fieldNames[3] = "updatedAt";
-    fieldNames[4] = "description";
-    fieldNames[5] = "title";
+    fieldNames[2] = "updatedAt";
+    fieldNames[3] = "description";
+    fieldNames[4] = "title";
   }
 
   /**
@@ -159,55 +157,13 @@ library Collection {
   }
 
   /**
-   * @notice Get published.
-   */
-  function getPublished(bytes32 id) internal view returns (bool published) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (_toBool(uint8(bytes1(_blob))));
-  }
-
-  /**
-   * @notice Get published.
-   */
-  function _getPublished(bytes32 id) internal view returns (bool published) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (_toBool(uint8(bytes1(_blob))));
-  }
-
-  /**
-   * @notice Set published.
-   */
-  function setPublished(bytes32 id, bool published) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((published)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set published.
-   */
-  function _setPublished(bytes32 id, bool published) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((published)), _fieldLayout);
-  }
-
-  /**
    * @notice Get updatedAt.
    */
   function getUpdatedAt(bytes32 id) internal view returns (uint64 updatedAt) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (uint64(bytes8(_blob)));
   }
 
@@ -218,7 +174,7 @@ library Collection {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (uint64(bytes8(_blob)));
   }
 
@@ -229,7 +185,7 @@ library Collection {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((updatedAt)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((updatedAt)), _fieldLayout);
   }
 
   /**
@@ -239,7 +195,7 @@ library Collection {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((updatedAt)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((updatedAt)), _fieldLayout);
   }
 
   /**
@@ -603,12 +559,11 @@ library Collection {
     bytes32 id,
     uint64 createdAt,
     address owner,
-    bool published,
     uint64 updatedAt,
     string memory description,
     string memory title
   ) internal {
-    bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
+    bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
     EncodedLengths _encodedLengths = encodeLengths(description, title);
     bytes memory _dynamicData = encodeDynamic(description, title);
@@ -626,12 +581,11 @@ library Collection {
     bytes32 id,
     uint64 createdAt,
     address owner,
-    bool published,
     uint64 updatedAt,
     string memory description,
     string memory title
   ) internal {
-    bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
+    bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
     EncodedLengths _encodedLengths = encodeLengths(description, title);
     bytes memory _dynamicData = encodeDynamic(description, title);
@@ -646,7 +600,7 @@ library Collection {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 id, CollectionData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.published, _table.updatedAt);
+    bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.updatedAt);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.title);
     bytes memory _dynamicData = encodeDynamic(_table.description, _table.title);
@@ -661,7 +615,7 @@ library Collection {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 id, CollectionData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.published, _table.updatedAt);
+    bytes memory _staticData = encodeStatic(_table.createdAt, _table.owner, _table.updatedAt);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.description, _table.title);
     bytes memory _dynamicData = encodeDynamic(_table.description, _table.title);
@@ -675,16 +629,12 @@ library Collection {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(
-    bytes memory _blob
-  ) internal pure returns (uint64 createdAt, address owner, bool published, uint64 updatedAt) {
+  function decodeStatic(bytes memory _blob) internal pure returns (uint64 createdAt, address owner, uint64 updatedAt) {
     createdAt = (uint64(Bytes.getBytes8(_blob, 0)));
 
     owner = (address(Bytes.getBytes20(_blob, 8)));
 
-    published = (_toBool(uint8(Bytes.getBytes1(_blob, 28))));
-
-    updatedAt = (uint64(Bytes.getBytes8(_blob, 29)));
+    updatedAt = (uint64(Bytes.getBytes8(_blob, 28)));
   }
 
   /**
@@ -719,7 +669,7 @@ library Collection {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (CollectionData memory _table) {
-    (_table.createdAt, _table.owner, _table.published, _table.updatedAt) = decodeStatic(_staticData);
+    (_table.createdAt, _table.owner, _table.updatedAt) = decodeStatic(_staticData);
 
     (_table.description, _table.title) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -748,13 +698,8 @@ library Collection {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(
-    uint64 createdAt,
-    address owner,
-    bool published,
-    uint64 updatedAt
-  ) internal pure returns (bytes memory) {
-    return abi.encodePacked(createdAt, owner, published, updatedAt);
+  function encodeStatic(uint64 createdAt, address owner, uint64 updatedAt) internal pure returns (bytes memory) {
+    return abi.encodePacked(createdAt, owner, updatedAt);
   }
 
   /**
@@ -788,12 +733,11 @@ library Collection {
   function encode(
     uint64 createdAt,
     address owner,
-    bool published,
     uint64 updatedAt,
     string memory description,
     string memory title
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(createdAt, owner, published, updatedAt);
+    bytes memory _staticData = encodeStatic(createdAt, owner, updatedAt);
 
     EncodedLengths _encodedLengths = encodeLengths(description, title);
     bytes memory _dynamicData = encodeDynamic(description, title);
@@ -809,17 +753,5 @@ library Collection {
     _keyTuple[0] = id;
 
     return _keyTuple;
-  }
-}
-
-/**
- * @notice Cast a value to a bool.
- * @dev Boolean values are encoded as uint8 (1 = true, 0 = false), but Solidity doesn't allow casting between uint8 and bool.
- * @param value The uint8 value to convert.
- * @return result The boolean value.
- */
-function _toBool(uint8 value) pure returns (bool result) {
-  assembly {
-    result := value
   }
 }

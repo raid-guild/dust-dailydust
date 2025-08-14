@@ -6,7 +6,7 @@ export default defineWorld({
   },
   // Replace this with a unique namespace (<= 14 chars)
   // rg: raidguild dd: dailydust deployer: ab564f
-  namespace: "rg_dd_0001",
+  namespace: "rg_dd_0002",
   systems: {
     NoteSystem: {
       openAccess: true,
@@ -49,7 +49,6 @@ export default defineWorld({
         id: "bytes32",
         createdAt: "uint64",
         owner: "address",
-        published: "bool", // draft vs published
         updatedAt: "uint64",
         description: "string",
         title: "string",
@@ -91,7 +90,6 @@ export default defineWorld({
         id: "bytes32",
         createdAt: "uint64",
         owner: "address",
-        published: "bool", // draft vs published
         updatedAt: "uint64",
         content: "string", // textarea string for Note; markdown content for Article, ~4-8KB limit
         title: "string",
@@ -99,7 +97,6 @@ export default defineWorld({
       },
       key: ["id"],
     },
-    PostToCollection: "bytes32", // ID is Post, and value is Collection ID
     WaypointGroup: {
       schema: {
         noteId: "bytes32",

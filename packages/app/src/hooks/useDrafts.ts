@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface Draft {
   id: string;
@@ -25,7 +25,8 @@ export function useDrafts() {
 
   // Unique id per hook instance to prevent echo loops
   const instanceIdRef = useRef<string>(
-    typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function'
+    typeof crypto !== "undefined" &&
+      typeof (crypto as any).randomUUID === "function"
       ? (crypto as any).randomUUID()
       : Math.random().toString(36).slice(2)
   );
@@ -76,7 +77,9 @@ export function useDrafts() {
     // Broadcast to other hook instances (but avoid echoing our own syncs)
     if (!suppressBroadcastRef.current) {
       try {
-        const evt = new CustomEvent('dailydust-drafts-updated', { detail: { source: instanceIdRef.current, ts: Date.now() } });
+        const evt = new CustomEvent("dailydust-drafts-updated", {
+          detail: { source: instanceIdRef.current, ts: Date.now() },
+        });
         window.dispatchEvent(evt);
       } catch {}
     }
@@ -96,10 +99,15 @@ export function useDrafts() {
         suppressBroadcastRef.current = true;
         setDrafts(parsed);
         // release suppression after next tick
-        setTimeout(() => { suppressBroadcastRef.current = false; }, 0);
+        setTimeout(() => {
+          suppressBroadcastRef.current = false;
+        }, 0);
       } catch {}
     };
-    window.addEventListener('dailydust-drafts-updated', onUpdated as EventListener);
+    window.addEventListener(
+      "dailydust-drafts-updated",
+      onUpdated as EventListener
+    );
     // Also listen to storage events (cross-tab)
     const onStorage = (e: StorageEvent) => {
       if (e.key !== DRAFTS_STORAGE_KEY) return;
@@ -109,13 +117,18 @@ export function useDrafts() {
         const parsed = JSON.parse(stored);
         suppressBroadcastRef.current = true;
         setDrafts(parsed);
-        setTimeout(() => { suppressBroadcastRef.current = false; }, 0);
+        setTimeout(() => {
+          suppressBroadcastRef.current = false;
+        }, 0);
       } catch {}
     };
-    window.addEventListener('storage', onStorage);
+    window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener('dailydust-drafts-updated', onUpdated as EventListener);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(
+        "dailydust-drafts-updated",
+        onUpdated as EventListener
+      );
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 
@@ -155,7 +168,7 @@ export function useDrafts() {
   );
 
   const deleteDraft = useCallback((id: string) => {
-    setDrafts(prev => prev.filter(draft => draft.id !== id));
+    setDrafts((prev) => prev.filter((draft) => draft.id !== id));
   }, []);
 
   const clearAllDrafts = useCallback(() => {

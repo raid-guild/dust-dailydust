@@ -17,8 +17,8 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 library ArticleCategories {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "ArticleCategorie", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f303030310000000041727469636c6543617465676f726965);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "ArticleCategorie", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f303030320000000041727469636c6543617465676f726965);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0000000100000000000000000000000000000000000000000000000000000000);

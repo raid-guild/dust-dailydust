@@ -25,8 +25,8 @@ struct NoteLinkData {
 }
 
 library NoteLink {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0001", name: "NoteLink", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f30303031000000004e6f74654c696e6b0000000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0002", name: "NoteLink", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f30303032000000004e6f74654c696e6b0000000000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x000d040104040401000000000000000000000000000000000000000000000000);

@@ -19,7 +19,7 @@ contract CollectionSystem is System {
 
     uint64 ts = uint64(block.timestamp);
 
-    Collection.set(collectionId, ts, _msgSender(), false, ts, description, title);
+    Collection.set(collectionId, ts, _msgSender(), ts, description, title);
   }
 
   /**

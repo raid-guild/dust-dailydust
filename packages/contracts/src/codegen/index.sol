@@ -11,6 +11,5 @@ import { CollectionPost } from "./tables/CollectionPost.sol";
 import { NoteCategories } from "./tables/NoteCategories.sol";
 import { NoteLink, NoteLinkData } from "./tables/NoteLink.sol";
 import { Post, PostData } from "./tables/Post.sol";
-import { PostToCollection } from "./tables/PostToCollection.sol";
 import { WaypointGroup, WaypointGroupData } from "./tables/WaypointGroup.sol";
 import { WaypointStep, WaypointStepData } from "./tables/WaypointStep.sol";
