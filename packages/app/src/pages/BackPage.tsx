@@ -5,6 +5,7 @@ import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
 import type React from "react";
 import { useCallback, useMemo, useState } from "react";
+import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ export const BackPage = () => {
               namespace: mudConfig.namespace,
               name: "NoteSystem",
             }),
-            abi: NoteSystemAbi,
+            abi: NoteSystemAbi as Abi,
             functionName: "createNote",
             args: [title, content],
           },
