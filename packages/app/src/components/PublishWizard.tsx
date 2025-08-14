@@ -358,11 +358,6 @@ export function PublishWizard({
       // Prepare
       const title = contentState.title.trim();
       const body = contentState.content.trim();
-      const tagsCsv = contentState.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .join(",");
 
       // Create or update the note on-chain
       const noteHexId: `0x${string}` =
