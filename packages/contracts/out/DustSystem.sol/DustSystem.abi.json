@@ -1,45 +1,6 @@
 [
   {
     "type": "function",
-    "name": "TYPE_FRONTPAGE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "TYPE_REGULAR",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "TYPE_SPECIAL",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "_msgSender",
     "inputs": [],
     "outputs": [
@@ -79,60 +40,22 @@
   },
   {
     "type": "function",
-    "name": "addArticleToCollection",
+    "name": "authorizeBooster",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "programAddress",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        "name": "articleId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "createCollection",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "collectionType",
+        "name": "programType",
         "type": "uint8",
         "internalType": "uint8"
       },
       {
-        "name": "title",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "headerImageUrl",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "featured",
-        "type": "bool",
-        "internalType": "bool"
+        "name": "maxBoostAmount",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -140,12 +63,17 @@
   },
   {
     "type": "function",
-    "name": "deleteCollection",
+    "name": "batchSetConfig",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "configKeys",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "values",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -153,10 +81,10 @@
   },
   {
     "type": "function",
-    "name": "getCollection",
+    "name": "configExists",
     "inputs": [
       {
-        "name": "collectionId",
+        "name": "configKey",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -164,53 +92,97 @@
     "outputs": [
       {
         "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "configExistsByString",
+    "inputs": [
+      {
+        "name": "configKeyString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "deauthorizeBooster",
+    "inputs": [
+      {
+        "name": "programAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deleteConfig",
+    "inputs": [
+      {
+        "name": "configKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBooster",
+    "inputs": [
+      {
+        "name": "programAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "tuple",
-        "internalType": "struct CollectionData",
+        "internalType": "struct AuthorizedBoosterData",
         "components": [
           {
-            "name": "owner",
+            "name": "programType",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "maxBoostAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "grantedBy",
             "type": "address",
             "internalType": "address"
           },
           {
-            "name": "createdAt",
+            "name": "grantedAt",
             "type": "uint64",
             "internalType": "uint64"
           },
           {
-            "name": "updatedAt",
-            "type": "uint64",
-            "internalType": "uint64"
-          },
-          {
-            "name": "collectionType",
+            "name": "isActive",
             "type": "uint8",
             "internalType": "uint8"
-          },
-          {
-            "name": "featured",
-            "type": "uint8",
-            "internalType": "uint8"
-          },
-          {
-            "name": "title",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "description",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "headerImageUrl",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "extra",
-            "type": "string",
-            "internalType": "string"
           }
         ]
       }
@@ -219,17 +191,95 @@
   },
   {
     "type": "function",
-    "name": "isArticleInCollection",
+    "name": "getConfig",
     "inputs": [
       {
-        "name": "articleId",
+        "name": "configKey",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
+      }
+    ],
+    "outputs": [
       {
-        "name": "collectionId",
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getConfigByString",
+    "inputs": [
+      {
+        "name": "configKeyString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getConfigKeyHash",
+    "inputs": [
+      {
+        "name": "configKeyString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "getMaxBoostAmount",
+    "inputs": [
+      {
+        "name": "programAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initializeConfig",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isBoosterAuthorized",
+    "inputs": [
+      {
+        "name": "programAddress",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [
@@ -243,22 +293,30 @@
   },
   {
     "type": "function",
-    "name": "moveArticleInCollection",
+    "name": "isSystemPaused",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setConfig",
     "inputs": [
       {
-        "name": "collectionId",
+        "name": "configKey",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "fromIndex",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "toIndex",
-        "type": "uint16",
-        "internalType": "uint16"
+        "name": "value",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -266,17 +324,30 @@
   },
   {
     "type": "function",
-    "name": "removeArticleFromCollection",
+    "name": "setConfigByString",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "configKeyString",
+        "type": "string",
+        "internalType": "string"
       },
       {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
+        "name": "value",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setSystemPaused",
+    "inputs": [
+      {
+        "name": "isPaused",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "outputs": [],
@@ -303,48 +374,20 @@
   },
   {
     "type": "function",
-    "name": "transferCollectionOwnership",
+    "name": "updateBooster",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newOwner",
+        "name": "programAddress",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateCollection",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
       },
       {
-        "name": "title",
-        "type": "string",
-        "internalType": "string"
+        "name": "newMaxBoostAmount",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "headerImageUrl",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "featured",
+        "name": "isActive",
         "type": "bool",
         "internalType": "bool"
       }
@@ -354,85 +397,35 @@
   },
   {
     "type": "event",
-    "name": "ArticleAddedToCollection",
+    "name": "BoosterAuthorized",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "articleId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "indexed": false,
-        "internalType": "uint16"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "ArticleRemovedFromCollection",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "articleId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "CollectionCreated",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "owner",
+        "name": "programAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "collectionType",
+        "name": "programType",
         "type": "uint8",
         "indexed": false,
         "internalType": "uint8"
+      },
+      {
+        "name": "maxBoostAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "CollectionDeleted",
+    "name": "BoosterDeauthorized",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "owner",
+        "name": "programAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -442,31 +435,49 @@
   },
   {
     "type": "event",
-    "name": "CollectionReordered",
+    "name": "BoosterUpdated",
     "inputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
+        "name": "programAddress",
+        "type": "address",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "address"
+      },
+      {
+        "name": "newMaxBoostAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "isActive",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "CollectionUpdated",
+    "name": "ConfigUpdated",
     "inputs": [
       {
-        "name": "collectionId",
+        "name": "configKey",
         "type": "bytes32",
         "indexed": true,
         "internalType": "bytes32"
       },
       {
-        "name": "owner",
+        "name": "value",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "updatedBy",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
       }
     ],

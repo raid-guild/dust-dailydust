@@ -1,0 +1,439 @@
+[
+  {
+    "type": "function",
+    "name": "_msgSender",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_msgValue",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_world",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "copyDailyDigest",
+    "inputs": [
+      {
+        "name": "fromDate",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "toDate",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "featureArticle",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "articleId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getDailyDigest",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[10]",
+        "internalType": "bytes32[10]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFeaturedArticle",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFeaturedCount",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTodayDate",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isArticleFeatured",
+    "inputs": [
+      {
+        "name": "articleId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "moveFeaturedArticle",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "fromSlot",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "toSlot",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setDailyDigest",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "articleIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "swapFeaturedArticles",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot1",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "slot2",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "unfeatureArticle",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ArticleFeaturedEvent",
+    "inputs": [
+      {
+        "name": "articleId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "date",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "editor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ArticleUnfeatured",
+    "inputs": [
+      {
+        "name": "articleId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "date",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "slot",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "editor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DailyDigestUpdated",
+    "inputs": [
+      {
+        "name": "date",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "editor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_DeleteRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_SpliceStaticData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "Slice_OutOfBounds",
+    "inputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  }
+]

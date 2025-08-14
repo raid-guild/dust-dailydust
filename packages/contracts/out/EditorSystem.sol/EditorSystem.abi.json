@@ -1,0 +1,394 @@
+[
+  {
+    "type": "function",
+    "name": "ROLE_ADMIN",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ROLE_EDITOR",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ROLE_OWNER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_msgSender",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_msgValue",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_world",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserRole",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct EditorRoleData",
+        "components": [
+          {
+            "name": "role",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "grantedBy",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "grantedAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "grantRole",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "role",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "hasRole",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "requiredRole",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initializeOwner",
+    "inputs": [
+      {
+        "name": "initialOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isAdmin",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isEditor",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isOwner",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "revokeRole",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "RoleGranted",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "role",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "grantedBy",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RoleRevoked",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "revokedBy",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_DeleteRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_SetRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "Slice_OutOfBounds",
+    "inputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  }
+]
