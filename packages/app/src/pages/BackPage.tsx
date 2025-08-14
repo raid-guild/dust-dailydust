@@ -25,8 +25,6 @@ export const BackPage = () => {
     table: tables.Post,
   });
 
-  console.log(notes);
-
   const createNote = useMutation({
     mutationFn: ({ title, content }: { title: string; content: string }) => {
       if (!dustClient) throw new Error("Dust client not connected");
