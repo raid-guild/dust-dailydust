@@ -51,6 +51,99 @@
         "name": "content",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createNoteAnchor",
+    "inputs": [
+      {
+        "name": "noteId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "coordX",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordY",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordZ",
+        "type": "int32",
+        "internalType": "int32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createNoteWithAnchor",
+    "inputs": [
+      {
+        "name": "title",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "content",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "coordX",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordY",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordZ",
+        "type": "int32",
+        "internalType": "int32"
       }
     ],
     "outputs": [
@@ -72,7 +165,32 @@
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "removeNoteAnchor",
+    "inputs": [
+      {
+        "name": "noteId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -112,9 +230,20 @@
         "name": "content",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {

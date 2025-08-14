@@ -1,21 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
+import { useEffect, useMemo, useState } from "react";
+
 import { useDustClient } from "@/common/useDustClient";
+import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { Button } from "@/components/ui/button";
 import { stash, tables } from "@/mud/stash";
-import { ArticleWizard } from "@/components/editor/ArticleWizard";
-
 
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
   const [tab, setTab] = useState<TabKey>("drafts");
 
-
   const { data: dustClient } = useDustClient();
   const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
-
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -60,7 +57,9 @@ export const EditorRoomPage = () => {
           html += "<ul>";
         }
         const item = ln.replace(/^\s*([-*])\s+/, "");
-        let content = escapeHtml(item).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+        let content = escapeHtml(item)
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>");
         html += `<li>${content}</li>`;
         continue;
       } else {
@@ -75,17 +74,23 @@ export const EditorRoomPage = () => {
       const h3 = ln.match(/^\s*###\s+(.*)/);
       if (h1) {
         pushPara();
-        html += `<h1>${escapeHtml(h1[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h1>`;
+        html += `<h1>${escapeHtml(h1[1])
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h1>`;
         continue;
       }
       if (h2) {
         pushPara();
-        html += `<h2>${escapeHtml(h2[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h2>`;
+        html += `<h2>${escapeHtml(h2[1])
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h2>`;
         continue;
       }
       if (h3) {
         pushPara();
-        html += `<h3>${escapeHtml(h3[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h3>`;
+        html += `<h3>${escapeHtml(h3[1])
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h3>`;
         continue;
       }
 
@@ -94,7 +99,11 @@ export const EditorRoomPage = () => {
         continue;
       }
 
-      paraBuf.push(escapeHtml(ln).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>'));
+      paraBuf.push(
+        escapeHtml(ln)
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      );
     }
     if (inList) html += "</ul>";
     pushPara();
@@ -117,8 +126,8 @@ export const EditorRoomPage = () => {
   const published = useMemo(() => {
     const toNumber = (v: any) => {
       try {
-        if (typeof v === 'bigint') return Number(v);
-        if (typeof v === 'string' && /^0x[0-9a-fA-F]+$/.test(v)) {
+        if (typeof v === "bigint") return Number(v);
+        if (typeof v === "string" && /^0x[0-9a-fA-F]+$/.test(v)) {
           // hex string (bytes32) - not a timestamp
           return 0;
         }
@@ -128,16 +137,24 @@ export const EditorRoomPage = () => {
         return 0;
       }
     };
-    
+
     return rawPosts
       .map((r: any) => {
         const isArticle =
-          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })
+            ?.value ?? false;
         // Read PostAnchor record (if any)
 
-        const anchorRecord = getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ?? null;
+        const anchorRecord =
+          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+          null;
         const anchor = anchorRecord
-          ? { entityId: anchorRecord.entityId, x: Number(anchorRecord.coordX || 0), y: Number(anchorRecord.coordY || 0), z: Number(anchorRecord.coordZ || 0) }
+          ? {
+              entityId: anchorRecord.entityId,
+              x: Number(anchorRecord.coordX || 0),
+              y: Number(anchorRecord.coordY || 0),
+              z: Number(anchorRecord.coordZ || 0),
+            }
           : null;
         const updatedAtRaw = r.updatedAt ?? r.createdAt ?? Date.now();
         const updatedAt = toNumber(updatedAtRaw);
@@ -163,7 +180,13 @@ export const EditorRoomPage = () => {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return [];
       const arr = JSON.parse(raw) as any[];
-      return Array.isArray(arr) ? arr.sort((a, b) => (b.lastSaved || b.createdAt || 0) - (a.lastSaved || a.createdAt || 0)) : [];
+      return Array.isArray(arr)
+        ? arr.sort(
+            (a, b) =>
+              (b.lastSaved || b.createdAt || 0) -
+              (a.lastSaved || a.createdAt || 0)
+          )
+        : [];
     } catch {
       return [];
     }
@@ -180,10 +203,16 @@ export const EditorRoomPage = () => {
       setDrafts(loadDrafts());
     };
     window.addEventListener("storage", onStorage);
-    window.addEventListener("editor-article-drafts-updated", onCustom as EventListener);
+    window.addEventListener(
+      "editor-article-drafts-updated",
+      onCustom as EventListener
+    );
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener("editor-article-drafts-updated", onCustom as EventListener);
+      window.removeEventListener(
+        "editor-article-drafts-updated",
+        onCustom as EventListener
+      );
     };
   }, []);
 
@@ -199,8 +228,12 @@ export const EditorRoomPage = () => {
 
   // Wizard dialog state
   const [open, setOpen] = useState(false);
-  const [wizardDraftId, setWizardDraftId] = useState<string | undefined>(undefined);
-  const [wizardArticleId, setWizardArticleId] = useState<string | undefined>(undefined);
+  const [wizardDraftId, setWizardDraftId] = useState<string | undefined>(
+    undefined
+  );
+  const [wizardArticleId, setWizardArticleId] = useState<string | undefined>(
+    undefined
+  );
 
   const openNew = () => {
     setWizardDraftId(undefined);
@@ -234,7 +267,9 @@ export const EditorRoomPage = () => {
           <TabButton k="drafts" label="Drafts" />
         </div>
         <div>
-          <Button onClick={openNew} size="sm" className="border-neutral-900">New Article</Button>
+          <Button onClick={openNew} size="sm" className="border-neutral-900">
+            New Article
+          </Button>
         </div>
       </div>
 
@@ -242,22 +277,51 @@ export const EditorRoomPage = () => {
         {tab === "drafts" && (
           <div className="grid gap-3">
             {drafts.length === 0 ? (
-              <div className="p-4 bg-panel border border-neutral-200 rounded">No drafts yet. Click "New Article" to start.</div>
+              <div className="p-4 bg-panel border border-neutral-200 rounded">
+                No drafts yet. Click "New Article" to start.
+              </div>
             ) : (
               drafts.map((d) => (
-                <div key={d.id} className="p-3 border border-neutral-200 rounded bg-white">
+                <div
+                  key={d.id}
+                  className="p-3 border border-neutral-200 rounded bg-white"
+                >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-heading text-lg">{d.title || "Untitled"}</div>
-                      <div className="text-xs text-text-secondary">Last saved: {formatDate(d.lastSaved || d.createdAt || Date.now())}</div>
+                      <div className="font-heading text-lg">
+                        {d.title || "Untitled"}
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        Last saved:{" "}
+                        {formatDate(d.lastSaved || d.createdAt || Date.now())}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openDraft(d.id)}>Edit</Button>
-                      <Button size="sm" variant="ghost" onClick={() => { if (confirm('Delete draft?')) removeDraft(d.id); }}>Delete</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openDraft(d.id)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm("Delete draft?")) removeDraft(d.id);
+                        }}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
-                    <div className="prose max-w-none overflow-hidden max-h-24" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(d.content || "") }} />
+                    <div
+                      className="prose max-w-none overflow-hidden max-h-24"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdownToHtml(d.content || ""),
+                      }}
+                    />
                   </div>
                 </div>
               ))
@@ -268,24 +332,47 @@ export const EditorRoomPage = () => {
         {tab === "published" && (
           <div className="grid gap-3">
             {published.length === 0 ? (
-              <div className="p-4 bg-panel border border-neutral-200 rounded">No published articles found.</div>
+              <div className="p-4 bg-panel border border-neutral-200 rounded">
+                No published articles found.
+              </div>
             ) : (
               published.map((p: any) => (
-                <div key={p.id} className="p-3 border border-neutral-200 rounded bg-white">
+                <div
+                  key={p.id}
+                  className="p-3 border border-neutral-200 rounded bg-white"
+                >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-heading text-lg">{p.title || "Untitled"}</div>
-                      <div className="text-xs text-text-secondary">By {p.owner === myAddress ? "you" : p.owner} • {formatDate(p.updatedAt || Date.now())}</div>
+                      <div className="font-heading text-lg">
+                        {p.title || "Untitled"}
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        By {p.owner === myAddress ? "you" : p.owner} •{" "}
+                        {formatDate(p.updatedAt || Date.now())}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openArticle(p.id)}>Edit</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openArticle(p.id)}
+                      >
+                        Edit
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
-                    <div className="prose max-w-none overflow-hidden max-h-24" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(p.content || "") }} />
-                  {p.anchor && (
-                    <div className="mt-2 text-sm text-text-secondary">Anchor: x:{p.anchor.x} y:{p.anchor.y} z:{p.anchor.z}</div>
-                  )}
+                    <div
+                      className="prose max-w-none overflow-hidden max-h-24"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdownToHtml(p.content || ""),
+                      }}
+                    />
+                    {p.anchor && (
+                      <div className="mt-2 text-sm text-text-secondary">
+                        Anchor: x:{p.anchor.x} y:{p.anchor.y} z:{p.anchor.z}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
@@ -296,10 +383,18 @@ export const EditorRoomPage = () => {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setOpen(false)}
+          />
           <div className="relative w-full max-w-4xl mx-auto">
             <div className="bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden">
-              <ArticleWizard draftId={wizardDraftId} articleId={wizardArticleId} onDone={handleDone} onCancel={() => setOpen(false)} />
+              <ArticleWizard
+                draftId={wizardDraftId}
+                articleId={wizardArticleId}
+                onDone={handleDone}
+                onCancel={() => setOpen(false)}
+              />
             </div>
           </div>
         </div>

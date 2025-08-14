@@ -51,6 +51,11 @@
         "name": "content",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [
@@ -106,6 +111,11 @@
       },
       {
         "name": "content",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "categoryName",
         "type": "string",
         "internalType": "string"
       },
@@ -200,6 +210,11 @@
       },
       {
         "name": "content",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "categoryName",
         "type": "string",
         "internalType": "string"
       }

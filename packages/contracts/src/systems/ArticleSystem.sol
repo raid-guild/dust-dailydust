@@ -2,21 +2,32 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { IsArticle, Post, PostAnchor, PostData } from "../codegen/index.sol";
+import { ArticleCategories, Category, IsArticle, Post, PostAnchor, PostData } from "../codegen/index.sol";
 
 contract ArticleSystem is System {
   /**
    * @dev Create a new article
    * @param title Article title
    * @param content Article content in markdown
+   * @param categoryName Article category
    */
-  function createArticle(string memory title, string memory content) public returns (bytes32) {
+  function createArticle(
+    string memory title,
+    string memory content,
+    string memory categoryName
+  ) public returns (bytes32) {
     bytes32 articleId = keccak256(abi.encodePacked(_msgSender(), block.timestamp, title));
 
     // Ensure article doesn't exist (check if owner is zero address)
     require(Post.getOwner(articleId) == address(0), "Article exists");
 
     uint64 timestamp = uint64(block.timestamp);
+
+    bytes32 category = keccak256(abi.encodePacked(categoryName));
+    _validateArticleCategory(categoryName);
+
+    bytes32[] memory categories = new bytes32[](1);
+    categories[0] = category;
 
     Post.set(
       articleId,
@@ -27,7 +38,7 @@ contract ArticleSystem is System {
         content: content,
         coverImage: "",
         title: title,
-        categories: new bytes32[](0)
+        categories: categories
       })
     );
     IsArticle.set(articleId, true);
@@ -39,6 +50,7 @@ contract ArticleSystem is System {
    * @dev Create a new article and attach an anchor in the same call
    * @param title Article title
    * @param content Article content in markdown
+   * @param categoryName Article category
    * @param entityId Entity to anchor to (bytes32)
    * @param coordX X coordinate cache
    * @param coordY Y coordinate cache
@@ -48,6 +60,7 @@ contract ArticleSystem is System {
   function createArticleWithAnchor(
     string memory title,
     string memory content,
+    string memory categoryName,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
@@ -60,6 +73,12 @@ contract ArticleSystem is System {
 
     uint64 timestamp = uint64(block.timestamp);
 
+    bytes32 category = keccak256(abi.encodePacked(categoryName));
+    _validateArticleCategory(categoryName);
+
+    bytes32[] memory categories = new bytes32[](1);
+    categories[0] = category;
+
     Post.set(
       articleId,
       PostData({
@@ -69,7 +88,7 @@ contract ArticleSystem is System {
         content: content,
         coverImage: "",
         title: title,
-        categories: new bytes32[](0)
+        categories: categories
       })
     );
     IsArticle.set(articleId, true);
@@ -85,14 +104,26 @@ contract ArticleSystem is System {
    * @param articleId Article to update
    * @param title New title
    * @param content New content
+   * @param categoryName New category
    */
-  function updateArticle(bytes32 articleId, string memory title, string memory content) public {
+  function updateArticle(
+    bytes32 articleId,
+    string memory title,
+    string memory content,
+    string memory categoryName
+  ) public {
     PostData memory article = Post.get(articleId);
     require(article.owner == _msgSender(), "Not owner");
 
+    bytes32 category = keccak256(abi.encodePacked(categoryName));
+    _validateArticleCategory(categoryName);
+
+    bytes32[] memory categories = new bytes32[](1);
+    categories[0] = category;
+
     Post.setTitle(articleId, title);
     Post.setContent(articleId, content);
-    Post.setCategories(articleId, new bytes32[](0));
+    Post.setCategories(articleId, categories);
     Post.setUpdatedAt(articleId, uint64(block.timestamp));
   }
 
@@ -134,5 +165,22 @@ contract ArticleSystem is System {
     require(article.owner == _msgSender(), "Not owner");
 
     PostAnchor.deleteRecord(articleId);
+  }
+
+  function _validateArticleCategory(string memory categoryName) internal view {
+    bytes32 category = keccak256(abi.encodePacked(categoryName));
+    string memory existingCategoryName = Category.get(category);
+    bytes32 existingCategory = keccak256(abi.encodePacked(existingCategoryName));
+    require(existingCategory == category, "Invalid category");
+
+    bytes32[] memory articleCategories = ArticleCategories.get();
+    bool isValid = false;
+    for (uint256 i = 0; i < articleCategories.length; i++) {
+      if (articleCategories[i] == category) {
+        isValid = true;
+        break;
+      }
+    }
+    require(isValid, "Invalid category");
   }
 }

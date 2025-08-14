@@ -40,15 +40,17 @@ library ArticleSystemLib {
   function createArticle(
     ArticleSystemType self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
-    return CallWrapper(self.toResourceId(), address(0)).createArticle(title, content);
+    return CallWrapper(self.toResourceId(), address(0)).createArticle(title, content, categoryName);
   }
 
   function createArticleWithAnchor(
     ArticleSystemType self,
     string memory title,
     string memory content,
+    string memory categoryName,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
@@ -58,6 +60,7 @@ library ArticleSystemLib {
       CallWrapper(self.toResourceId(), address(0)).createArticleWithAnchor(
         title,
         content,
+        categoryName,
         entityId,
         coordX,
         coordY,
@@ -69,9 +72,10 @@ library ArticleSystemLib {
     ArticleSystemType self,
     bytes32 articleId,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal {
-    return CallWrapper(self.toResourceId(), address(0)).updateArticle(articleId, title, content);
+    return CallWrapper(self.toResourceId(), address(0)).updateArticle(articleId, title, content, categoryName);
   }
 
   function deleteArticle(ArticleSystemType self, bytes32 articleId) internal {
@@ -97,12 +101,16 @@ library ArticleSystemLib {
   function createArticle(
     CallWrapper memory self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert ArticleSystemLib_CallingFromRootSystem();
 
-    bytes memory systemCall = abi.encodeCall(_createArticle_string_string.createArticle, (title, content));
+    bytes memory systemCall = abi.encodeCall(
+      _createArticle_string_string_string.createArticle,
+      (title, content, categoryName)
+    );
 
     bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
@@ -117,6 +125,7 @@ library ArticleSystemLib {
     CallWrapper memory self,
     string memory title,
     string memory content,
+    string memory categoryName,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
@@ -126,8 +135,8 @@ library ArticleSystemLib {
     if (address(_world()) == address(this)) revert ArticleSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _createArticleWithAnchor_string_string_bytes32_int32_int32_int32.createArticleWithAnchor,
-      (title, content, entityId, coordX, coordY, coordZ)
+      _createArticleWithAnchor_string_string_string_bytes32_int32_int32_int32.createArticleWithAnchor,
+      (title, content, categoryName, entityId, coordX, coordY, coordZ)
     );
 
     bytes memory result = self.from == address(0)
@@ -143,14 +152,15 @@ library ArticleSystemLib {
     CallWrapper memory self,
     bytes32 articleId,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert ArticleSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _updateArticle_bytes32_string_string.updateArticle,
-      (articleId, title, content)
+      _updateArticle_bytes32_string_string_string.updateArticle,
+      (articleId, title, content, categoryName)
     );
     self.from == address(0)
       ? _world().call(self.systemId, systemCall)
@@ -200,9 +210,13 @@ library ArticleSystemLib {
   function createArticle(
     RootCallWrapper memory self,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal returns (bytes32 __auxRet0) {
-    bytes memory systemCall = abi.encodeCall(_createArticle_string_string.createArticle, (title, content));
+    bytes memory systemCall = abi.encodeCall(
+      _createArticle_string_string_string.createArticle,
+      (title, content, categoryName)
+    );
 
     bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
     // skip decoding an empty result, which can happen after expectRevert
@@ -215,14 +229,15 @@ library ArticleSystemLib {
     RootCallWrapper memory self,
     string memory title,
     string memory content,
+    string memory categoryName,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
     int32 coordZ
   ) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(
-      _createArticleWithAnchor_string_string_bytes32_int32_int32_int32.createArticleWithAnchor,
-      (title, content, entityId, coordX, coordY, coordZ)
+      _createArticleWithAnchor_string_string_string_bytes32_int32_int32_int32.createArticleWithAnchor,
+      (title, content, categoryName, entityId, coordX, coordY, coordZ)
     );
 
     bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
@@ -236,11 +251,12 @@ library ArticleSystemLib {
     RootCallWrapper memory self,
     bytes32 articleId,
     string memory title,
-    string memory content
+    string memory content,
+    string memory categoryName
   ) internal {
     bytes memory systemCall = abi.encodeCall(
-      _updateArticle_bytes32_string_string.updateArticle,
-      (articleId, title, content)
+      _updateArticle_bytes32_string_string_string.updateArticle,
+      (articleId, title, content, categoryName)
     );
     SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
   }
@@ -308,14 +324,15 @@ library ArticleSystemLib {
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
 
-interface _createArticle_string_string {
-  function createArticle(string memory title, string memory content) external;
+interface _createArticle_string_string_string {
+  function createArticle(string memory title, string memory content, string memory categoryName) external;
 }
 
-interface _createArticleWithAnchor_string_string_bytes32_int32_int32_int32 {
+interface _createArticleWithAnchor_string_string_string_bytes32_int32_int32_int32 {
   function createArticleWithAnchor(
     string memory title,
     string memory content,
+    string memory categoryName,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
@@ -323,8 +340,13 @@ interface _createArticleWithAnchor_string_string_bytes32_int32_int32_int32 {
   ) external;
 }
 
-interface _updateArticle_bytes32_string_string {
-  function updateArticle(bytes32 articleId, string memory title, string memory content) external;
+interface _updateArticle_bytes32_string_string_string {
+  function updateArticle(
+    bytes32 articleId,
+    string memory title,
+    string memory content,
+    string memory categoryName
+  ) external;
 }
 
 interface _deleteArticle_bytes32 {
