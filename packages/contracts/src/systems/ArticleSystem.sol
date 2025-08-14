@@ -36,6 +36,51 @@ contract ArticleSystem is System {
   }
 
   /**
+   * @dev Create a new article and attach an anchor in the same call
+   * @param title Article title
+   * @param content Article content in markdown
+   * @param entityId Entity to anchor to (bytes32)
+   * @param coordX X coordinate cache
+   * @param coordY Y coordinate cache
+   * @param coordZ Z coordinate cache
+   * @return articleId The newly created article id
+   */
+  function createArticleWithAnchor(
+    string memory title,
+    string memory content,
+    bytes32 entityId,
+    int32 coordX,
+    int32 coordY,
+    int32 coordZ
+  ) public returns (bytes32) {
+    bytes32 articleId = keccak256(abi.encodePacked(_msgSender(), block.timestamp, title));
+
+    // Ensure article doesn't exist (check if owner is zero address)
+    require(Post.getOwner(articleId) == address(0), "Article exists");
+
+    uint64 timestamp = uint64(block.timestamp);
+
+    Post.set(
+      articleId,
+      PostData({
+        createdAt: timestamp,
+        owner: _msgSender(),
+        updatedAt: timestamp,
+        content: content,
+        coverImage: "",
+        title: title,
+        categories: new bytes32[](0)
+      })
+    );
+    IsArticle.set(articleId, true);
+
+    // Set the anchor immediately
+    PostAnchor.set(articleId, entityId, coordX, coordY, coordZ);
+
+    return articleId;
+  }
+
+  /**
    * @dev Update an existing article (owner only)
    * @param articleId Article to update
    * @param title New title
