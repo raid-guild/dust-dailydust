@@ -128,11 +128,17 @@ export const EditorRoomPage = () => {
         return 0;
       }
     };
-
+    
     return rawPosts
       .map((r: any) => {
         const isArticle =
           getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+        // Read PostAnchor record (if any)
+
+        const anchorRecord = getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ?? null;
+        const anchor = anchorRecord
+          ? { entityId: anchorRecord.entityId, x: Number(anchorRecord.coordX || 0), y: Number(anchorRecord.coordY || 0), z: Number(anchorRecord.coordZ || 0) }
+          : null;
         const updatedAtRaw = r.updatedAt ?? r.createdAt ?? Date.now();
         const updatedAt = toNumber(updatedAtRaw);
         return {
@@ -143,6 +149,7 @@ export const EditorRoomPage = () => {
           updatedAt,
           owner: r.owner,
           isArticle,
+          anchor,
         };
       })
       .filter((p: any) => p.isArticle)
@@ -276,6 +283,9 @@ export const EditorRoomPage = () => {
                   </div>
                   <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
                     <div className="prose max-w-none overflow-hidden max-h-24" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(p.content || "") }} />
+                  {p.anchor && (
+                    <div className="mt-2 text-sm text-text-secondary">Anchor: x:{p.anchor.x} y:{p.anchor.y} z:{p.anchor.z}</div>
+                  )}
                   </div>
                 </div>
               ))
