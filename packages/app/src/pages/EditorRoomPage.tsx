@@ -1,48 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { getRecord } from "@latticexyz/stash/internal";
+import { useRecords } from "@latticexyz/stash/react";
 import { useDustClient } from "@/common/useDustClient";
-import { CollectionsTab } from "@/components/CollectionsTab";
-import { PublishWizard } from "@/components/PublishWizard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WaypointsTab } from "@/components/WaypointsTab";
-import { useDrafts } from "@/hooks/useDrafts";
-import { useOnchainNotes } from "@/hooks/useOnchainNotes";
-import { cn } from "@/lib/utils";
+import { stash, tables } from "@/mud/stash";
+import { ArticleWizard } from "@/components/editor/ArticleWizard";
+
 
 export const EditorRoomPage = () => {
-  type TabKey = "published" | "submit" | "collections" | "waypoints";
-  const [tab, setTab] = useState<TabKey>("submit");
+  type TabKey = "published" | "drafts";
+  const [tab, setTab] = useState<TabKey>("drafts");
 
-  const { getRecentDrafts, deleteDraft } = useDrafts();
-  const {
-    notes: chainNotes,
-    loading: chainLoading,
-    error: chainError,
-    refetch,
-  } = useOnchainNotes({ limit: 200, offset: 0 });
+
   const { data: dustClient } = useDustClient();
-
-  // Selection state for editors within tabs
-  const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-
-  // Clear cross-tab selections when switching
-  useEffect(() => {
-    if (tab === "submit") setSelectedNoteId(null);
-    if (tab === "published") setSelectedDraftId(null);
-  }, [tab]);
-
   const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
 
-  const myPublished = useMemo(() => {
-    if (!myAddress) return [] as typeof chainNotes;
-    return chainNotes.filter(
-      (n) => (n.owner || "").toLowerCase() === myAddress
-    );
-  }, [chainNotes, myAddress]);
-
-  const recentDrafts = getRecentDrafts();
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -58,6 +31,76 @@ export const EditorRoomPage = () => {
     return date.toLocaleDateString();
   };
 
+  // Minimal markdown -> HTML renderer (same rules as ArticleWizard)
+  const renderMarkdownToHtml = (md: string) => {
+    if (!md) return "";
+    const escapeHtml = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    const text = md.replace(/\r\n?/g, "\n");
+    const lines = text.split("\n");
+    let html = "";
+    let inList = false;
+    let paraBuf: string[] = [];
+    const pushPara = () => {
+      if (!paraBuf.length) return;
+      html += `<p>${paraBuf.join("\n").replace(/\n/g, "<br />")}</p>`;
+      paraBuf = [];
+    };
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i];
+      if (/^\s*([-*])\s+/.test(ln)) {
+        pushPara();
+        if (!inList) {
+          inList = true;
+          html += "<ul>";
+        }
+        const item = ln.replace(/^\s*([-*])\s+/, "");
+        let content = escapeHtml(item).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+        html += `<li>${content}</li>`;
+        continue;
+      } else {
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
+      }
+
+      const h1 = ln.match(/^\s*#\s+(.*)/);
+      const h2 = ln.match(/^\s*##\s+(.*)/);
+      const h3 = ln.match(/^\s*###\s+(.*)/);
+      if (h1) {
+        pushPara();
+        html += `<h1>${escapeHtml(h1[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h1>`;
+        continue;
+      }
+      if (h2) {
+        pushPara();
+        html += `<h2>${escapeHtml(h2[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h2>`;
+        continue;
+      }
+      if (h3) {
+        pushPara();
+        html += `<h3>${escapeHtml(h3[1]).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</h3>`;
+        continue;
+      }
+
+      if (ln.trim() === "") {
+        pushPara();
+        continue;
+      }
+
+      paraBuf.push(escapeHtml(ln).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>'));
+    }
+    if (inList) html += "</ul>";
+    pushPara();
+    return html;
+  };
+
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
     <Button
       className="border-neutral-900"
@@ -69,207 +112,188 @@ export const EditorRoomPage = () => {
     </Button>
   );
 
+  // Published articles: read Post table and filter by IsArticle like BackPage
+  const rawPosts = useRecords({ stash, table: tables.Post }) || [];
+  const published = useMemo(() => {
+    const toNumber = (v: any) => {
+      try {
+        if (typeof v === 'bigint') return Number(v);
+        if (typeof v === 'string' && /^0x[0-9a-fA-F]+$/.test(v)) {
+          // hex string (bytes32) - not a timestamp
+          return 0;
+        }
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      } catch {
+        return 0;
+      }
+    };
+
+    return rawPosts
+      .map((r: any) => {
+        const isArticle =
+          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+        const updatedAtRaw = r.updatedAt ?? r.createdAt ?? Date.now();
+        const updatedAt = toNumber(updatedAtRaw);
+        return {
+          id: r.id,
+          title: r.title,
+          content: r.content,
+          coverImage: r.coverImage,
+          updatedAt,
+          owner: r.owner,
+          isArticle,
+        };
+      })
+      .filter((p: any) => p.isArticle)
+      .sort((a: any, b: any) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }, [rawPosts]);
+
+  // Drafts stored in localStorage under same key as ArticleWizard
+  const DRAFT_KEY = "editor-article-drafts";
+  const loadDrafts = (): any[] => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw) as any[];
+      return Array.isArray(arr) ? arr.sort((a, b) => (b.lastSaved || b.createdAt || 0) - (a.lastSaved || a.createdAt || 0)) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const [drafts, setDrafts] = useState(() => loadDrafts());
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === DRAFT_KEY) setDrafts(loadDrafts());
+    };
+    const onCustom = (_e: Event) => {
+      // Refresh drafts list when ArticleWizard saves/deletes
+      setDrafts(loadDrafts());
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("editor-article-drafts-updated", onCustom as EventListener);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("editor-article-drafts-updated", onCustom as EventListener);
+    };
+  }, []);
+
+  const removeDraft = (id: string) => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const arr = (JSON.parse(raw) as any[]).filter((d) => d.id !== id);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(arr));
+      setDrafts(arr);
+    } catch {}
+  };
+
+  // Wizard dialog state
+  const [open, setOpen] = useState(false);
+  const [wizardDraftId, setWizardDraftId] = useState<string | undefined>(undefined);
+  const [wizardArticleId, setWizardArticleId] = useState<string | undefined>(undefined);
+
+  const openNew = () => {
+    setWizardDraftId(undefined);
+    setWizardArticleId(undefined);
+    setOpen(true);
+  };
+  const openDraft = (id: string) => {
+    setWizardDraftId(id);
+    setWizardArticleId(undefined);
+    setOpen(true);
+  };
+  const openArticle = (id: string) => {
+    setWizardArticleId(id);
+    setWizardDraftId(undefined);
+    setOpen(true);
+  };
+
+  const handleDone = () => {
+    // close and refresh local drafts and rely on stash/react to update published
+    setOpen(false);
+    setWizardArticleId(undefined);
+    setWizardDraftId(undefined);
+    setDrafts(loadDrafts());
+  };
+
   return (
-    <section className="gap-6 grid p-4 sm:p-6">
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <h1 className={cn("font-heading", "text-3xl")}>Editor Room</h1>
-        <div className="flex flex-wrap gap-2 ml-auto">
-          <TabButton k="published" label="My Published Stories" />
-          <TabButton k="submit" label="Submit Content" />
-          <TabButton k="collections" label="Collections" />
-          <TabButton k="waypoints" label="Waypoint Tools" />
+    <div className="flex flex-col gap-4 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <TabButton k="published" label="Published" />
+          <TabButton k="drafts" label="Drafts" />
+        </div>
+        <div>
+          <Button onClick={openNew} size="sm" className="border-neutral-900">New Article</Button>
         </div>
       </div>
 
-      {tab === "published" && (
-        <Card className="border-neutral-900">
-          {/* My Published Stories */}
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              My Published Stories
-              <div className="flex gap-2 items-center">
-                <span className="text-sm text-text-secondary">
-                  {myPublished.length}
-                </span>
-                <button
-                  onClick={() => void refetch()}
-                  className="bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded text-text-secondary text-xs"
-                >
-                  Refresh
-                </button>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!myAddress ? (
-              <div className="text-text-secondary text-sm">
-                Connect your wallet to see your published stories.
-              </div>
-            ) : chainLoading ? (
-              <div className="text-text-secondary text-sm">Loading…</div>
-            ) : chainError ? (
-              <div className="text-danger text-sm">{String(chainError)}</div>
-            ) : myPublished.length === 0 ? (
-              <div className="text-text-secondary text-sm">
-                No published stories yet.
-              </div>
+      <div className="flex-1">
+        {tab === "drafts" && (
+          <div className="grid gap-3">
+            {drafts.length === 0 ? (
+              <div className="p-4 bg-panel border border-neutral-200 rounded">No drafts yet. Click "New Article" to start.</div>
             ) : (
-              <ul className="space-y-2">
-                {myPublished.map((n) => (
-                  <li
-                    key={n.id}
-                    className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                  >
-                    <button
-                      className="text-left flex-1 min-w-0"
-                      onClick={() => setSelectedNoteId(n.id)}
-                    >
-                      <div className="font-medium text-text-primary truncate">
-                        {n.title || "Untitled"}
-                      </div>
-                      <div className="text-xs text-text-secondary mt-0.5">
-                        Updated {formatDate(n.updatedAt)}
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setSelectedNoteId(n.id)}
-                      className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
-                    >
-                      Edit
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Inline editor when a published note is selected */}
-            {selectedNoteId && (
-              <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 p-4">
-                <h3 className="font-heading text-xl mb-3">
-                  Edit Published Story
-                </h3>
-                <PublishWizard
-                  noteId={selectedNoteId}
-                  onDone={() => {
-                    setSelectedNoteId(null);
-                    void refetch();
-                  }}
-                  onCancel={() => setSelectedNoteId(null)}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Content per tab */}
-      {tab === "submit" && (
-        <>
-          {/* Submit New Content */}
-          <PublishWizard
-            draftId={selectedDraftId || undefined}
-            onDone={() => {
-              setSelectedDraftId(null);
-              void refetch();
-            }}
-            onCancel={() => setSelectedDraftId(null)}
-          />
-
-          {/* Your Drafts */}
-          <Card className="border-neutral-900">
-            <CardHeader>
-              <CardTitle
-                className={cn("font-heading", "flex justify-between text-xl")}
-              >
-                Your Drafts
-                <span className="text-sm text-text-secondary">
-                  {recentDrafts.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentDrafts.length === 0 ? (
-                <div className="text-text-secondary text-sm">
-                  No drafts yet. Use Save Draft in the form above.
+              drafts.map((d) => (
+                <div key={d.id} className="p-3 border border-neutral-200 rounded bg-white">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-heading text-lg">{d.title || "Untitled"}</div>
+                      <div className="text-xs text-text-secondary">Last saved: {formatDate(d.lastSaved || d.createdAt || Date.now())}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openDraft(d.id)}>Edit</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { if (confirm('Delete draft?')) removeDraft(d.id); }}>Delete</Button>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
+                    <div className="prose max-w-none overflow-hidden max-h-24" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(d.content || "") }} />
+                  </div>
                 </div>
-              ) : (
-                <ul className="space-y-2">
-                  {recentDrafts.map((d) => (
-                    <li
-                      key={d.id}
-                      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                    >
-                      <button
-                        className="text-left flex-1 min-w-0"
-                        onClick={() => {
-                          setSelectedDraftId(d.id);
-                        }}
-                      >
-                        <div className="font-medium text-text-primary truncate">
-                          {d.title || "Untitled"}
-                        </div>
-                        <div className="text-xs text-text-secondary mt-0.5">
-                          Last saved {formatDate(d.lastSaved)}
-                        </div>
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedDraftId(d.id)}
-                          className="px-2 py-1 text-xs text-text-secondary bg-neutral-100 rounded hover:bg-neutral-200"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm("Delete this draft?"))
-                              deleteDraft(d.id);
-                          }}
-                          className="px-2 py-1 text-xs text-danger border border-danger/30 rounded hover:bg-danger/10"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
+              ))
+            )}
+          </div>
+        )}
 
-      {tab === "collections" && (
-        <Card className="border-neutral-900">
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              Collections
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CollectionsTab />
-          </CardContent>
-        </Card>
-      )}
+        {tab === "published" && (
+          <div className="grid gap-3">
+            {published.length === 0 ? (
+              <div className="p-4 bg-panel border border-neutral-200 rounded">No published articles found.</div>
+            ) : (
+              published.map((p: any) => (
+                <div key={p.id} className="p-3 border border-neutral-200 rounded bg-white">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-heading text-lg">{p.title || "Untitled"}</div>
+                      <div className="text-xs text-text-secondary">By {p.owner === myAddress ? "you" : p.owner} • {formatDate(p.updatedAt || Date.now())}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openArticle(p.id)}>Edit</Button>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
+                    <div className="prose max-w-none overflow-hidden max-h-24" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(p.content || "") }} />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
 
-      {tab === "waypoints" && (
-        <Card className="border-neutral-900">
-          <CardHeader>
-            <CardTitle
-              className={cn("font-heading", "flex justify-between text-xl")}
-            >
-              Waypoint Tools
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WaypointsTab />
-          </CardContent>
-        </Card>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="relative w-full max-w-4xl mx-auto">
+            <div className="bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden">
+              <ArticleWizard draftId={wizardDraftId} articleId={wizardArticleId} onDone={handleDone} onCancel={() => setOpen(false)} />
+            </div>
+          </div>
+        </div>
       )}
-    </section>
+    </div>
   );
 };
