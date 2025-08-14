@@ -8,6 +8,10 @@ export default defineWorld({
   // rg: raidguild dd: dailydust deployer: ab564f
   namespace: "rg_dd_0003",
   systems: {
+    AdminSystem: {
+      openAccess: false,
+      deploy: { registerWorldFunctions: false },
+    },
     ArticleSystem: {
       openAccess: true,
       deploy: { registerWorldFunctions: false },
