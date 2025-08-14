@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type NoteSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0002", name: "NoteSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0003", name: "NoteSystem" }))
 NoteSystemType constant noteSystem = NoteSystemType.wrap(
-  0x737972675f64645f30303032000000004e6f746553797374656d000000000000
+  0x737972675f64645f30303033000000004e6f746553797374656d000000000000
 );
 
 struct CallWrapper {
@@ -51,23 +51,6 @@ library NoteSystemLib {
 
   function deleteNote(NoteSystemType self, bytes32 noteId) internal {
     return CallWrapper(self.toResourceId(), address(0)).deleteNote(noteId);
-  }
-
-  function createNoteLink(
-    NoteSystemType self,
-    bytes32 noteId,
-    bytes32 entityId,
-    uint8 linkType,
-    int32 coordX,
-    int32 coordY,
-    int32 coordZ
-  ) internal {
-    return
-      CallWrapper(self.toResourceId(), address(0)).createNoteLink(noteId, entityId, linkType, coordX, coordY, coordZ);
-  }
-
-  function removeNoteLink(NoteSystemType self, bytes32 noteId, bytes32 entityId) internal {
-    return CallWrapper(self.toResourceId(), address(0)).removeNoteLink(noteId, entityId);
   }
 
   function createNote(
@@ -109,37 +92,6 @@ library NoteSystemLib {
       : _world().callFrom(self.from, self.systemId, systemCall);
   }
 
-  function createNoteLink(
-    CallWrapper memory self,
-    bytes32 noteId,
-    bytes32 entityId,
-    uint8 linkType,
-    int32 coordX,
-    int32 coordY,
-    int32 coordZ
-  ) internal {
-    // if the contract calling this function is a root system, it should use `callAsRoot`
-    if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
-
-    bytes memory systemCall = abi.encodeCall(
-      _createNoteLink_bytes32_bytes32_uint8_int32_int32_int32.createNoteLink,
-      (noteId, entityId, linkType, coordX, coordY, coordZ)
-    );
-    self.from == address(0)
-      ? _world().call(self.systemId, systemCall)
-      : _world().callFrom(self.from, self.systemId, systemCall);
-  }
-
-  function removeNoteLink(CallWrapper memory self, bytes32 noteId, bytes32 entityId) internal {
-    // if the contract calling this function is a root system, it should use `callAsRoot`
-    if (address(_world()) == address(this)) revert NoteSystemLib_CallingFromRootSystem();
-
-    bytes memory systemCall = abi.encodeCall(_removeNoteLink_bytes32_bytes32.removeNoteLink, (noteId, entityId));
-    self.from == address(0)
-      ? _world().call(self.systemId, systemCall)
-      : _world().callFrom(self.from, self.systemId, systemCall);
-  }
-
   function createNote(
     RootCallWrapper memory self,
     string memory title,
@@ -166,27 +118,6 @@ library NoteSystemLib {
 
   function deleteNote(RootCallWrapper memory self, bytes32 noteId) internal {
     bytes memory systemCall = abi.encodeCall(_deleteNote_bytes32.deleteNote, (noteId));
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
-  }
-
-  function createNoteLink(
-    RootCallWrapper memory self,
-    bytes32 noteId,
-    bytes32 entityId,
-    uint8 linkType,
-    int32 coordX,
-    int32 coordY,
-    int32 coordZ
-  ) internal {
-    bytes memory systemCall = abi.encodeCall(
-      _createNoteLink_bytes32_bytes32_uint8_int32_int32_int32.createNoteLink,
-      (noteId, entityId, linkType, coordX, coordY, coordZ)
-    );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
-  }
-
-  function removeNoteLink(RootCallWrapper memory self, bytes32 noteId, bytes32 entityId) internal {
-    bytes memory systemCall = abi.encodeCall(_removeNoteLink_bytes32_bytes32.removeNoteLink, (noteId, entityId));
     SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
   }
 
@@ -238,21 +169,6 @@ interface _updateNote_bytes32_string_string {
 
 interface _deleteNote_bytes32 {
   function deleteNote(bytes32 noteId) external;
-}
-
-interface _createNoteLink_bytes32_bytes32_uint8_int32_int32_int32 {
-  function createNoteLink(
-    bytes32 noteId,
-    bytes32 entityId,
-    uint8 linkType,
-    int32 coordX,
-    int32 coordY,
-    int32 coordZ
-  ) external;
-}
-
-interface _removeNoteLink_bytes32_bytes32 {
-  function removeNoteLink(bytes32 noteId, bytes32 entityId) external;
 }
 
 using NoteSystemLib for NoteSystemType global;

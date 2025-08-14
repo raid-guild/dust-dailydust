@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type CollectionSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0002", name: "CollectionSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0003", name: "CollectionSystem" }))
 CollectionSystemType constant collectionSystem = CollectionSystemType.wrap(
-  0x737972675f64645f3030303200000000436f6c6c656374696f6e53797374656d
+  0x737972675f64645f3030303300000000436f6c6c656374696f6e53797374656d
 );
 
 struct CallWrapper {

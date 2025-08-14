@@ -40,75 +40,56 @@
   },
   {
     "type": "function",
-    "name": "addWaypointStep",
+    "name": "createArticle",
     "inputs": [
       {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "x",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "y",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "z",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "label",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "createWaypointGroup",
-    "inputs": [
-      {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "name",
+        "name": "title",
         "type": "string",
         "internalType": "string"
       },
       {
-        "name": "color",
-        "type": "uint24",
-        "internalType": "uint24"
+        "name": "content",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createArticleAnchor",
+    "inputs": [
+      {
+        "name": "articleId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "name": "isPublic",
-        "type": "bool",
-        "internalType": "bool"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "coordX",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordY",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "coordZ",
+        "type": "int32",
+        "internalType": "int32"
       }
     ],
     "outputs": [],
@@ -116,17 +97,12 @@
   },
   {
     "type": "function",
-    "name": "deleteWaypointGroup",
+    "name": "deleteArticle",
     "inputs": [
       {
-        "name": "noteId",
+        "name": "articleId",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
-      {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -134,22 +110,12 @@
   },
   {
     "type": "function",
-    "name": "removeWaypointStep",
+    "name": "removeArticleAnchor",
     "inputs": [
       {
-        "name": "noteId",
+        "name": "articleId",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
-      {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -176,73 +142,20 @@
   },
   {
     "type": "function",
-    "name": "updateWaypointGroup",
+    "name": "updateArticle",
     "inputs": [
       {
-        "name": "noteId",
+        "name": "articleId",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "name",
+        "name": "title",
         "type": "string",
         "internalType": "string"
       },
       {
-        "name": "color",
-        "type": "uint24",
-        "internalType": "uint24"
-      },
-      {
-        "name": "isPublic",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateWaypointStep",
-    "inputs": [
-      {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "groupId",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "x",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "y",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "z",
-        "type": "int32",
-        "internalType": "int32"
-      },
-      {
-        "name": "label",
+        "name": "content",
         "type": "string",
         "internalType": "string"
       }

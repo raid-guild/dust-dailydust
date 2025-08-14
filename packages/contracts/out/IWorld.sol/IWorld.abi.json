@@ -912,7 +912,7 @@
   },
   {
     "type": "function",
-    "name": "rg_dd_0002___msgSender",
+    "name": "rg_dd_0003___msgSender",
     "inputs": [],
     "outputs": [
       {
@@ -925,7 +925,7 @@
   },
   {
     "type": "function",
-    "name": "rg_dd_0002___msgValue",
+    "name": "rg_dd_0003___msgValue",
     "inputs": [],
     "outputs": [
       {
@@ -938,7 +938,7 @@
   },
   {
     "type": "function",
-    "name": "rg_dd_0002__onAttachProgram",
+    "name": "rg_dd_0003__onAttachProgram",
     "inputs": [
       {
         "name": "ctx",
@@ -973,7 +973,7 @@
   },
   {
     "type": "function",
-    "name": "rg_dd_0002__onDetachProgram",
+    "name": "rg_dd_0003__onDetachProgram",
     "inputs": [
       {
         "name": "ctx",
