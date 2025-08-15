@@ -5,10 +5,12 @@ import { useRecord } from "@latticexyz/stash/react";
 import mudConfig from "contracts/mud.config";
 import ArticleSystemAbi from "contracts/out/ArticleSystem.sol/ArticleSystem.abi.json";
 import React, { useEffect, useState } from "react";
+import Step1 from "./ArticleWizardStep1";
+import Step2 from "./ArticleWizardStep2";
+import Step3 from "./ArticleWizardStep3";
 
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 
 interface Props {
@@ -156,9 +158,11 @@ function renderMarkdownToHtml(md: string) {
       continue;
     }
 
-    // Empty line -> paragraph break
+    // Empty line -> paragraph break. Emit a visible spacer div for every
+    // blank line so spacing is noticeable in the preview modal.
     if (ln.trim() === "") {
-      pushPara();
+      if (paraBuf.length > 0) pushPara();
+      html += '<div style="height:1rem"></div>';
       continue;
     }
 
@@ -172,6 +176,23 @@ function renderMarkdownToHtml(md: string) {
 
   if (inList) html += "</ul>";
   pushPara();
+
+  // Add a drop-cap (first-letter styling) if the rendered HTML starts with a paragraph
+  // and not with a heading. We inject a small <span> with inline styles around the
+  // first visible character of the first paragraph. Also handle the case where the
+  // paragraph starts with a <strong> tag.
+  if (html.startsWith("<p>")) {
+    // Case: <p><strong>X...
+    html = html.replace(
+      /^<p>(\s*)<strong>(\s*)([^<\s])/,
+      '<p>$1<strong>$2<span style="float:left;font-size:3rem;line-height:1;margin-right:0.5rem;">$3</span>'
+    );
+    // Case: <p>X...
+    html = html.replace(
+      /^<p>(\s*)([^<\s])/,
+      '<p>$1<span style="float:left;font-size:3rem;line-height:1;margin-right:0.5rem;">$2</span>'
+    );
+  }
 
   return html;
 }
@@ -213,6 +234,14 @@ export const ArticleWizard: React.FC<Props> = ({
     })
     .filter((c): c is string => !!c) ?? []) as string[];
 
+  // If the category hasn't been set by the user or by loading an article/draft,
+  // default to the first available category when the list becomes available.
+  useEffect(() => {
+    if (!category && articleCategories.length > 0) {
+      setCategory(articleCategories[0]);
+    }
+  }, [articleCategories, category]);
+
   useEffect(() => {
     // hydrate from draft or articleId (basic)
     if (draftId) {
@@ -230,16 +259,142 @@ export const ArticleWizard: React.FC<Props> = ({
     if (articleId) {
       try {
         // cast articleId to the expected hex literal type for stash/getRecord
-        const rec = getRecord({
-          stash,
-          table: tables.Post,
-          key: { id: articleId as unknown as `0x${string}` },
-        }) as any | null;
+        // Normalize record shapes returned by stash/getRecord. Records can be wrapped
+        // in { value: ... }, { data: ... }, arrays, or even JSON strings. This helper
+        // tries to unwrap common wrapper shapes recursively and return the underlying
+        // payload object.
+        const normalize = (r: any): any => {
+          if (r == null) return r;
+          const seen = new Set<any>();
+
+          const unwrap = (obj: any): any => {
+            if (obj == null) return obj;
+            if (typeof obj === "string") {
+              // try to parse JSON-encoded payload
+              try {
+                const parsed = JSON.parse(obj);
+                if (typeof parsed === "object") return unwrap(parsed);
+              } catch (e) {
+                // not JSON, return original string
+                return obj;
+              }
+            }
+            if (Array.isArray(obj)) {
+              // common case: [ { value: { ... } } ] or single-element arrays
+              if (obj.length === 0) return obj;
+              if (obj.length === 1) return unwrap(obj[0]);
+              return obj.map(unwrap);
+            }
+            if (typeof obj === "object") {
+              if (seen.has(obj)) return obj;
+              seen.add(obj);
+
+              // common wrapper keys
+              if ("value" in obj) return unwrap((obj as any).value);
+              if ("data" in obj) return unwrap((obj as any).data);
+              if ("values" in obj) return unwrap((obj as any).values);
+
+              // sometimes the actual payload is stored under a single key
+              const keys = Object.keys(obj);
+              if (keys.length === 1) return unwrap((obj as any)[keys[0]]);
+
+              return obj;
+            }
+
+            return obj;
+          };
+
+          return unwrap(r);
+        };
+
+        // Helper that robustly extracts a cover image URL from a normalized record.
+        const extractCoverImage = (rec: any): string => {
+          if (!rec) return "";
+
+          // If rec is an array, try first element
+          if (Array.isArray(rec) && rec.length) rec = rec[0];
+
+          const tryField = (v: any): string | null => {
+            if (v === null || v === undefined) return null;
+            if (typeof v === "string") return v.trim() || null;
+            if (typeof v === "object") {
+              if (typeof v.url === "string") return v.url;
+              if (typeof v.uri === "string") return v.uri;
+              if (typeof v.src === "string") return v.src;
+              if (typeof v.path === "string") return v.path;
+              // if wrapper like {0: '...'} or nested objects, try keys
+              const keys = Object.keys(v);
+              for (const k of keys) {
+                const maybe: string | null = tryField((v as any)[k]);
+                if (maybe) return maybe;
+              }
+            }
+            return null;
+          };
+
+          const candidates: any[] = [
+            rec.coverImage,
+            rec.image,
+            rec.imageUrl,
+            rec.cover,
+            rec.media,
+            rec.thumbnail,
+            rec.thumbnailUrl,
+          ];
+
+          for (const c of candidates) {
+            const found = tryField(c);
+            if (found) return found;
+          }
+
+          // last resort: scan object keys for anything resembling an image url
+          if (typeof rec === "object") {
+            for (const k of Object.keys(rec)) {
+              if (/image|cover|thumbnail|media|url|src/i.test(k)) {
+                const maybe: string | null = tryField((rec as any)[k]);
+                if (maybe) return maybe;
+              }
+            }
+          }
+
+          return "";
+        };
+
+        const recRaw = getRecord({
+           stash,
+           table: tables.Post,
+           key: { id: articleId as unknown as `0x${string}` },
+         }) as any | null;
+        console.debug("loading article recRaw", { articleId, recRaw });
+        const rec = normalize(recRaw);
         if (rec) {
+          console.debug("normalized rec", rec);
+          const possibleCover = extractCoverImage(rec) || "";
+          if (possibleCover) setCoverImage(possibleCover);
+          else setCoverImage("");
           setTitle(rec.title ?? "");
-          setCoverImage(rec.coverImage ?? "");
           setContent(rec.content ?? "");
           setDraftLocalId(null);
+        }
+
+        // Try to load an existing anchor for this post so preview shows anchor coords
+        try {
+          const anchorRaw = getRecord({
+            stash,
+            table: tables.PostAnchor,
+            key: { id: articleId as unknown as `0x${string}` },
+          }) as any | null;
+          console.debug("loading anchorRaw", { articleId, anchorRaw });
+          const anchorRec = normalize(anchorRaw);
+          if (anchorRec) {
+            setAnchorPos({
+              x: Math.floor(Number(anchorRec.coordX ?? anchorRec.x ?? 0)),
+              y: Math.floor(Number(anchorRec.coordY ?? anchorRec.y ?? 0)),
+              z: Math.floor(Number(anchorRec.coordZ ?? anchorRec.z ?? 0)),
+            });
+          }
+        } catch (e) {
+          // ignore
         }
       } catch (err) {
         console.warn("Failed to load article for editing", err);
@@ -378,7 +533,7 @@ export const ArticleWizard: React.FC<Props> = ({
               systemId: articleSystemId,
               abi: ArticleSystemAbi as any,
               functionName: "updateArticle",
-              args: [articleId, title, content],
+              args: [articleId, title, content, category, coverImage],
             },
           ],
         });
@@ -428,7 +583,7 @@ export const ArticleWizard: React.FC<Props> = ({
                   systemId: articleSystemId,
                   abi: ArticleSystemAbi as any,
                   functionName: "createArticleWithAnchor",
-                  args: [title, content, category, entityId, bx, by, bz],
+                  args: [title, content, category, coverImage, entityId, bx, by, bz],
                 },
               ],
             });
@@ -450,7 +605,7 @@ export const ArticleWizard: React.FC<Props> = ({
                 systemId: articleSystemId,
                 abi: ArticleSystemAbi as any,
                 functionName: "createArticle",
-                args: [title, content, category],
+                args: [title, content, category, coverImage],
               },
             ],
           });
@@ -507,7 +662,7 @@ export const ArticleWizard: React.FC<Props> = ({
             <div
               className={
                 step === 1
-                  ? "px-2 py-1 text-xs rounded bg-brand-600 text-white"
+                  ? "px-2 py-1 text-xs rounded bg-white text-text-primary border border-neutral-900"
                   : "px-2 py-1 text-xs rounded bg-neutral-100 text-text-secondary"
               }
             >
@@ -516,7 +671,7 @@ export const ArticleWizard: React.FC<Props> = ({
             <div
               className={
                 step === 2
-                  ? "px-2 py-1 text-xs rounded bg-brand-600 text-white"
+                  ? "px-2 py-1 text-xs rounded bg-white text-text-primary border border-neutral-900"
                   : "px-2 py-1 text-xs rounded bg-neutral-100 text-text-secondary"
               }
             >
@@ -525,7 +680,7 @@ export const ArticleWizard: React.FC<Props> = ({
             <div
               className={
                 step === 3
-                  ? "px-2 py-1 text-xs rounded bg-brand-600 text-white"
+                  ? "px-2 py-1 text-xs rounded bg-white text-text-primary border border-neutral-900"
                   : "px-2 py-1 text-xs rounded bg-neutral-100 text-text-secondary"
               }
             >
@@ -556,7 +711,7 @@ export const ArticleWizard: React.FC<Props> = ({
                 <button
                   disabled={!canContinueFrom1}
                   onClick={() => setStep(2)}
-                  className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded disabled:opacity-50"
+                  className="px-3 py-1.5 text-sm bg-white text-text-primary border border-neutral-900 rounded hover:bg-neutral-100 disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -566,7 +721,7 @@ export const ArticleWizard: React.FC<Props> = ({
             {step === 2 && (
               <button
                 onClick={() => setStep(3)}
-                className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded"
+                className="px-3 py-1.5 text-sm bg-white text-text-primary border border-neutral-900 rounded hover:bg-neutral-100"
               >
                 Proceed
               </button>
@@ -576,7 +731,7 @@ export const ArticleWizard: React.FC<Props> = ({
               <button
                 onClick={handlePublish}
                 disabled={isPublishing}
-                className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded"
+                className="px-3 py-1.5 text-sm bg-white text-text-primary border border-neutral-900 rounded hover:bg-neutral-100"
               >
                 {isPublishing
                   ? "Publishing…"
@@ -598,131 +753,37 @@ export const ArticleWizard: React.FC<Props> = ({
 
       <CardContent>
         {step === 1 && (
-          <div className="space-y-3">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
-              className="w-full text-xl font-semibold border-none outline-none bg-transparent"
-            />
-            <input
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              placeholder="Cover image URL (optional)"
-              className="w-full text-sm border border-neutral-200 rounded px-2 py-1 bg-panel"
-            />
-
-            <select
-              id="article-category-select"
-              aria-label="Type"
-              className={cn(
-                "border-input bg-transparent border border-neutral-900",
-                "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
-                "transition-[color,box-shadow] outline-none",
-                "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                "md:text-sm"
-              )}
-              onChange={(e) => setCategory(e.target.value)}
-              value={category}
-            >
-              {articleCategories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-
-            {/* Markdown toolbar */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => applyFormatting("h1")}
-                className="px-2 py-1 text-xs bg-neutral-100 rounded hover:bg-neutral-200"
-              >
-                H1
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting("h2")}
-                className="px-2 py-1 text-xs bg-neutral-100 rounded hover:bg-neutral-200"
-              >
-                H2
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting("h3")}
-                className="px-2 py-1 text-xs bg-neutral-100 rounded hover:bg-neutral-200"
-              >
-                H3
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting("bold")}
-                className="px-2 py-1 text-xs bg-neutral-100 rounded hover:bg-neutral-200"
-              >
-                Bold
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting("italic")}
-                className="px-2 py-1 text-xs bg-neutral-100 rounded hover:bg-neutral-200"
-              >
-                Italic
-              </button>
-            </div>
-
-            <textarea
-              id="article-content-textarea"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your article in markdown..."
-              className="w-full h-80 p-2 text-sm border border-neutral-200 rounded bg-transparent"
-            />
-          </div>
+          <Step1
+            title={title}
+            setTitle={setTitle}
+            coverImage={coverImage}
+            setCoverImage={setCoverImage}
+            category={category}
+            setCategory={setCategory}
+            articleCategories={articleCategories}
+            applyFormatting={applyFormatting}
+            content={content}
+            setContent={setContent}
+            handleSaveDraft={handleSaveDraft}
+            canContinueFrom1={canContinueFrom1}
+            justSaved={justSaved}
+            onContinue={() => setStep(2)}
+          />
         )}
 
         {step === 2 && (
-          <div>
-            <h3 className="text-lg font-medium">Preview</h3>
-            {coverImage && (
-              <img
-                src={coverImage}
-                alt="cover"
-                className="w-full h-40 object-cover rounded mt-2"
-              />
-            )}
-            <h2 className="mt-2 text-2xl font-heading">
-              {title || "Untitled"}
-            </h2>
-            <div
-              className="prose max-w-none whitespace-pre-wrap mt-2"
-              dangerouslySetInnerHTML={{
-                __html: renderMarkdownToHtml(content),
-              }}
-            />
-            {/* Show planned anchor position if available */}
-            {anchorPos && (
-              <div className="mt-3 text-sm text-text-secondary">
-                Anchor position: x:{anchorPos.x} y:{anchorPos.y} z:{anchorPos.z}
-              </div>
-            )}
-          </div>
+          <Step2
+            coverImage={coverImage}
+            title={title}
+            content={content}
+            anchorPos={anchorPos}
+            renderMarkdownToHtml={renderMarkdownToHtml}
+            authorAddress={(dustClient as any)?.appContext?.userAddress}
+            category={category}
+          />
         )}
         {step === 3 && (
-          <div>
-            <h3 className="text-lg font-medium">Ready to publish</h3>
-            <p className="text-sm text-text-secondary mt-2">
-              Title: {title || "(no title)"}
-            </p>
-            <p className="text-sm text-text-secondary">
-              Content length: {content.length} chars
-            </p>
-            {coverImage && (
-              <p className="text-sm text-text-secondary">
-                Cover image: {coverImage}
-              </p>
-            )}
-          </div>
+          <Step3 title={title} content={content} coverImage={coverImage} />
         )}
       </CardContent>
     </Card>
