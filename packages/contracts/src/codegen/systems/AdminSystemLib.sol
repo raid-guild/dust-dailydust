@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type AdminSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0003", name: "AdminSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "thedailydust", name: "AdminSystem" }))
 AdminSystemType constant adminSystem = AdminSystemType.wrap(
-  0x737972675f64645f303030330000000041646d696e53797374656d0000000000
+  0x73797468656461696c7964757374000041646d696e53797374656d0000000000
 );
 
 struct CallWrapper {

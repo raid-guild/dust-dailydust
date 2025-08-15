@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useDustClient } from "@/common/useDustClient";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
-import { Button } from "@/components/ui/button";
 import PublishedList from "@/components/editor/PublishedList";
+import { Button } from "@/components/ui/button";
 import { stash, tables } from "@/mud/stash";
 
 export const EditorRoomPage = () => {
@@ -348,7 +348,7 @@ export const EditorRoomPage = () => {
             onClick={() => setOpen(false)}
           />
           <div className="relative w-full max-w-4xl mx-auto">
-            <div className="bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg max-h-[80vh] overflow-scroll">
               <ArticleWizard
                 draftId={wizardDraftId}
                 articleId={wizardArticleId}

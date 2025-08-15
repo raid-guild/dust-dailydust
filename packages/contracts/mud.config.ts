@@ -4,9 +4,7 @@ export default defineWorld({
   codegen: {
     generateSystemLibraries: true,
   },
-  // Replace this with a unique namespace (<= 14 chars)
-  // rg: raidguild dd: dailydust deployer: ab564f
-  namespace: "rg_dd_0003",
+  namespace: "thedailydust",
   systems: {
     AdminSystem: {
       openAccess: false,
