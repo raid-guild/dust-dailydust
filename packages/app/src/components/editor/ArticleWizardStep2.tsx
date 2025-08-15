@@ -21,23 +21,30 @@ export default function ArticleWizardStep2({
 }: Props) {
   const ens = useENS(authorAddress as any);
   const authorDisplay =
-    ens?.data?.displayName ?? ens?.data?.name ??
+    ens?.data?.displayName ??
+    ens?.data?.name ??
     (authorAddress ? `@${authorAddress.slice(0, 6)}` : "anonymous");
   console.log("ArticleWizardStep2", {
     authorAddress,
     authorDisplay,
     ens,
-    category, 
+    category,
     coverImage,
   });
 
   return (
     <div className="max-h-[60vh] overflow-y-auto bg-panel border border-neutral-200 rounded p-4">
       <header className="grid gap-3">
-        <div className={"font-accent text-[10px] text-neutral-700 uppercase tracking-widest"}>
+        <div
+          className={
+            "font-accent text-[10px] text-neutral-700 uppercase tracking-widest"
+          }
+        >
           Draft
         </div>
-        <h1 className={"font-heading text-2xl leading-tight"}>{title || "Untitled"}</h1>
+        <h1 className={"font-heading text-2xl leading-tight"}>
+          {title || "Untitled"}
+        </h1>
         <div className="font-accent text-[10px] text-neutral-700">{`By ${authorDisplay}`}</div>
         {category && (
           <div className="mt-1">
@@ -58,8 +65,15 @@ export default function ArticleWizardStep2({
         </div>
       ) : null}
 
-      <div className={"mt-2 prose max-w-none text-[16px] text-neutral-900 leading-relaxed bg-panel"}>
-        <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }} />
+      <div
+        className={
+          "mt-2 prose max-w-none text-[16px] text-neutral-900 leading-relaxed bg-panel"
+        }
+      >
+        <div
+          className="whitespace-pre-wrap"
+          dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(content) }}
+        />
       </div>
 
       <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">

@@ -1,3 +1,4 @@
+import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecord, useRecords } from "@latticexyz/stash/react";
@@ -5,16 +6,26 @@ import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
 import type React from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
+
+const formatDate = (timestamp: bigint) => {
+  return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
@@ -24,6 +35,12 @@ export const BackPage = () => {
     content: "",
     category: "",
   });
+  // Anchor position (block coords) shown in preview and used for best-effort anchor creation
+  const [anchorPos, setAnchorPos] = useState<{
+    x: number;
+    y: number;
+    z: number;
+  } | null>(null);
 
   const notes = useRecords({
     stash,
@@ -38,6 +55,10 @@ export const BackPage = () => {
         })?.value ?? false;
       let category = null;
 
+      const anchor =
+        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+        null;
+
       if (r.categories[0]) {
         category =
           getRecord({
@@ -51,7 +72,12 @@ export const BackPage = () => {
         id: r.id,
         categories: [category],
         content: r.content,
+        coords: anchor
+          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
+          : null,
+        createdAt: r.createdAt,
         isNote: isNote,
+        owner: r.owner,
         title: r.title,
       };
     })
@@ -70,6 +96,34 @@ export const BackPage = () => {
       })?.value;
     })
     .filter((c): c is string => !!c) ?? []) as string[];
+
+  // Fetch current player position (best-effort) to show anchor in preview when creating a new article
+  useEffect(() => {
+    if (!dustClient) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const pos = await dustClient.provider.request({
+          method: "getPlayerPosition",
+          params: { entity: dustClient.appContext?.userAddress },
+        });
+        if (cancelled) return;
+        setAnchorPos({
+          x: Math.floor(pos.x),
+          y: Math.floor(pos.y),
+          z: Math.floor(pos.z),
+        });
+      } catch (e) {
+        // preview anchor is optional
+        // eslint-disable-next-line no-console
+        console.warn("Could not fetch player position for preview anchor", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dustClient]);
 
   const createNote = useMutation({
     mutationFn: ({
@@ -100,6 +154,46 @@ export const BackPage = () => {
     },
   });
 
+  const createNoteWithAnchor = useMutation({
+    mutationFn: ({
+      title,
+      content,
+      category,
+      anchorPos,
+    }: {
+      title: string;
+      content: string;
+      category: string;
+      anchorPos: { x: number; y: number; z: number };
+    }) => {
+      if (!dustClient) throw new Error("Dust client not connected");
+      const entityId = encodeBlock([anchorPos.x, anchorPos.y, anchorPos.z]);
+      return dustClient.provider.request({
+        method: "systemCall",
+        params: [
+          {
+            systemId: resourceToHex({
+              type: "system",
+              namespace: mudConfig.namespace,
+              name: "NoteSystem",
+            }),
+            abi: NoteSystemAbi as Abi,
+            functionName: "createNoteWithAnchor",
+            args: [
+              title,
+              content,
+              category,
+              entityId,
+              anchorPos.x,
+              anchorPos.y,
+              anchorPos.z,
+            ],
+          },
+        ],
+      });
+    },
+  });
+
   const onSubmitListing = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -107,17 +201,26 @@ export const BackPage = () => {
 
       setForm({ category: "Offer", title: "", content: "" });
       try {
-        await createNote.mutateAsync({
-          title: form.title,
-          content: form.content,
-          category: form.category,
-        });
+        if (anchorPos) {
+          await createNoteWithAnchor.mutateAsync({
+            title: form.title,
+            content: form.content,
+            category: form.category,
+            anchorPos,
+          });
+        } else {
+          await createNote.mutateAsync({
+            title: form.title,
+            content: form.content,
+            category: form.category,
+          });
+        }
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error creating note:", error);
       }
     },
-    [createNote, form]
+    [anchorPos, createNote, createNoteWithAnchor, form]
   );
 
   const isDisabled = useMemo(() => {
@@ -188,25 +291,71 @@ export const BackPage = () => {
               {createNote.isPending ? "Submitting..." : "Submit Listing"}
             </Button>
           </form>
+          <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
+            <div className={"font-accent text-[10px] text-neutral-700"}>
+              {anchorPos
+                ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
+                : "No anchor"}
+            </div>
+          </footer>
         </CardContent>
       </Card>
 
-      <div className="gap-6 grid md:grid-cols-3">
+      <div className="gap-2 grid md:grid-cols-3">
         {notes.map((n) => (
           <div
             key={n.id}
-            className="bg-neutral-50 border border-neutral-900 p-3"
+            className="border border-neutral-900 bg-neutral-50 p-4 space-y-3"
           >
-            <div
-              className={cn(
-                "font-accent",
-                "text-[10px] text-neutral-700 tracking-widest uppercase"
+            <div className="flex items-start justify-between gap-2">
+              {n.categories[0] && (
+                <Badge
+                  className={cn(
+                    "heading-accent",
+                    "text-[9px] uppercase tracking-wider"
+                  )}
+                >
+                  {n.categories[0]}
+                </Badge>
               )}
-            >
-              {n.categories.join(", ")}
+              <span
+                className={cn(
+                  "font-accent",
+                  "text-[9px] text-neutral-600 uppercase tracking-wider"
+                )}
+              >
+                by {n.owner.slice(0, 6)}...{n.owner.slice(-4)}
+              </span>
             </div>
-            <h3 className={cn("font-heading", "text-xl")}>{n.title}</h3>
-            <p className={"text-[15px] leading-relaxed"}>{n.content}</p>
+
+            <h3 className={cn("font-heading", "text-lg leading-tight")}>
+              {n.title}
+            </h3>
+
+            <p className={"text-sm leading-relaxed text-neutral-800"}>
+              {n.content}
+            </p>
+
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-neutral-300">
+              {n.coords && (
+                <span
+                  className={cn(
+                    "font-accent",
+                    "text-[9px] text-neutral-600 uppercase tracking-wider"
+                  )}
+                >
+                  x:{n.coords.x} y:{n.coords.y} z:{n.coords.z}
+                </span>
+              )}
+              <span
+                className={cn(
+                  "heading-accent",
+                  "text-[9px] text-neutral-600 uppercase tracking-wider"
+                )}
+              >
+                {formatDate(n.createdAt)}
+              </span>
+            </div>
           </div>
         ))}
       </div>
