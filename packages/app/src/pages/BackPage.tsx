@@ -1,3 +1,4 @@
+import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecord, useRecords } from "@latticexyz/stash/react";
@@ -5,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
 import type React from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
@@ -24,6 +25,12 @@ export const BackPage = () => {
     content: "",
     category: "",
   });
+  // Anchor position (block coords) shown in preview and used for best-effort anchor creation
+  const [anchorPos, setAnchorPos] = useState<{
+    x: number;
+    y: number;
+    z: number;
+  } | null>(null);
 
   const notes = useRecords({
     stash,
@@ -71,6 +78,34 @@ export const BackPage = () => {
     })
     .filter((c): c is string => !!c) ?? []) as string[];
 
+  // Fetch current player position (best-effort) to show anchor in preview when creating a new article
+  useEffect(() => {
+    if (!dustClient) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const pos = await dustClient.provider.request({
+          method: "getPlayerPosition",
+          params: { entity: dustClient.appContext?.userAddress },
+        });
+        if (cancelled) return;
+        setAnchorPos({
+          x: Math.floor(pos.x),
+          y: Math.floor(pos.y),
+          z: Math.floor(pos.z),
+        });
+      } catch (e) {
+        // preview anchor is optional
+        // eslint-disable-next-line no-console
+        console.warn("Could not fetch player position for preview anchor", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dustClient]);
+
   const createNote = useMutation({
     mutationFn: ({
       title,
@@ -100,6 +135,46 @@ export const BackPage = () => {
     },
   });
 
+  const createNoteWithAnchor = useMutation({
+    mutationFn: ({
+      title,
+      content,
+      category,
+      anchorPos,
+    }: {
+      title: string;
+      content: string;
+      category: string;
+      anchorPos: { x: number; y: number; z: number };
+    }) => {
+      if (!dustClient) throw new Error("Dust client not connected");
+      const entityId = encodeBlock([anchorPos.x, anchorPos.y, anchorPos.z]);
+      return dustClient.provider.request({
+        method: "systemCall",
+        params: [
+          {
+            systemId: resourceToHex({
+              type: "system",
+              namespace: mudConfig.namespace,
+              name: "NoteSystem",
+            }),
+            abi: NoteSystemAbi as Abi,
+            functionName: "createNoteWithAnchor",
+            args: [
+              title,
+              content,
+              category,
+              entityId,
+              anchorPos.x,
+              anchorPos.y,
+              anchorPos.z,
+            ],
+          },
+        ],
+      });
+    },
+  });
+
   const onSubmitListing = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -107,17 +182,26 @@ export const BackPage = () => {
 
       setForm({ category: "Offer", title: "", content: "" });
       try {
-        await createNote.mutateAsync({
-          title: form.title,
-          content: form.content,
-          category: form.category,
-        });
+        if (anchorPos) {
+          await createNoteWithAnchor.mutateAsync({
+            title: form.title,
+            content: form.content,
+            category: form.category,
+            anchorPos,
+          });
+        } else {
+          await createNote.mutateAsync({
+            title: form.title,
+            content: form.content,
+            category: form.category,
+          });
+        }
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error creating note:", error);
       }
     },
-    [createNote, form]
+    [anchorPos, createNote, createNoteWithAnchor, form]
   );
 
   const isDisabled = useMemo(() => {
@@ -188,6 +272,13 @@ export const BackPage = () => {
               {createNote.isPending ? "Submitting..." : "Submit Listing"}
             </Button>
           </form>
+          <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
+            <div className={"font-accent text-[10px] text-neutral-700"}>
+              {anchorPos
+                ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
+                : "No anchor"}
+            </div>
+          </footer>
         </CardContent>
       </Card>
 

@@ -5,13 +5,14 @@ import { useRecord } from "@latticexyz/stash/react";
 import mudConfig from "contracts/mud.config";
 import ArticleSystemAbi from "contracts/out/ArticleSystem.sol/ArticleSystem.abi.json";
 import React, { useEffect, useState } from "react";
-import Step1 from "./ArticleWizardStep1";
-import Step2 from "./ArticleWizardStep2";
-import Step3 from "./ArticleWizardStep3";
 
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { stash, tables } from "@/mud/stash";
+
+import Step1 from "./ArticleWizardStep1";
+import Step2 from "./ArticleWizardStep2";
+import Step3 from "./ArticleWizardStep3";
 
 interface Props {
   draftId?: string;
@@ -361,10 +362,10 @@ export const ArticleWizard: React.FC<Props> = ({
         };
 
         const recRaw = getRecord({
-           stash,
-           table: tables.Post,
-           key: { id: articleId as unknown as `0x${string}` },
-         }) as any | null;
+          stash,
+          table: tables.Post,
+          key: { id: articleId as unknown as `0x${string}` },
+        }) as any | null;
         console.debug("loading article recRaw", { articleId, recRaw });
         const rec = normalize(recRaw);
         if (rec) {
@@ -544,9 +545,9 @@ export const ArticleWizard: React.FC<Props> = ({
           playerPos = { x: anchorPos.x, y: anchorPos.y, z: anchorPos.z };
         } else {
           try {
-            const pos = await (dustClient as any).provider.request({
+            const pos = await dustClient.provider.request({
               method: "getPlayerPosition",
-              params: { entity: (dustClient as any).appContext?.userAddress },
+              params: { entity: dustClient.appContext?.userAddress },
             });
             playerPos = {
               x: Math.floor(pos.x),
@@ -583,7 +584,16 @@ export const ArticleWizard: React.FC<Props> = ({
                   systemId: articleSystemId,
                   abi: ArticleSystemAbi as any,
                   functionName: "createArticleWithAnchor",
-                  args: [title, content, category, coverImage, entityId, bx, by, bz],
+                  args: [
+                    title,
+                    content,
+                    category,
+                    coverImage,
+                    entityId,
+                    bx,
+                    by,
+                    bz,
+                  ],
                 },
               ],
             });
