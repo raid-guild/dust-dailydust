@@ -1,4 +1,5 @@
 import { useENS } from "@/common/useENS";
+import { uriToHttp } from "@/utils/helpers";
 
 interface Props {
   coverImage: string;
@@ -60,7 +61,7 @@ export default function ArticleWizardStep2({
           <img
             alt={title}
             className="grayscale object-cover w-full"
-            src={coverImage}
+            src={uriToHttp(coverImage)[0]}
           />
         </div>
       ) : null}

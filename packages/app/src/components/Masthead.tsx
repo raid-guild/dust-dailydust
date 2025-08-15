@@ -1,7 +1,8 @@
 import { Newspaper, Pin } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
 
+import { PinnedApp } from "@/components/PinnedApp";
 import { cn } from "@/lib/utils";
 import {
   BACK_PAGE_PATH,
@@ -10,7 +11,6 @@ import {
   FRONT_PAGE_PATH,
   LOCAL_PAGE_PATH,
 } from "@/Routes";
-import { PinnedApp } from "@/components/PinnedApp";
 
 const nav = [
   { href: FRONT_PAGE_PATH, label: "Front Page" },
@@ -40,13 +40,17 @@ export const Masthead = () => {
       try {
         localStorage.setItem("pinnedApp", next ? "true" : "false");
       } catch (e) {}
-      try { console.log && console.log('[Masthead] togglePin', { prev, next }); } catch (e) {}
+      try {
+        console.log && console.log("[Masthead] togglePin", { prev, next });
+      } catch (e) {}
       return next;
     });
   }, []);
 
   useEffect(() => {
-    try { console.log && console.log('[Masthead] open changed', { open }); } catch (e) {}
+    try {
+      console.log && console.log("[Masthead] open changed", { open });
+    } catch (e) {}
   }, [open]);
 
   const handleClose = useCallback(() => setOpen(false), []);
@@ -95,7 +99,7 @@ export const Masthead = () => {
                 )}
               >
                 <div className="flex items-center gap-2">
-                  {"Est. 2025 • Week 32"}
+                  {"Est. 2025 • Week 0"}
                   <button
                     title={pinned ? "Unpin app" : "Pin app"}
                     onClick={() => togglePin()}
