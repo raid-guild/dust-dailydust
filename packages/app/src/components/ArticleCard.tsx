@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { ARTICLE_PAGE_PATH } from "@/Routes";
-import { uriToHttp } from "@/utils/helpers";
 
 export type Article = {
   id: string;
@@ -27,7 +26,6 @@ export const ArticleCard = ({
   compact?: boolean;
 }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
-
   return (
     <article className="relative">
       <h3
@@ -52,15 +50,15 @@ export const ArticleCard = ({
             className="absolute inset-0 bg-neutral-200"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)",
-              backgroundSize: "200% 100%",
-              animation: "shimmer 1.2s linear infinite",
+                'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)',
+              backgroundSize: '200% 100%',
+              animation: 'shimmer 1.2s linear infinite',
             }}
           />
         )}
         <img
           alt={article.title}
-          src={uriToHttp(article.image)[0]}
+          src={article.image}
           loading="lazy"
           onLoad={() => setImgLoaded(true)}
           className={`aspect-video grayscale object-cover w-full transition-opacity duration-500 ${
