@@ -1,14 +1,15 @@
-import { Link, useParams } from "react-router-dom";
-import { useMemo } from "react";
-import { useRecords } from "@latticexyz/stash/react";
-import { getRecord } from "@latticexyz/stash/internal";
-import { stash, tables } from "@/mud/stash";
-import { useDustClient } from "@/common/useDustClient";
 import { encodeBlock } from "@dust/world/internal";
+import { getRecord } from "@latticexyz/stash/internal";
+import { useRecords } from "@latticexyz/stash/react";
+import { useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
 
+import { useDustClient } from "@/common/useDustClient";
 import { localNewsSeed, weeklyCurated } from "@/dummy-data";
 import { cn } from "@/lib/utils";
+import { stash, tables } from "@/mud/stash";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
+import { uriToHttp } from "@/utils/helpers";
 
 const getArticleById = (id: string | undefined) => {
   return [...weeklyCurated, ...localNewsSeed].find((a) => a.id === id);
@@ -30,13 +31,13 @@ export const ArticlePage = () => {
   // Set waypoint for the currently viewed article (uses block-entity encoding)
   const handleSetWaypoint = async (art: any) => {
     if (!dustClient) {
-      alert('Wallet/client not ready');
+      alert("Wallet/client not ready");
       return;
     }
 
     const coords = art?.coords;
-    if (!coords || typeof coords.x !== 'number') {
-      alert('Article has no anchor/coordinates to set a waypoint for');
+    if (!coords || typeof coords.x !== "number") {
+      alert("Article has no anchor/coordinates to set a waypoint for");
       return;
     }
 
@@ -47,12 +48,12 @@ export const ArticlePage = () => {
       const entityId = encodeBlock([bx, by, bz]);
 
       await (dustClient as any).provider.request({
-        method: 'setWaypoint',
-        params: { entity: entityId, label: art.title || 'Waypoint' },
+        method: "setWaypoint",
+        params: { entity: entityId, label: art.title || "Waypoint" },
       });
     } catch (e) {
-      console.warn('Failed to set waypoint', e);
-      alert('Failed to set waypoint');
+      console.warn("Failed to set waypoint", e);
+      alert("Failed to set waypoint");
     }
   };
 
@@ -62,7 +63,8 @@ export const ArticlePage = () => {
     if (!r) return null;
 
     const isArticle =
-      getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+      getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ??
+      false;
     if (!isArticle) return null;
 
     const anchorRecord =
@@ -84,12 +86,20 @@ export const ArticlePage = () => {
       id: r.id,
       title: r.title || "Untitled",
       author: r.owner || "",
-      categories: (r.categories || []).map((c: any) => {
-        const val = getRecord({ stash, table: tables.Category, key: { id: c } })?.value;
-        return val ?? String(c);
-      }).filter(Boolean),
+      categories: (r.categories || [])
+        .map((c: any) => {
+          const val = getRecord({
+            stash,
+            table: tables.Category,
+            key: { id: c },
+          })?.value;
+          return val ?? String(c);
+        })
+        .filter(Boolean),
       city: "",
-      content: (typeof r.content === "string" ? r.content.split("\n\n") : []) as string[],
+      content: (typeof r.content === "string"
+        ? r.content.split("\n\n")
+        : []) as string[],
       coords: anchor,
       excerpt,
       image: r.coverImage || "/assets/placeholder-notext.png",
@@ -159,7 +169,7 @@ export const ArticlePage = () => {
             alt={finalArticle.title}
             className="grayscale object-cover w-full"
             height={720}
-            src={finalArticle.image}
+            src={uriToHttp(finalArticle.image)[0]}
             width={1200}
           />
         </div>
