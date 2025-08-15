@@ -1,9 +1,9 @@
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 
 import { useDustClient } from "@/common/useDustClient";
+import { encodeBlock } from "@dust/world/internal";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +30,7 @@ const parseCoords = (input: string) => {
 
 export const LocalPage = () => {
   const { data: dustClient } = useDustClient();
+  const [currentPos, setCurrentPos] = useState<{ x: number; y: number; z: number } | null>(null);
   const [coords, setCoords] = useState<string>("120 64 -40");
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export const LocalPage = () => {
           setCoords(
             `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
           );
+          setCurrentPos({ x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) });
         }
       } catch (e) {
         // ignore - keep default
@@ -63,6 +65,7 @@ export const LocalPage = () => {
         setCoords(
           `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
         );
+        setCurrentPos({ x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) });
       } else {
         alert("Could not determine current position");
       }
@@ -76,8 +79,8 @@ export const LocalPage = () => {
   const rawPosts = useRecords({ stash, table: tables.Post }) || [];
 
   const parsed = useMemo(
-    () => parseCoords(coords) ?? { x: 0, y: 64, z: 0 },
-    [coords]
+    () => currentPos ?? parseCoords(coords) ?? { x: 0, y: 64, z: 0 },
+    [coords, currentPos]
   );
 
   const ranked = useMemo(() => {
@@ -136,6 +139,35 @@ export const LocalPage = () => {
       .map((p) => ({ ...p, dist: distance(parsed, p.coords) }))
       .sort((a, b) => a.dist - b.dist);
   }, [rawPosts, parsed]);
+
+  // Set waypoint for an article by encoding its block coords into an EntityId
+  const handleSetWaypoint = async (article: any) => {
+    if (!dustClient) {
+      alert("Wallet/client not ready");
+      return;
+    }
+
+    const coords = article.coords;
+    if (!coords || typeof coords.x !== 'number') {
+      alert('Article has no anchor/coordinates to set a waypoint for');
+      return;
+    }
+
+    try {
+      const bx = Math.floor(coords.x);
+      const by = Math.floor(coords.y);
+      const bz = Math.floor(coords.z);
+      const entityId = encodeBlock([bx, by, bz]);
+
+      await (dustClient as any).provider.request({
+        method: 'setWaypoint',
+        params: { entity: entityId, label: article.title || 'Waypoint' },
+      });
+    } catch (e) {
+      console.warn('Failed to set waypoint', e);
+      alert('Failed to set waypoint');
+    }
+  };
 
   return (
     <section className="p-4 sm:p-6">
@@ -213,9 +245,13 @@ export const LocalPage = () => {
               <ArticleCard article={a} />
               <div className={cn("font-accent", "mt-2 text-[10px]")}>
                 Distance: {a.dist} blocks •{" "}
-                <Link to="/waypoint-in-game" className="underline">
-                  Get directions
-                </Link>
+                <button
+                  onClick={() => handleSetWaypoint(a)}
+                  className="underline"
+                  disabled={!dustClient}
+                >
+                  Set Waypoint
+                </button>
               </div>
             </div>
           ))}
