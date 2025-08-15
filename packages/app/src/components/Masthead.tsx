@@ -54,7 +54,7 @@ export const Masthead = () => {
                   "hidden sm:block text-[10px] text-neutral-700"
                 )}
               >
-                {"Est. 2025 • Week 32"}
+                {"Est. 2025 • Week 1"}
               </div>
             </div>
           </div>
