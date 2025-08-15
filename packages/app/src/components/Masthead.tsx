@@ -1,5 +1,6 @@
-import { Newspaper } from "lucide-react";
+import { Newspaper, Pin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +10,7 @@ import {
   FRONT_PAGE_PATH,
   LOCAL_PAGE_PATH,
 } from "@/Routes";
+import { PinnedApp } from "@/components/PinnedApp";
 
 const nav = [
   { href: FRONT_PAGE_PATH, label: "Front Page" },
@@ -19,6 +21,44 @@ const nav = [
 ];
 
 export const Masthead = () => {
+  const [pinned, setPinned] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const val = localStorage.getItem("pinnedApp");
+      if (val === "true") setPinned(true);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const togglePin = useCallback(() => {
+    setPinned((prev) => {
+      const next = !prev;
+      setOpen(next);
+      try {
+        localStorage.setItem("pinnedApp", next ? "true" : "false");
+      } catch (e) {}
+      try { console.log && console.log('[Masthead] togglePin', { prev, next }); } catch (e) {}
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    try { console.log && console.log('[Masthead] open changed', { open }); } catch (e) {}
+  }, [open]);
+
+  const handleClose = useCallback(() => setOpen(false), []);
+
+  const handleUnpin = useCallback(() => {
+    setPinned(false);
+    setOpen(false);
+    try {
+      localStorage.setItem("pinnedApp", "false");
+    } catch (e) {}
+  }, []);
+
   return (
     <header className="sticky top-0 z-30">
       <div className="max-w-6xl mx-auto pt-6 px-4 w-full">
@@ -54,7 +94,16 @@ export const Masthead = () => {
                   "hidden sm:block text-[10px] text-neutral-700"
                 )}
               >
-                {"Est. 2025 • Week 32"}
+                <div className="flex items-center gap-2">
+                  {"Est. 2025 • Week 32"}
+                  <button
+                    title={pinned ? "Unpin app" : "Pin app"}
+                    onClick={() => togglePin()}
+                    className="p-1 border border-neutral-800 rounded-sm bg-neutral-100"
+                  >
+                    <Pin className="size-4 text-neutral-800" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -74,6 +123,11 @@ export const Masthead = () => {
           </nav>
         </div>
       </div>
+
+      {/* Pinned app mount */}
+      {open && (
+        <PinnedApp open={open} onClose={handleClose} onUnpin={handleUnpin} />
+      )}
     </header>
   );
 };

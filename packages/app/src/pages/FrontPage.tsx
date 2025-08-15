@@ -54,7 +54,6 @@ const LeadStory = ({ article }: { article: Article }) => {
         alt={article.title}
         className="grayscale object-cover w-full"
         decoding="async"
-        fetchPriority="high"
         height={800}
         loading="eager"
         src={article.image}
