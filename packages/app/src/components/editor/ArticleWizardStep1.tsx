@@ -1,4 +1,9 @@
+import { Jimp } from "jimp";
+
 import { cn } from "@/lib/utils";
+import { uriToHttp } from "@/utils/helpers";
+
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 interface Props {
   title: string;
@@ -33,14 +38,76 @@ export default function ArticleWizardStep1({
   justSaved,
   onContinue,
 }: Props) {
+  const uploadImageToIpfs = async (file: File, name: string) => {
+    if (!API_BASE) throw new Error("API_BASE is not defined");
+
+    // Using Jimp to resize the image and convert to a PNG
+    const buffer = await file.arrayBuffer();
+    const image = await Jimp.read(buffer);
+    const pngBuffer = (await image
+      .resize({ w: 1000 })
+      .getBuffer("image/png")) as BlobPart;
+
+    const form = new FormData();
+    form.append("file", new File([pngBuffer], name, { type: "image/png" }));
+    if (name) form.append("name", name);
+
+    const resp = await fetch(`${API_BASE}/ipfs/file`, {
+      method: "POST",
+      body: form,
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err?.error || `HTTP ${resp.status}`);
+    }
+
+    return resp.json() as Promise<{
+      cid: string;
+      size: number;
+      created_at: string;
+    }>;
+  };
+
   return (
     <div className="space-y-3">
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
-        className="w-full text-xl font-semibold border-none outline-none bg-transparent"
-      />
+      {API_BASE && (
+        <>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+            className="w-full text-xl font-semibold border-none outline-none bg-transparent"
+          />
+          <input
+            accept="image/png, image/jpeg, image/jpg"
+            className="bg-panel border border-neutral-200 px-2 py-1 rounded text-sm w-full"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                uploadImageToIpfs(file, file.name)
+                  .then((res) => {
+                    setCoverImage(`ipfs://${res.cid}`);
+                  })
+                  .catch((err) => {
+                    // eslint-disable-next-line no-console
+                    console.error("Failed to upload image:", err);
+                  });
+              }
+            }}
+            type="file"
+          />
+        </>
+      )}
+
+      {coverImage && (
+        <img
+          alt="Cover Preview"
+          className="h-auto rounded w-full"
+          src={uriToHttp(coverImage)[0]}
+        />
+      )}
+
       <input
         value={coverImage}
         onChange={(e) => setCoverImage(e.target.value)}

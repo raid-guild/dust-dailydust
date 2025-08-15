@@ -24,6 +24,7 @@
     "clsx": "^2.1.1",
     "contracts": "workspace:*",
     "dustkit": "https://pkg.pr.new/dustproject/dust/dustkit@27f724c",
+    "jimp": "^1.6.0",
     "lucide-react": "^0.539.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
