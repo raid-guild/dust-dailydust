@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type ArticleSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0003", name: "ArticleSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "thedailydust", name: "ArticleSystem" }))
 ArticleSystemType constant articleSystem = ArticleSystemType.wrap(
-  0x737972675f64645f303030330000000041727469636c6553797374656d000000
+  0x73797468656461696c7964757374000041727469636c6553797374656d000000
 );
 
 struct CallWrapper {

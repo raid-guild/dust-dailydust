@@ -26,8 +26,8 @@ struct CollectionData {
 }
 
 library Collection {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "rg_dd_0003", name: "Collection", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746272675f64645f3030303300000000436f6c6c656374696f6e000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "thedailydust", name: "Collection", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x74627468656461696c79647573740000436f6c6c656374696f6e000000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0024030308140800000000000000000000000000000000000000000000000000);

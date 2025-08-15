@@ -14,9 +14,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 type NoteSystemType is bytes32;
 
-// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "rg_dd_0003", name: "NoteSystem" }))
+// equivalent to WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "thedailydust", name: "NoteSystem" }))
 NoteSystemType constant noteSystem = NoteSystemType.wrap(
-  0x737972675f64645f30303033000000004e6f746553797374656d000000000000
+  0x73797468656461696c796475737400004e6f746553797374656d000000000000
 );
 
 struct CallWrapper {
