@@ -1,15 +1,16 @@
-import { useMemo, useState, useEffect } from "react";
+import { getRecord } from "@latticexyz/stash/internal";
+import { useRecords } from "@latticexyz/stash/react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { useDustClient } from "@/common/useDustClient";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useDustClient } from "@/common/useDustClient";
-import { useRecords } from "@latticexyz/stash/react";
-import { getRecord } from "@latticexyz/stash/internal";
 import { stash, tables } from "@/mud/stash";
+import { POPULAR_PLACES } from "@/utils/constants";
 
 const distance = (
   a: { x: number; y: number; z: number },
@@ -27,46 +28,6 @@ const parseCoords = (input: string) => {
   return { x: parts[0], y: parts[1], z: parts[2] };
 };
 
-// Temporary popular places definitions (will be replaced with on-chain data later)
-const popularPlaces = [
-  {
-    id: "default-raidguild-forge",
-    name: "Raidguild Forge",
-    coords: { x: 1272, y: 154, z: -930 },
-    description:
-      "The main RaidGuild Forge Hall - a central hub for crafting and community",
-    category: "Base",
-  },
-  {
-    id: "default-arena-eternal",
-    name: "Arena Eternal",
-    coords: { x: -22, y: 75, z: 101 },
-    description: "Community PvP arena",
-    category: "Arena",
-  },
-  {
-    id: "default-perm-town-market",
-    name: "Perm Town Market",
-    coords: { x: 609, y: 149, z: -1509 },
-    description: "Trading hub in Perm Town",
-    category: "Trading",
-  },
-  {
-    id: "default-baby-yoda",
-    name: "Baby Yoda",
-    coords: { x: 0, y: 0, z: 0 },
-    description: "Baby Yoda landmark",
-    category: "Landmark",
-  },
-  {
-    id: "default-ethereum-monument",
-    name: "Ethereum Monument",
-    coords: { x: 57, y: 63, z: -87 },
-    description: "Ethereum monument",
-    category: "Monument",
-  },
-];
-
 export const LocalPage = () => {
   const { data: dustClient } = useDustClient();
   const [coords, setCoords] = useState<string>("120 64 -40");
@@ -80,7 +41,9 @@ export const LocalPage = () => {
           params: { entity: (dustClient as any).appContext?.userAddress },
         });
         if (pos && typeof pos.x === "number") {
-          setCoords(`${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`);
+          setCoords(
+            `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+          );
         }
       } catch (e) {
         // ignore - keep default
@@ -97,7 +60,9 @@ export const LocalPage = () => {
         params: { entity: (dustClient as any).appContext?.userAddress },
       });
       if (pos && typeof pos.x === "number") {
-        setCoords(`${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`);
+        setCoords(
+          `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+        );
       } else {
         alert("Could not determine current position");
       }
@@ -119,12 +84,14 @@ export const LocalPage = () => {
     const posts = rawPosts
       .map((r: any) => {
         const isArticle =
-          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })
+            ?.value ?? false;
 
         if (!isArticle) return null;
 
         const anchorRecord =
-          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ?? null;
+          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+          null;
         const anchor = anchorRecord
           ? {
               x: Number(anchorRecord.coordX || 0),
@@ -133,18 +100,29 @@ export const LocalPage = () => {
             }
           : null;
 
-        const excerpt = typeof r.content === "string" ? (r.content.split("\n\n")[0] || r.content).slice(0, 240) : "";
+        const excerpt =
+          typeof r.content === "string"
+            ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
+            : "";
 
         return {
           id: r.id,
           title: r.title || "Untitled",
           author: r.owner || "",
-          categories: (r.categories || []).map((c: any) => {
-            const val = getRecord({ stash, table: tables.Category, key: { id: c } })?.value;
-            return val ?? String(c);
-          }).filter(Boolean),
+          categories: (r.categories || [])
+            .map((c: any) => {
+              const val = getRecord({
+                stash,
+                table: tables.Category,
+                key: { id: c },
+              })?.value;
+              return val ?? String(c);
+            })
+            .filter(Boolean),
           city: "",
-          content: (typeof r.content === "string" ? r.content.split("\n\n") : []) as string[],
+          content: (typeof r.content === "string"
+            ? r.content.split("\n\n")
+            : []) as string[],
           coords: anchor ?? { x: 0, y: 0, z: 0 },
           excerpt,
           image: r.coverImage || "/assets/placeholder-notext.png",
@@ -213,7 +191,7 @@ export const LocalPage = () => {
               Popular Places
             </div>
             <div className="flex flex-wrap gap-2">
-              {popularPlaces.map((p) => (
+              {POPULAR_PLACES.map((p) => (
                 <button
                   key={p.name}
                   onClick={() =>

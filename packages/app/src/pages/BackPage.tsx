@@ -10,12 +10,22 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
+
+const formatDate = (timestamp: bigint) => {
+  return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
@@ -45,6 +55,10 @@ export const BackPage = () => {
         })?.value ?? false;
       let category = null;
 
+      const anchor =
+        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+        null;
+
       if (r.categories[0]) {
         category =
           getRecord({
@@ -58,7 +72,12 @@ export const BackPage = () => {
         id: r.id,
         categories: [category],
         content: r.content,
+        coords: anchor
+          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
+          : null,
+        createdAt: r.createdAt,
         isNote: isNote,
+        owner: r.owner,
         title: r.title,
       };
     })
@@ -282,22 +301,61 @@ export const BackPage = () => {
         </CardContent>
       </Card>
 
-      <div className="gap-6 grid md:grid-cols-3">
+      <div className="gap-2 grid md:grid-cols-3">
         {notes.map((n) => (
           <div
             key={n.id}
-            className="bg-neutral-50 border border-neutral-900 p-3"
+            className="border border-neutral-900 bg-neutral-50 p-4 space-y-3"
           >
-            <div
-              className={cn(
-                "font-accent",
-                "text-[10px] text-neutral-700 tracking-widest uppercase"
+            <div className="flex items-start justify-between gap-2">
+              {n.categories[0] && (
+                <Badge
+                  className={cn(
+                    "heading-accent",
+                    "text-[9px] uppercase tracking-wider"
+                  )}
+                >
+                  {n.categories[0]}
+                </Badge>
               )}
-            >
-              {n.categories.join(", ")}
+              <span
+                className={cn(
+                  "font-accent",
+                  "text-[9px] text-neutral-600 uppercase tracking-wider"
+                )}
+              >
+                by {n.owner.slice(0, 6)}...{n.owner.slice(-4)}
+              </span>
             </div>
-            <h3 className={cn("font-heading", "text-xl")}>{n.title}</h3>
-            <p className={"text-[15px] leading-relaxed"}>{n.content}</p>
+
+            <h3 className={cn("font-heading", "text-lg leading-tight")}>
+              {n.title}
+            </h3>
+
+            <p className={"text-sm leading-relaxed text-neutral-800"}>
+              {n.content}
+            </p>
+
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-neutral-300">
+              {n.coords && (
+                <span
+                  className={cn(
+                    "font-accent",
+                    "text-[9px] text-neutral-600 uppercase tracking-wider"
+                  )}
+                >
+                  x:{n.coords.x} y:{n.coords.y} z:{n.coords.z}
+                </span>
+              )}
+              <span
+                className={cn(
+                  "heading-accent",
+                  "text-[9px] text-neutral-600 uppercase tracking-wider"
+                )}
+              >
+                {formatDate(n.createdAt)}
+              </span>
+            </div>
           </div>
         ))}
       </div>
