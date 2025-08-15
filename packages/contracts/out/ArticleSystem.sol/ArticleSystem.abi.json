@@ -56,6 +56,11 @@
         "name": "categoryName",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "coverImage",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [
@@ -116,6 +121,11 @@
       },
       {
         "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "coverImage",
         "type": "string",
         "internalType": "string"
       },
@@ -215,6 +225,11 @@
       },
       {
         "name": "categoryName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "coverImage",
         "type": "string",
         "internalType": "string"
       }

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDustClient } from "@/common/useDustClient";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { Button } from "@/components/ui/button";
+import PublishedList from "@/components/editor/PublishedList";
 import { stash, tables } from "@/mud/stash";
 
 export const EditorRoomPage = () => {
@@ -330,54 +331,13 @@ export const EditorRoomPage = () => {
         )}
 
         {tab === "published" && (
-          <div className="grid gap-3">
-            {published.length === 0 ? (
-              <div className="p-4 bg-panel border border-neutral-200 rounded">
-                No published articles found.
-              </div>
-            ) : (
-              published.map((p: any) => (
-                <div
-                  key={p.id}
-                  className="p-3 border border-neutral-200 rounded bg-white"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-heading text-lg">
-                        {p.title || "Untitled"}
-                      </div>
-                      <div className="text-xs text-text-secondary">
-                        By {p.owner === myAddress ? "you" : p.owner} •{" "}
-                        {formatDate(p.updatedAt || Date.now())}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openArticle(p.id)}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
-                    <div
-                      className="prose max-w-none overflow-hidden max-h-24"
-                      dangerouslySetInnerHTML={{
-                        __html: renderMarkdownToHtml(p.content || ""),
-                      }}
-                    />
-                    {p.anchor && (
-                      <div className="mt-2 text-sm text-text-secondary">
-                        Anchor: x:{p.anchor.x} y:{p.anchor.y} z:{p.anchor.z}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <PublishedList
+            published={published}
+            myAddress={myAddress}
+            onEdit={(id) => openArticle(id)}
+            renderMarkdownToHtml={renderMarkdownToHtml}
+            formatDate={formatDate}
+          />
         )}
       </div>
 

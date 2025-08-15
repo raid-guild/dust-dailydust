@@ -10,37 +10,39 @@ contract ArticleSystem is System {
    * @param title Article title
    * @param content Article content in markdown
    * @param categoryName Article category
+   * @param coverImage Optional cover image URL
    */
   function createArticle(
     string memory title,
     string memory content,
-    string memory categoryName
+    string memory categoryName,
+    string memory coverImage
   ) public returns (bytes32) {
     bytes32 articleId = keccak256(abi.encodePacked(_msgSender(), block.timestamp, title));
 
     // Ensure article doesn't exist (check if owner is zero address)
     require(Post.getOwner(articleId) == address(0), "Article exists");
 
-    uint64 timestamp = uint64(block.timestamp);
-
-    bytes32 category = keccak256(abi.encodePacked(categoryName));
     _validateArticleCategory(categoryName);
 
-    bytes32[] memory categories = new bytes32[](1);
-    categories[0] = category;
+    // Scope the categories and Post.set into a nested block so fewer locals are live at once
+    {
+      bytes32[] memory categories = new bytes32[](1);
+      categories[0] = keccak256(abi.encodePacked(categoryName));
 
-    Post.set(
-      articleId,
-      PostData({
-        createdAt: timestamp,
-        owner: _msgSender(),
-        updatedAt: timestamp,
-        content: content,
-        coverImage: "",
-        title: title,
-        categories: categories
-      })
-    );
+      Post.set(
+        articleId,
+        PostData({
+          createdAt: uint64(block.timestamp),
+          owner: _msgSender(),
+          updatedAt: uint64(block.timestamp),
+          content: content,
+          coverImage: coverImage,
+          title: title,
+          categories: categories
+        })
+      );
+    }
     IsArticle.set(articleId, true);
 
     return articleId;
@@ -51,6 +53,7 @@ contract ArticleSystem is System {
    * @param title Article title
    * @param content Article content in markdown
    * @param categoryName Article category
+   * @param coverImage Optional cover image URL
    * @param entityId Entity to anchor to (bytes32)
    * @param coordX X coordinate cache
    * @param coordY Y coordinate cache
@@ -61,6 +64,7 @@ contract ArticleSystem is System {
     string memory title,
     string memory content,
     string memory categoryName,
+    string memory coverImage,
     bytes32 entityId,
     int32 coordX,
     int32 coordY,
@@ -71,26 +75,26 @@ contract ArticleSystem is System {
     // Ensure article doesn't exist (check if owner is zero address)
     require(Post.getOwner(articleId) == address(0), "Article exists");
 
-    uint64 timestamp = uint64(block.timestamp);
-
-    bytes32 category = keccak256(abi.encodePacked(categoryName));
     _validateArticleCategory(categoryName);
 
-    bytes32[] memory categories = new bytes32[](1);
-    categories[0] = category;
+    // Scope the categories and Post.set into a nested block so fewer locals are live at once
+    {
+      bytes32[] memory categories = new bytes32[](1);
+      categories[0] = keccak256(abi.encodePacked(categoryName));
 
-    Post.set(
-      articleId,
-      PostData({
-        createdAt: timestamp,
-        owner: _msgSender(),
-        updatedAt: timestamp,
-        content: content,
-        coverImage: "",
-        title: title,
-        categories: categories
-      })
-    );
+      Post.set(
+        articleId,
+        PostData({
+          createdAt: uint64(block.timestamp),
+          owner: _msgSender(),
+          updatedAt: uint64(block.timestamp),
+          content: content,
+          coverImage: coverImage,
+          title: title,
+          categories: categories
+        })
+      );
+    }
     IsArticle.set(articleId, true);
 
     // Set the anchor immediately
@@ -105,12 +109,14 @@ contract ArticleSystem is System {
    * @param title New title
    * @param content New content
    * @param categoryName New category
+   * @param coverImage Optional cover image URL
    */
   function updateArticle(
     bytes32 articleId,
     string memory title,
     string memory content,
-    string memory categoryName
+    string memory categoryName,
+    string memory coverImage
   ) public {
     PostData memory article = Post.get(articleId);
     require(article.owner == _msgSender(), "Not owner");
@@ -125,6 +131,8 @@ contract ArticleSystem is System {
     Post.setContent(articleId, content);
     Post.setCategories(articleId, categories);
     Post.setUpdatedAt(articleId, uint64(block.timestamp));
+    // Persist cover image
+    Post.setCoverImage(articleId, coverImage);
   }
 
   /**
