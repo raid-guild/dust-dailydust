@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { ARTICLE_PAGE_PATH } from "@/Routes";
@@ -24,6 +25,7 @@ export const ArticleCard = ({
   article: Article;
   compact?: boolean;
 }) => {
+  const [imgLoaded, setImgLoaded] = useState(false);
   return (
     <article className="relative">
       <h3
@@ -40,14 +42,32 @@ export const ArticleCard = ({
           {article.title}
         </Link>
       </h3>
-      <div className="border border-neutral-900 my-2 overflow-hidden">
+      <div className="border border-neutral-900 my-2 overflow-hidden relative">
+        {/* shimmer placeholder while image loads */}
+        {!imgLoaded && (
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-neutral-200"
+            style={{
+              backgroundImage:
+                'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)',
+              backgroundSize: '200% 100%',
+              animation: 'shimmer 1.2s linear infinite',
+            }}
+          />
+        )}
         <img
           alt={article.title}
           src={article.image}
-          className="aspect-video grayscale object-cover w-full"
+          loading="lazy"
+          onLoad={() => setImgLoaded(true)}
+          className={`aspect-video grayscale object-cover w-full transition-opacity duration-500 ${
+            imgLoaded ? "opacity-100" : "opacity-0"
+          }`}
           width={800}
           height={450}
         />
+        <style>{`@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }`}</style>
       </div>
       <p className={"text-[15px] leading-relaxed text-neutral-800"}>
         {article.excerpt}
