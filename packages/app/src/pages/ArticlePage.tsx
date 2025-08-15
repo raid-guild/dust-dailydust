@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import { useRecords } from "@latticexyz/stash/react";
 import { getRecord } from "@latticexyz/stash/internal";
 import { stash, tables } from "@/mud/stash";
+import { useDustClient } from "@/common/useDustClient";
+import { encodeBlock } from "@dust/world/internal";
 
 import { localNewsSeed, weeklyCurated } from "@/dummy-data";
 import { cn } from "@/lib/utils";
@@ -19,10 +21,40 @@ const formatDateTime = (timestamp: number) => {
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
+  const { data: dustClient } = useDustClient();
   const article = getArticleById(id);
 
   // Try to resolve article from on-chain stash if it's not part of the local seeds
   const rawPosts = useRecords({ stash, table: tables.Post }) || [];
+
+  // Set waypoint for the currently viewed article (uses block-entity encoding)
+  const handleSetWaypoint = async (art: any) => {
+    if (!dustClient) {
+      alert('Wallet/client not ready');
+      return;
+    }
+
+    const coords = art?.coords;
+    if (!coords || typeof coords.x !== 'number') {
+      alert('Article has no anchor/coordinates to set a waypoint for');
+      return;
+    }
+
+    try {
+      const bx = Math.floor(coords.x);
+      const by = Math.floor(coords.y);
+      const bz = Math.floor(coords.z);
+      const entityId = encodeBlock([bx, by, bz]);
+
+      await (dustClient as any).provider.request({
+        method: 'setWaypoint',
+        params: { entity: entityId, label: art.title || 'Waypoint' },
+      });
+    } catch (e) {
+      console.warn('Failed to set waypoint', e);
+      alert('Failed to set waypoint');
+    }
+  };
 
   const stashArticle = useMemo(() => {
     if (!id) return null;
@@ -160,6 +192,14 @@ export const ArticlePage = () => {
         <div className={cn("font-accent", "text-[10px] text-neutral-700")}>
           {`${finalArticle.city} • `}
           {`x:${finalArticle.coords.x} y:${finalArticle.coords.y} z:${finalArticle.coords.z}`}
+          {" • "}
+          <button
+            onClick={() => handleSetWaypoint(finalArticle)}
+            className="underline"
+            disabled={!dustClient}
+          >
+            Set Waypoint
+          </button>
         </div>
         <div className="flex gap-3">
           <Link to={FRONT_PAGE_PATH} className="underline">
