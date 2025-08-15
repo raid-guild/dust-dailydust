@@ -1,4 +1,3 @@
-import React from "react";
 import { useENS } from "@/common/useENS";
 
 interface Props {

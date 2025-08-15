@@ -1,12 +1,15 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { localNewsSeed, popularPlaces } from "@/dummy-data";
 import { cn } from "@/lib/utils";
+import { useDustClient } from "@/common/useDustClient";
+import { useRecords } from "@latticexyz/stash/react";
+import { getRecord } from "@latticexyz/stash/internal";
+import { stash, tables } from "@/mud/stash";
 
 const distance = (
   a: { x: number; y: number; z: number },
@@ -24,21 +27,137 @@ const parseCoords = (input: string) => {
   return { x: parts[0], y: parts[1], z: parts[2] };
 };
 
+// Temporary popular places definitions (will be replaced with on-chain data later)
+const popularPlaces = [
+  {
+    id: "default-raidguild-forge",
+    name: "Raidguild Forge",
+    coords: { x: 1272, y: 154, z: -930 },
+    description:
+      "The main RaidGuild Forge Hall - a central hub for crafting and community",
+    category: "Base",
+  },
+  {
+    id: "default-arena-eternal",
+    name: "Arena Eternal",
+    coords: { x: -22, y: 75, z: 101 },
+    description: "Community PvP arena",
+    category: "Arena",
+  },
+  {
+    id: "default-perm-town-market",
+    name: "Perm Town Market",
+    coords: { x: 609, y: 149, z: -1509 },
+    description: "Trading hub in Perm Town",
+    category: "Trading",
+  },
+  {
+    id: "default-baby-yoda",
+    name: "Baby Yoda",
+    coords: { x: 0, y: 0, z: 0 },
+    description: "Baby Yoda landmark",
+    category: "Landmark",
+  },
+  {
+    id: "default-ethereum-monument",
+    name: "Ethereum Monument",
+    coords: { x: 57, y: 63, z: -87 },
+    description: "Ethereum monument",
+    category: "Monument",
+  },
+];
+
 export const LocalPage = () => {
+  const { data: dustClient } = useDustClient();
   const [coords, setCoords] = useState<string>("120 64 -40");
+
+  useEffect(() => {
+    (async () => {
+      if (!dustClient) return;
+      try {
+        const pos = await (dustClient as any).provider.request({
+          method: "getPlayerPosition",
+          params: { entity: (dustClient as any).appContext?.userAddress },
+        });
+        if (pos && typeof pos.x === "number") {
+          setCoords(`${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`);
+        }
+      } catch (e) {
+        // ignore - keep default
+      }
+    })();
+  }, [dustClient]);
+
+  // Add helper to explicitly reset coords to current player position
+  const resetToCurrentPosition = async () => {
+    if (!dustClient) return;
+    try {
+      const pos = await (dustClient as any).provider.request({
+        method: "getPlayerPosition",
+        params: { entity: (dustClient as any).appContext?.userAddress },
+      });
+      if (pos && typeof pos.x === "number") {
+        setCoords(`${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`);
+      } else {
+        alert("Could not determine current position");
+      }
+    } catch (e) {
+      console.warn("Failed to fetch current position", e);
+      alert("Failed to fetch current position");
+    }
+  };
+
+  // Read posts from stash
+  const rawPosts = useRecords({ stash, table: tables.Post }) || [];
 
   const parsed = useMemo(
     () => parseCoords(coords) ?? { x: 0, y: 64, z: 0 },
     [coords]
   );
 
-  const ranked = useMemo(
-    () =>
-      [...localNewsSeed]
-        .map((n) => ({ ...n, dist: distance(parsed, n.coords) }))
-        .sort((a, b) => a.dist - b.dist),
-    [parsed]
-  );
+  const ranked = useMemo(() => {
+    const posts = rawPosts
+      .map((r: any) => {
+        const isArticle =
+          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })?.value ?? false;
+
+        if (!isArticle) return null;
+
+        const anchorRecord =
+          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ?? null;
+        const anchor = anchorRecord
+          ? {
+              x: Number(anchorRecord.coordX || 0),
+              y: Number(anchorRecord.coordY || 0),
+              z: Number(anchorRecord.coordZ || 0),
+            }
+          : null;
+
+        const excerpt = typeof r.content === "string" ? (r.content.split("\n\n")[0] || r.content).slice(0, 240) : "";
+
+        return {
+          id: r.id,
+          title: r.title || "Untitled",
+          author: r.owner || "",
+          categories: (r.categories || []).map((c: any) => {
+            const val = getRecord({ stash, table: tables.Category, key: { id: c } })?.value;
+            return val ?? String(c);
+          }).filter(Boolean),
+          city: "",
+          content: (typeof r.content === "string" ? r.content.split("\n\n") : []) as string[],
+          coords: anchor ?? { x: 0, y: 0, z: 0 },
+          excerpt,
+          image: r.coverImage || "/assets/placeholder-notext.png",
+          section: "",
+          timestamp: Number(r.createdAt ?? 0),
+        };
+      })
+      .filter(Boolean) as any[];
+
+    return posts
+      .map((p) => ({ ...p, dist: distance(parsed, p.coords) }))
+      .sort((a, b) => a.dist - b.dist);
+  }, [rawPosts, parsed]);
 
   return (
     <section className="p-4 sm:p-6">
@@ -71,6 +190,14 @@ export const LocalPage = () => {
               type="submit"
             >
               Set Position
+            </Button>
+            <Button
+              className={cn("font-accent", "h-9 px-3 text-[10px]")}
+              type="button"
+              onClick={resetToCurrentPosition}
+              disabled={!dustClient}
+            >
+              Reset to my position
             </Button>
           </form>
         </div>
