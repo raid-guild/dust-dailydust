@@ -17,15 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
-
-const formatDate = (timestamp: bigint) => {
-  return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-};
+import { formatDate } from "@/utils/helpers";
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
