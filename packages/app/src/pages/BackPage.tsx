@@ -81,7 +81,8 @@ export const BackPage = () => {
         title: r.title,
       };
     })
-    .filter((r) => r.isNote);
+    .filter((r) => r.isNote)
+    .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   const noteCategories = (useRecord({
     stash,
