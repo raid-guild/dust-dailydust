@@ -24,6 +24,7 @@ import type { Post } from "@/utils/types";
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
 
+  const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -35,6 +36,8 @@ export const BackPage = () => {
     y: number;
     z: number;
   } | null>(null);
+
+  const [showPosFilters, setShowPosFilters] = useState(false);
 
   const [coords, setCoords] = useState<string>("");
   const [q, setQ] = useState("");
@@ -340,78 +343,105 @@ export const BackPage = () => {
   }, [createNote.isPending, form.title, form.content]);
 
   return (
-    <section className="gap-6 grid p-4 sm:p-6">
-      <div>
-        <h1 className={cn("font-heading", "text-3xl")}>
-          Back Page — Classifieds
-        </h1>
-        <p
-          className={cn(
-            "font-accent",
-            "text-[10px] text-neutral-700 tracking-widest uppercase"
-          )}
-        >
-          Looking for something, offering a service, or asking for a story
-        </p>
+    <section className="gap-4 grid p-4 sm:p-6">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h1 className={cn("font-heading", "text-3xl")}>
+            Back Page — Classifieds
+          </h1>
+          <p
+            className={cn(
+              "font-accent",
+              "text-[10px] text-neutral-700 tracking-widest uppercase"
+            )}
+          >
+            Looking for something, offering a service, or asking for a story
+          </p>
+        </div>
+        <div>
+          <Button
+            className="border-neutral-900"
+            onClick={() => setIsNewNoteDialogOpen(true)}
+            size="sm"
+          >
+            New Note
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-neutral-900">
-        <CardHeader>
-          <CardTitle className={cn("font-heading", "text-xl")}>
-            Post a Listing
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="gap-3 grid" onSubmit={onSubmitListing}>
-            <div className="gap-2 grid sm:grid-cols-3">
-              <select
-                aria-label="Type"
-                className={cn(
-                  "border-input bg-transparent border border-neutral-900",
-                  "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
-                  "transition-[color,box-shadow] outline-none",
-                  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                  "md:text-sm"
-                )}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                value={form.category}
-              >
-                {noteCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <Input
-                className="border-neutral-900 sm:col-span-2"
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Title"
-                value={form.title}
-              />
-            </div>
-            <Textarea
-              className="border-neutral-900 min-h-28"
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="Details..."
-              value={form.content}
-            />
-            <Button
-              className={cn("font-accent", "h-9 px-3 text-[10px]")}
-              disabled={isDisabled}
-              type="submit"
-            >
-              {createNote.isPending ? "Submitting..." : "Submit Listing"}
-            </Button>
-          </form>
-          <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
-            <div className={"font-accent text-[10px] text-neutral-700"}>
-              {anchorPos
-                ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
-                : "No anchor"}
-            </div>
-          </footer>
-        </CardContent>
-      </Card>
+      {isNewNoteDialogOpen && (
+        <div className="fixed flex inset-0 items-start justify-center p-4 sm:items-center z-50">
+          <div
+            className="absolute bg-black/50 inset-0"
+            onClick={() => setIsNewNoteDialogOpen(false)}
+          />
+          <div className="max-w-4xl mx-auto relative w-full">
+            <Card className="border-neutral-900">
+              <CardHeader>
+                <CardTitle className={cn("font-heading", "text-xl")}>
+                  Post a Listing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="gap-3 grid" onSubmit={onSubmitListing}>
+                  <div className="gap-2 grid sm:grid-cols-3">
+                    <select
+                      aria-label="Type"
+                      className={cn(
+                        "border-input bg-transparent border border-neutral-900",
+                        "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
+                        "transition-[color,box-shadow] outline-none",
+                        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                        "md:text-sm"
+                      )}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value })
+                      }
+                      value={form.category}
+                    >
+                      {noteCategories.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      className="border-neutral-900 sm:col-span-2"
+                      onChange={(e) =>
+                        setForm({ ...form, title: e.target.value })
+                      }
+                      placeholder="Title"
+                      value={form.title}
+                    />
+                  </div>
+                  <Textarea
+                    className="border-neutral-900 min-h-28"
+                    onChange={(e) =>
+                      setForm({ ...form, content: e.target.value })
+                    }
+                    placeholder="Details..."
+                    value={form.content}
+                  />
+                  <Button
+                    className={cn("font-accent", "h-9 px-3 text-[10px]")}
+                    disabled={isDisabled}
+                    type="submit"
+                  >
+                    {createNote.isPending ? "Submitting..." : "Submit Listing"}
+                  </Button>
+                </form>
+                <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
+                  <div className={"font-accent text-[10px] text-neutral-700"}>
+                    {anchorPos
+                      ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
+                      : "No anchor"}
+                  </div>
+                </footer>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 items-end">
         <Input
@@ -462,49 +492,64 @@ export const BackPage = () => {
         ))}
       </div>
 
-      <Card className="border-neutral-900">
-        <CardContent className="p-3">
-          <div
-            className={cn(
-              "font-accent",
-              "mb-2 text-[10px] tracking-wider uppercase"
-            )}
-          >
-            Popular Places
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {POPULAR_PLACES.map((p) => (
-              <button
-                key={p.name}
-                onClick={() =>
-                  setCoords(`${p.coords.x} ${p.coords.y} ${p.coords.z}`)
-                }
-                className="bg-neutral-100 border border-neutral-900 hover:bg-neutral-200 px-2 py-1 rounded-[3px] text-sm"
-                aria-label={`Set coords to ${p.name}`}
-              >
-                {p.name} ({p.coords.x} {p.coords.y} {p.coords.z})
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="flex gap-2 items-center">
-        <Input
-          className="border-neutral-900 w-40"
-          onChange={(e) => setCoords(e.target.value)}
-          placeholder="x y z"
-          value={coords}
-        />
         <Button
-          className={cn("font-accent", "h-9 px-3 text-[10px]")}
-          type="button"
-          onClick={onResetCurrentPos}
-          disabled={!dustClient}
+          className="border-neutral-900"
+          onClick={() => setShowPosFilters(!showPosFilters)}
+          size="sm"
+          variant={showPosFilters ? "default" : "outline"}
         >
-          Reset to my position
+          {showPosFilters ? "Hide Position Filters" : "Show Position Filters"}
         </Button>
       </div>
+
+      {showPosFilters && (
+        <>
+          <Card className="border-neutral-900">
+            <CardContent className="p-3">
+              <div
+                className={cn(
+                  "font-accent",
+                  "mb-2 text-[10px] tracking-wider uppercase"
+                )}
+              >
+                Popular Places
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_PLACES.map((p) => (
+                  <button
+                    key={p.name}
+                    onClick={() =>
+                      setCoords(`${p.coords.x} ${p.coords.y} ${p.coords.z}`)
+                    }
+                    className="bg-neutral-100 border border-neutral-900 hover:bg-neutral-200 px-2 py-1 rounded-[3px] text-sm"
+                    aria-label={`Set coords to ${p.name}`}
+                  >
+                    {p.name} ({p.coords.x} {p.coords.y} {p.coords.z})
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-2 items-center">
+            <Input
+              className="border-neutral-900 w-40"
+              onChange={(e) => setCoords(e.target.value)}
+              placeholder="x y z"
+              value={coords}
+            />
+            <Button
+              className={cn("font-accent", "h-9 px-3 text-[10px]")}
+              type="button"
+              onClick={onResetCurrentPos}
+              disabled={!dustClient}
+            >
+              Reset to my position
+            </Button>
+          </div>
+        </>
+      )}
 
       <div className="gap-2 grid md:grid-cols-3">
         {filteredNotes.map((n) => (
