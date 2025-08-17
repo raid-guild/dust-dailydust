@@ -37,3 +37,18 @@ export const uriToHttp = (uri: string): string[] => {
     return [""];
   }
 };
+
+/**
+ * Calculate the distance between two 3D points.
+ * @param a The first point.
+ * @param b The second point.
+ * @returns The distance between the two points.
+ */
+export const getDistance = (
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number }
+) => {
+  const dx = a.x - b.x;
+  const dz = a.z - b.z;
+  return Math.round(Math.sqrt(dx * dx + dz * dz));
+};

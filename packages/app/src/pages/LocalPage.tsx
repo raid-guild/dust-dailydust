@@ -1,9 +1,9 @@
+import { encodeBlock } from "@dust/world/internal";
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useEffect, useMemo, useState } from "react";
 
 import { useDustClient } from "@/common/useDustClient";
-import { encodeBlock } from "@dust/world/internal";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,15 +11,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
-
-const distance = (
-  a: { x: number; y: number; z: number },
-  b: { x: number; y: number; z: number }
-) => {
-  const dx = a.x - b.x;
-  const dz = a.z - b.z;
-  return Math.round(Math.sqrt(dx * dx + dz * dz));
-};
+import { getDistance } from "@/utils/helpers";
+import type { Post } from "@/utils/types";
 
 const parseCoords = (input: string) => {
   // expects "x y z"
@@ -30,25 +23,34 @@ const parseCoords = (input: string) => {
 
 export const LocalPage = () => {
   const { data: dustClient } = useDustClient();
-  const [currentPos, setCurrentPos] = useState<{ x: number; y: number; z: number } | null>(null);
-  const [coords, setCoords] = useState<string>("120 64 -40");
+  const [currentPos, setCurrentPos] = useState<{
+    x: number;
+    y: number;
+    z: number;
+  } | null>(null);
+  const [coords, setCoords] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       if (!dustClient) return;
       try {
-        const pos = await (dustClient as any).provider.request({
+        const pos = await dustClient.provider.request({
           method: "getPlayerPosition",
-          params: { entity: (dustClient as any).appContext?.userAddress },
+          params: { entity: dustClient.appContext?.userAddress },
         });
         if (pos && typeof pos.x === "number") {
           setCoords(
             `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
           );
-          setCurrentPos({ x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) });
+          setCurrentPos({
+            x: Math.floor(pos.x),
+            y: Math.floor(pos.y),
+            z: Math.floor(pos.z),
+          });
         }
       } catch (e) {
-        // ignore - keep default
+        // eslint-disable-next-line no-console
+        console.warn("Failed to fetch current position", e);
       }
     })();
   }, [dustClient]);
@@ -57,99 +59,107 @@ export const LocalPage = () => {
   const resetToCurrentPosition = async () => {
     if (!dustClient) return;
     try {
-      const pos = await (dustClient as any).provider.request({
+      const pos = await dustClient.provider.request({
         method: "getPlayerPosition",
-        params: { entity: (dustClient as any).appContext?.userAddress },
+        params: { entity: dustClient.appContext?.userAddress },
       });
       if (pos && typeof pos.x === "number") {
         setCoords(
           `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
         );
-        setCurrentPos({ x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z) });
+        setCurrentPos({
+          x: Math.floor(pos.x),
+          y: Math.floor(pos.y),
+          z: Math.floor(pos.z),
+        });
       } else {
         alert("Could not determine current position");
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.warn("Failed to fetch current position", e);
       alert("Failed to fetch current position");
     }
   };
-
-  // Read posts from stash
-  const rawPosts = useRecords({ stash, table: tables.Post }) || [];
 
   const parsed = useMemo(
     () => currentPos ?? parseCoords(coords) ?? { x: 0, y: 64, z: 0 },
     [coords, currentPos]
   );
 
-  const ranked = useMemo(() => {
-    const posts = rawPosts
-      .map((r: any) => {
-        const isArticle =
-          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })
-            ?.value ?? false;
+  const posts = useRecords({
+    stash,
+    table: tables.Post,
+  })
+    .map((r): Post => {
+      const isArticle =
+        getRecord({
+          stash,
+          table: tables.IsArticle,
+          key: { id: r.id as `0x${string}` },
+        })?.value ?? false;
+      let category: null | string = null;
 
-        if (!isArticle) return null;
+      const anchor =
+        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+        null;
 
-        const anchorRecord =
-          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
-          null;
-        const anchor = anchorRecord
-          ? {
-              x: Number(anchorRecord.coordX || 0),
-              y: Number(anchorRecord.coordY || 0),
-              z: Number(anchorRecord.coordZ || 0),
-            }
-          : null;
+      const excerpt =
+        typeof r.content === "string"
+          ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
+          : "";
 
-        const excerpt =
-          typeof r.content === "string"
-            ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
-            : "";
+      if (r.categories[0]) {
+        category =
+          getRecord({
+            stash,
+            table: tables.Category,
+            key: { id: r.categories[0] as `0x${string}` },
+          })?.value ?? null;
+      }
 
-        return {
-          id: r.id,
-          title: r.title || "Untitled",
-          author: r.owner || "",
-          categories: (r.categories || [])
-            .map((c: any) => {
-              const val = getRecord({
-                stash,
-                table: tables.Category,
-                key: { id: c },
-              })?.value;
-              return val ?? String(c);
-            })
-            .filter(Boolean),
-          city: "",
-          content: (typeof r.content === "string"
-            ? r.content.split("\n\n")
-            : []) as string[],
-          coords: anchor ?? { x: 0, y: 0, z: 0 },
-          excerpt,
-          image: r.coverImage || "/assets/placeholder-notext.png",
-          section: "",
-          timestamp: Number(r.createdAt ?? 0),
-        };
-      })
-      .filter(Boolean) as any[];
+      return {
+        id: r.id,
+        categories: category ? [category] : [],
+        content: (typeof r.content === "string"
+          ? r.content.split("\n\n")
+          : []) as string[],
+        coords: anchor
+          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
+          : null,
+        createdAt: r.createdAt,
+        coverImage: r.coverImage || "/assets/placeholder-notext.png",
+        distance: null,
+        excerpt,
+        owner: r.owner,
+        title: r.title,
+        type: isArticle ? "article" : "note",
+      };
+    })
+    .filter((r) => r.type === "article")
+    .sort((a, b) => Number(b.createdAt - a.createdAt));
 
+  const postsByDistance = useMemo(() => {
+    if (!coords) return posts;
     return posts
-      .map((p) => ({ ...p, dist: distance(parsed, p.coords) }))
-      .sort((a, b) => a.dist - b.dist);
-  }, [rawPosts, parsed]);
+      .filter((a) => !!a.coords)
+      .map((p) => ({
+        ...p,
+        distance: p.coords ? getDistance(parsed, p.coords) : null,
+      }))
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+  }, [posts, coords, parsed]);
 
   // Set waypoint for an article by encoding its block coords into an EntityId
-  const handleSetWaypoint = async (article: any) => {
+  const onSetWaypoint = async (article: Post) => {
     if (!dustClient) {
       alert("Wallet/client not ready");
       return;
     }
 
     const coords = article.coords;
-    if (!coords || typeof coords.x !== 'number') {
-      alert('Article has no anchor/coordinates to set a waypoint for');
+    if (!coords || typeof coords.x !== "number") {
+      alert("Article has no anchor/coordinates to set a waypoint for");
       return;
     }
 
@@ -159,13 +169,14 @@ export const LocalPage = () => {
       const bz = Math.floor(coords.z);
       const entityId = encodeBlock([bx, by, bz]);
 
-      await (dustClient as any).provider.request({
-        method: 'setWaypoint',
-        params: { entity: entityId, label: article.title || 'Waypoint' },
+      await dustClient.provider.request({
+        method: "setWaypoint",
+        params: { entity: entityId, label: article.title || "Waypoint" },
       });
     } catch (e) {
-      console.warn('Failed to set waypoint', e);
-      alert('Failed to set waypoint');
+      // eslint-disable-next-line no-console
+      console.warn("Failed to set waypoint", e);
+      alert("Failed to set waypoint");
     }
   };
 
@@ -240,19 +251,26 @@ export const LocalPage = () => {
         </Card>
 
         <div className="gap-6 grid md:grid-cols-2">
-          {ranked.map((a) => (
+          {postsByDistance.map((a) => (
             <div key={a.id} className="border-neutral-900 border-t pt-3">
               <ArticleCard article={a} />
-              <div className={cn("font-accent", "mt-2 text-[10px]")}>
-                Distance: {a.dist} blocks •{" "}
-                <button
-                  onClick={() => handleSetWaypoint(a)}
-                  className="underline"
-                  disabled={!dustClient}
-                >
-                  Set Waypoint
-                </button>
-              </div>
+              {a.distance && (
+                <div className={cn("font-accent", "mt-2 text-[10px]")}>
+                  Distance: {a.distance} blocks{" "}
+                  {dustClient && (
+                    <span>
+                      •{" "}
+                      <button
+                        onClick={() => onSetWaypoint(a)}
+                        className="underline"
+                        disabled={!dustClient}
+                      >
+                        Set Waypoint
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
