@@ -27,6 +27,18 @@ export const getDistance = (
   return Math.round(Math.sqrt(dx * dx + dz * dz));
 };
 
+/**
+ * Parse a coordinate string into an object.
+ * @param input The coordinate string to parse.
+ * @returns The parsed coordinates or null if invalid.
+ */
+export const parseCoords = (input: string) => {
+  // expects "x y z"
+  const parts = input.trim().split(/\s+/).map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  return { x: parts[0], y: parts[1], z: parts[2] };
+};
+
 const IPFS_GATEWAYS = ["https://charactersheets.mypinata.cloud"];
 
 /**

@@ -20,6 +20,10 @@ export const DiscoverPage = () => {
     y: number;
     z: number;
   } | null>(null);
+  const [q, setQ] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [authorFilter, setAuthorFilter] = useState<string>("");
+  const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
 
   const articleCategories = (useRecord({
     stash,
@@ -34,11 +38,6 @@ export const DiscoverPage = () => {
       })?.value;
     })
     .filter((c): c is string => !!c) ?? []) as string[];
-
-  const [q, setQ] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [authorFilter, setAuthorFilter] = useState<string>("");
-  const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
 
   const posts = useRecords({
     stash,
@@ -188,7 +187,7 @@ export const DiscoverPage = () => {
       <div className="flex gap-3 items-end justify-between">
         <div>
           <h1 className={cn("font-heading", "text-3xl")}>Discover</h1>
-          <p className="text-neutral-700 text-sm">Search all submissions</p>
+          <p className="text-neutral-700 text-sm">Search all articles</p>
         </div>
         <div className="flex gap-2 items-end">
           <Input

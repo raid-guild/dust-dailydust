@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
-import { formatDate } from "@/utils/helpers";
+import { POPULAR_PLACES } from "@/utils/constants";
+import { formatDate, getDistance, parseCoords } from "@/utils/helpers";
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
@@ -33,6 +34,12 @@ export const BackPage = () => {
     y: number;
     z: number;
   } | null>(null);
+
+  const [coords, setCoords] = useState<string>("");
+  const [q, setQ] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [authorFilter, setAuthorFilter] = useState<string>("");
+  const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
 
   const notes = useRecords({
     stash,
@@ -62,7 +69,7 @@ export const BackPage = () => {
 
       return {
         id: r.id,
-        categories: [category],
+        categories: category ? [category] : [],
         content: r.content,
         coords: anchor
           ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
@@ -75,6 +82,58 @@ export const BackPage = () => {
     })
     .filter((r) => r.isNote)
     .sort((a, b) => Number(b.createdAt - a.createdAt));
+
+  const parsedCoords = useMemo(
+    () => (coords ? parseCoords(coords) : null),
+    [coords]
+  );
+
+  const notesByDistance = useMemo(() => {
+    if (!parsedCoords) return notes;
+    return notes
+      .filter((a) => !!a.coords)
+      .map((p) => ({
+        ...p,
+        distance: p.coords ? getDistance(parsedCoords, p.coords) : null,
+      }))
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+  }, [notes, parsedCoords]);
+
+  const filteredNotes = useMemo(() => {
+    const term = q.trim().toLowerCase();
+
+    let results = notesByDistance.slice();
+
+    if (selectedCategory) {
+      results = results.filter((a) =>
+        (a.categories || []).includes(selectedCategory)
+      );
+    }
+
+    if (authorFilter.trim()) {
+      const af = authorFilter.trim().toLowerCase();
+      results = results.filter((a) =>
+        (a.owner || "").toLowerCase().includes(af)
+      );
+    }
+
+    if (term) {
+      results = results.filter(
+        (a) =>
+          (a.title || "").toLowerCase().includes(term) ||
+          (a.categories || []).some((cat: string) =>
+            cat.toLowerCase().includes(term)
+          )
+      );
+    }
+
+    if (coords) return results;
+
+    return results.sort((a, b) => {
+      if (dateSort === "newest") return Number(b.createdAt - a.createdAt);
+      return Number(a.createdAt - b.createdAt);
+    });
+  }, [coords, notesByDistance, q, selectedCategory, authorFilter, dateSort]);
 
   const noteCategories = (useRecord({
     stash,
@@ -117,6 +176,30 @@ export const BackPage = () => {
       cancelled = true;
     };
   }, [dustClient]);
+
+  const onResetCurrentPos = async () => {
+    if (!dustClient) return;
+    try {
+      const pos = await dustClient.provider.request({
+        method: "getPlayerPosition",
+        params: { entity: dustClient.appContext?.userAddress },
+      });
+      if (pos && typeof pos.x === "number") {
+        setCoords(
+          `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+        );
+        setCoords(
+          `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+        );
+      } else {
+        alert("Could not determine current position");
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Failed to fetch current position", e);
+      alert("Failed to fetch current position");
+    }
+  };
 
   const createNote = useMutation({
     mutationFn: ({
@@ -294,8 +377,101 @@ export const BackPage = () => {
         </CardContent>
       </Card>
 
+      <div className="flex gap-2 items-end">
+        <Input
+          className="border-neutral-900 max-w-xs"
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search stories..."
+          value={q}
+        />
+        <Input
+          className="border-neutral-900 max-w-xs"
+          onChange={(e) => setAuthorFilter(e.target.value)}
+          placeholder="Filter by author..."
+          value={authorFilter}
+        />
+        <select
+          className={cn(
+            "border-input bg-transparent border border-neutral-900",
+            "h-9 rounded-md px-2 text-sm"
+          )}
+          value={dateSort}
+          onChange={(e) => setDateSort(e.target.value as "newest" | "oldest")}
+          aria-label="Sort by date"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+        </select>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          className="border-neutral-900"
+          onClick={() => setSelectedCategory("")}
+          size="sm"
+          variant={selectedCategory === "" ? "default" : "outline"}
+        >
+          All Categories
+        </Button>
+        {noteCategories.map((category) => (
+          <Button
+            key={category}
+            className="border-neutral-900"
+            onClick={() => setSelectedCategory(category)}
+            size="sm"
+            variant={selectedCategory === category ? "default" : "outline"}
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
+
+      <Card className="border-neutral-900">
+        <CardContent className="p-3">
+          <div
+            className={cn(
+              "font-accent",
+              "mb-2 text-[10px] tracking-wider uppercase"
+            )}
+          >
+            Popular Places
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_PLACES.map((p) => (
+              <button
+                key={p.name}
+                onClick={() =>
+                  setCoords(`${p.coords.x} ${p.coords.y} ${p.coords.z}`)
+                }
+                className="bg-neutral-100 border border-neutral-900 hover:bg-neutral-200 px-2 py-1 rounded-[3px] text-sm"
+                aria-label={`Set coords to ${p.name}`}
+              >
+                {p.name} ({p.coords.x} {p.coords.y} {p.coords.z})
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-2 items-center">
+        <Input
+          className="border-neutral-900 w-40"
+          onChange={(e) => setCoords(e.target.value)}
+          placeholder="x y z"
+          value={coords}
+        />
+        <Button
+          className={cn("font-accent", "h-9 px-3 text-[10px]")}
+          type="button"
+          onClick={onResetCurrentPos}
+          disabled={!dustClient}
+        >
+          Reset to my position
+        </Button>
+      </div>
+
       <div className="gap-2 grid md:grid-cols-3">
-        {notes.map((n) => (
+        {filteredNotes.map((n) => (
           <div
             key={n.id}
             className="border border-neutral-900 bg-neutral-50 p-4 space-y-3"

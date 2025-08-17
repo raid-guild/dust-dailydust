@@ -11,15 +11,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
-import { getDistance } from "@/utils/helpers";
+import { getDistance, parseCoords } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
-
-const parseCoords = (input: string) => {
-  // expects "x y z"
-  const parts = input.trim().split(/\s+/).map(Number);
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
-  return { x: parts[0], y: parts[1], z: parts[2] };
-};
 
 export const LocalPage = () => {
   const { data: dustClient } = useDustClient();
@@ -56,7 +49,7 @@ export const LocalPage = () => {
   }, [dustClient]);
 
   // Add helper to explicitly reset coords to current player position
-  const resetToCurrentPosition = async () => {
+  const onResetCurrentPos = async () => {
     if (!dustClient) return;
     try {
       const pos = await dustClient.provider.request({
@@ -215,7 +208,7 @@ export const LocalPage = () => {
             <Button
               className={cn("font-accent", "h-9 px-3 text-[10px]")}
               type="button"
-              onClick={resetToCurrentPosition}
+              onClick={onResetCurrentPos}
               disabled={!dustClient}
             >
               Reset to my position
