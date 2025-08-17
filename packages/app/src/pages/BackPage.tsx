@@ -17,19 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
-
-const formatDate = (timestamp: bigint) => {
-  return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-};
+import { POPULAR_PLACES } from "@/utils/constants";
+import { formatDate, getDistance, parseCoords } from "@/utils/helpers";
+import type { Post } from "@/utils/types";
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
 
+  const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -42,18 +37,26 @@ export const BackPage = () => {
     z: number;
   } | null>(null);
 
-  const notes = useRecords({
+  const [showPosFilters, setShowPosFilters] = useState(false);
+
+  const [coords, setCoords] = useState<string>("");
+  const [q, setQ] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [authorFilter, setAuthorFilter] = useState<string>("");
+  const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
+
+  const posts = useRecords({
     stash,
     table: tables.Post,
   })
-    .map((r) => {
+    .map((r): Post => {
       const isNote =
         getRecord({
           stash,
           table: tables.IsNote,
           key: { id: r.id as `0x${string}` },
         })?.value ?? false;
-      let category = null;
+      let category: null | string = null;
 
       const anchor =
         getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
@@ -70,18 +73,76 @@ export const BackPage = () => {
 
       return {
         id: r.id,
-        categories: [category],
-        content: r.content,
+        categories: category ? [category] : [],
+        content: (typeof r.content === "string"
+          ? r.content.split("\n\n")
+          : []) as string[],
         coords: anchor
           ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
           : null,
         createdAt: r.createdAt,
-        isNote: isNote,
+        coverImage: r.coverImage || "/assets/placeholder-notext.png",
+        distance: null,
+        excerpt: "",
         owner: r.owner,
         title: r.title,
+        type: isNote ? "note" : "article",
       };
     })
-    .filter((r) => r.isNote);
+    .filter((r) => r.type === "note")
+    .sort((a, b) => Number(b.createdAt - a.createdAt));
+
+  const parsedCoords = useMemo(
+    () => (coords ? parseCoords(coords) : null),
+    [coords]
+  );
+
+  const notesByDistance = useMemo(() => {
+    if (!parsedCoords) return posts;
+    return posts
+      .filter((a) => !!a.coords)
+      .map((p) => ({
+        ...p,
+        distance: p.coords ? getDistance(parsedCoords, p.coords) : null,
+      }))
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+  }, [parsedCoords, posts]);
+
+  const filteredNotes = useMemo(() => {
+    const term = q.trim().toLowerCase();
+
+    let results = notesByDistance.slice();
+
+    if (selectedCategory) {
+      results = results.filter((a) =>
+        (a.categories || []).includes(selectedCategory)
+      );
+    }
+
+    if (authorFilter.trim()) {
+      const af = authorFilter.trim().toLowerCase();
+      results = results.filter((a) =>
+        (a.owner || "").toLowerCase().includes(af)
+      );
+    }
+
+    if (term) {
+      results = results.filter(
+        (a) =>
+          (a.title || "").toLowerCase().includes(term) ||
+          (a.categories || []).some((cat: string) =>
+            cat.toLowerCase().includes(term)
+          )
+      );
+    }
+
+    if (coords) return results;
+
+    return results.sort((a, b) => {
+      if (dateSort === "newest") return Number(b.createdAt - a.createdAt);
+      return Number(a.createdAt - b.createdAt);
+    });
+  }, [coords, notesByDistance, q, selectedCategory, authorFilter, dateSort]);
 
   const noteCategories = (useRecord({
     stash,
@@ -124,6 +185,60 @@ export const BackPage = () => {
       cancelled = true;
     };
   }, [dustClient]);
+
+  const onResetCurrentPos = async () => {
+    if (!dustClient) return;
+    try {
+      const pos = await dustClient.provider.request({
+        method: "getPlayerPosition",
+        params: { entity: dustClient.appContext?.userAddress },
+      });
+      if (pos && typeof pos.x === "number") {
+        setCoords(
+          `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+        );
+        setCoords(
+          `${Math.floor(pos.x)} ${Math.floor(pos.y)} ${Math.floor(pos.z)}`
+        );
+      } else {
+        alert("Could not determine current position");
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Failed to fetch current position", e);
+      alert("Failed to fetch current position");
+    }
+  };
+
+  // Set waypoint for an note by encoding its block coords into an EntityId
+  const onSetWaypoint = async (note: Post) => {
+    if (!dustClient) {
+      alert("Wallet/client not ready");
+      return;
+    }
+
+    const coords = note.coords;
+    if (!coords || typeof coords.x !== "number") {
+      alert("Note has no anchor/coordinates to set a waypoint for");
+      return;
+    }
+
+    try {
+      const bx = Math.floor(coords.x);
+      const by = Math.floor(coords.y);
+      const bz = Math.floor(coords.z);
+      const entityId = encodeBlock([bx, by, bz]);
+
+      await dustClient.provider.request({
+        method: "setWaypoint",
+        params: { entity: entityId, label: note.title || "Waypoint" },
+      });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Failed to set waypoint", e);
+      alert("Failed to set waypoint");
+    }
+  };
 
   const createNote = useMutation({
     mutationFn: ({
@@ -228,81 +343,216 @@ export const BackPage = () => {
   }, [createNote.isPending, form.title, form.content]);
 
   return (
-    <section className="gap-6 grid p-4 sm:p-6">
-      <div>
-        <h1 className={cn("font-heading", "text-3xl")}>
-          Back Page — Classifieds
-        </h1>
-        <p
-          className={cn(
-            "font-accent",
-            "text-[10px] text-neutral-700 tracking-widest uppercase"
-          )}
-        >
-          Looking for something, offering a service, or asking for a story
-        </p>
+    <section className="gap-4 grid p-4 sm:p-6">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h1 className={cn("font-heading", "text-3xl")}>
+            Back Page — Classifieds
+          </h1>
+          <p
+            className={cn(
+              "font-accent",
+              "text-[10px] text-neutral-700 tracking-widest uppercase"
+            )}
+          >
+            Looking for something, offering a service, or asking for a story
+          </p>
+        </div>
+        <div>
+          <Button
+            className="border-neutral-900"
+            onClick={() => setIsNewNoteDialogOpen(true)}
+            size="sm"
+          >
+            New Note
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-neutral-900">
-        <CardHeader>
-          <CardTitle className={cn("font-heading", "text-xl")}>
-            Post a Listing
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="gap-3 grid" onSubmit={onSubmitListing}>
-            <div className="gap-2 grid sm:grid-cols-3">
-              <select
-                aria-label="Type"
+      {isNewNoteDialogOpen && (
+        <div className="fixed flex inset-0 items-start justify-center p-4 sm:items-center z-50">
+          <div
+            className="absolute bg-black/50 inset-0"
+            onClick={() => setIsNewNoteDialogOpen(false)}
+          />
+          <div className="max-w-4xl mx-auto relative w-full">
+            <Card className="border-neutral-900">
+              <CardHeader>
+                <CardTitle className={cn("font-heading", "text-xl")}>
+                  Post a Listing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="gap-3 grid" onSubmit={onSubmitListing}>
+                  <div className="gap-2 grid sm:grid-cols-3">
+                    <select
+                      aria-label="Type"
+                      className={cn(
+                        "border-input bg-transparent border border-neutral-900",
+                        "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
+                        "transition-[color,box-shadow] outline-none",
+                        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                        "md:text-sm"
+                      )}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value })
+                      }
+                      value={form.category}
+                    >
+                      {noteCategories.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      className="border-neutral-900 sm:col-span-2"
+                      onChange={(e) =>
+                        setForm({ ...form, title: e.target.value })
+                      }
+                      placeholder="Title"
+                      value={form.title}
+                    />
+                  </div>
+                  <Textarea
+                    className="border-neutral-900 min-h-28"
+                    onChange={(e) =>
+                      setForm({ ...form, content: e.target.value })
+                    }
+                    placeholder="Details..."
+                    value={form.content}
+                  />
+                  <Button
+                    className={cn("font-accent", "h-9 px-3 text-[10px]")}
+                    disabled={isDisabled}
+                    type="submit"
+                  >
+                    {createNote.isPending ? "Submitting..." : "Submit Listing"}
+                  </Button>
+                </form>
+                <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
+                  <div className={"font-accent text-[10px] text-neutral-700"}>
+                    {anchorPos
+                      ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
+                      : "No anchor"}
+                  </div>
+                </footer>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2 items-end">
+        <Input
+          className="border-neutral-900 max-w-xs"
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search stories..."
+          value={q}
+        />
+        <Input
+          className="border-neutral-900 max-w-xs"
+          onChange={(e) => setAuthorFilter(e.target.value)}
+          placeholder="Filter by author..."
+          value={authorFilter}
+        />
+        <select
+          className={cn(
+            "border-input bg-transparent border border-neutral-900",
+            "h-9 rounded-md px-2 text-sm"
+          )}
+          value={dateSort}
+          onChange={(e) => setDateSort(e.target.value as "newest" | "oldest")}
+          aria-label="Sort by date"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+        </select>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          className="border-neutral-900"
+          onClick={() => setSelectedCategory("")}
+          size="sm"
+          variant={selectedCategory === "" ? "default" : "outline"}
+        >
+          All Categories
+        </Button>
+        {noteCategories.map((category) => (
+          <Button
+            key={category}
+            className="border-neutral-900"
+            onClick={() => setSelectedCategory(category)}
+            size="sm"
+            variant={selectedCategory === category ? "default" : "outline"}
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 items-center">
+        <Button
+          className="border-neutral-900"
+          onClick={() => setShowPosFilters(!showPosFilters)}
+          size="sm"
+          variant={showPosFilters ? "default" : "outline"}
+        >
+          {showPosFilters ? "Hide Position Filters" : "Show Position Filters"}
+        </Button>
+      </div>
+
+      {showPosFilters && (
+        <>
+          <Card className="border-neutral-900">
+            <CardContent className="p-3">
+              <div
                 className={cn(
-                  "border-input bg-transparent border border-neutral-900",
-                  "h-9 w-full rounded-md px-3 py-1 text-base shadow-xs",
-                  "transition-[color,box-shadow] outline-none",
-                  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                  "md:text-sm"
+                  "font-accent",
+                  "mb-2 text-[10px] tracking-wider uppercase"
                 )}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                value={form.category}
               >
-                {noteCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                Popular Places
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_PLACES.map((p) => (
+                  <button
+                    key={p.name}
+                    onClick={() =>
+                      setCoords(`${p.coords.x} ${p.coords.y} ${p.coords.z}`)
+                    }
+                    className="bg-neutral-100 border border-neutral-900 hover:bg-neutral-200 px-2 py-1 rounded-[3px] text-sm"
+                    aria-label={`Set coords to ${p.name}`}
+                  >
+                    {p.name} ({p.coords.x} {p.coords.y} {p.coords.z})
+                  </button>
                 ))}
-              </select>
-              <Input
-                className="border-neutral-900 sm:col-span-2"
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Title"
-                value={form.title}
-              />
-            </div>
-            <Textarea
-              className="border-neutral-900 min-h-28"
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="Details..."
-              value={form.content}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-2 items-center">
+            <Input
+              className="border-neutral-900 w-40"
+              onChange={(e) => setCoords(e.target.value)}
+              placeholder="x y z"
+              value={coords}
             />
             <Button
               className={cn("font-accent", "h-9 px-3 text-[10px]")}
-              disabled={isDisabled}
-              type="submit"
+              type="button"
+              onClick={onResetCurrentPos}
+              disabled={!dustClient}
             >
-              {createNote.isPending ? "Submitting..." : "Submit Listing"}
+              Reset to my position
             </Button>
-          </form>
-          <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
-            <div className={"font-accent text-[10px] text-neutral-700"}>
-              {anchorPos
-                ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
-                : "No anchor"}
-            </div>
-          </footer>
-        </CardContent>
-      </Card>
+          </div>
+        </>
+      )}
 
       <div className="gap-2 grid md:grid-cols-3">
-        {notes.map((n) => (
+        {filteredNotes.map((n) => (
           <div
             key={n.id}
             className="border border-neutral-900 bg-neutral-50 p-4 space-y-3"
@@ -336,7 +586,7 @@ export const BackPage = () => {
               {n.content}
             </p>
 
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-neutral-300">
+            <div className="align-start flex flex-col space-y-1 text-xs pt-2 border-t border-neutral-300">
               {n.coords && (
                 <span
                   className={cn(
@@ -346,6 +596,17 @@ export const BackPage = () => {
                 >
                   x:{n.coords.x} y:{n.coords.y} z:{n.coords.z}
                 </span>
+              )}
+              {dustClient && (
+                <div>
+                  <button
+                    onClick={() => onSetWaypoint(n)}
+                    className="underline"
+                    disabled={!dustClient}
+                  >
+                    Set Waypoint
+                  </button>
+                </div>
               )}
               <span
                 className={cn(

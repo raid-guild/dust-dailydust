@@ -1,3 +1,44 @@
+/**
+ * Format a timestamp into a human-readable date string.
+ * @param timestamp The timestamp in seconds to format.
+ * @returns The formatted date string.
+ */
+export const formatDate = (timestamp: bigint | number) => {
+  return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+/**
+ * Calculate the distance between two 3D points.
+ * @param a The first point.
+ * @param b The second point.
+ * @returns The distance between the two points.
+ */
+export const getDistance = (
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number }
+) => {
+  const dx = a.x - b.x;
+  const dz = a.z - b.z;
+  return Math.round(Math.sqrt(dx * dx + dz * dz));
+};
+
+/**
+ * Parse a coordinate string into an object.
+ * @param input The coordinate string to parse.
+ * @returns The parsed coordinates or null if invalid.
+ */
+export const parseCoords = (input: string) => {
+  // expects "x y z"
+  const parts = input.trim().split(/\s+/).map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  return { x: parts[0], y: parts[1], z: parts[2] };
+};
+
 const IPFS_GATEWAYS = ["https://charactersheets.mypinata.cloud"];
 
 /**
