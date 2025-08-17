@@ -247,7 +247,7 @@ export const LocalPage = () => {
           {postsByDistance.map((a) => (
             <div key={a.id} className="border-neutral-900 border-t pt-3">
               <ArticleCard article={a} />
-              {a.distance && (
+              {a.distance !== null && (
                 <div className={cn("font-accent", "mt-2 text-[10px]")}>
                   Distance: {a.distance} blocks{" "}
                   {dustClient && (

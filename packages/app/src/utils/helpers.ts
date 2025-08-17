@@ -1,9 +1,9 @@
 /**
  * Format a timestamp into a human-readable date string.
- * @param timestamp The timestamp to format.
+ * @param timestamp The timestamp in seconds to format.
  * @returns The formatted date string.
  */
-export const formatDate = (timestamp: bigint) => {
+export const formatDate = (timestamp: bigint | number) => {
   return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
