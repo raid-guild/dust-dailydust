@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
 import { formatDate, getDistance, parseCoords } from "@/utils/helpers";
+import type { Post } from "@/utils/types";
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
@@ -41,18 +42,18 @@ export const BackPage = () => {
   const [authorFilter, setAuthorFilter] = useState<string>("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
 
-  const notes = useRecords({
+  const posts = useRecords({
     stash,
     table: tables.Post,
   })
-    .map((r) => {
+    .map((r): Post => {
       const isNote =
         getRecord({
           stash,
           table: tables.IsNote,
           key: { id: r.id as `0x${string}` },
         })?.value ?? false;
-      let category = null;
+      let category: null | string = null;
 
       const anchor =
         getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
@@ -70,17 +71,22 @@ export const BackPage = () => {
       return {
         id: r.id,
         categories: category ? [category] : [],
-        content: r.content,
+        content: (typeof r.content === "string"
+          ? r.content.split("\n\n")
+          : []) as string[],
         coords: anchor
           ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
           : null,
         createdAt: r.createdAt,
-        isNote: isNote,
+        coverImage: r.coverImage || "/assets/placeholder-notext.png",
+        distance: null,
+        excerpt: "",
         owner: r.owner,
         title: r.title,
+        type: isNote ? "note" : "article",
       };
     })
-    .filter((r) => r.isNote)
+    .filter((r) => r.type === "note")
     .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   const parsedCoords = useMemo(
@@ -89,15 +95,15 @@ export const BackPage = () => {
   );
 
   const notesByDistance = useMemo(() => {
-    if (!parsedCoords) return notes;
-    return notes
+    if (!parsedCoords) return posts;
+    return posts
       .filter((a) => !!a.coords)
       .map((p) => ({
         ...p,
         distance: p.coords ? getDistance(parsedCoords, p.coords) : null,
       }))
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
-  }, [notes, parsedCoords]);
+  }, [parsedCoords, posts]);
 
   const filteredNotes = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -198,6 +204,36 @@ export const BackPage = () => {
       // eslint-disable-next-line no-console
       console.warn("Failed to fetch current position", e);
       alert("Failed to fetch current position");
+    }
+  };
+
+  // Set waypoint for an note by encoding its block coords into an EntityId
+  const onSetWaypoint = async (note: Post) => {
+    if (!dustClient) {
+      alert("Wallet/client not ready");
+      return;
+    }
+
+    const coords = note.coords;
+    if (!coords || typeof coords.x !== "number") {
+      alert("Note has no anchor/coordinates to set a waypoint for");
+      return;
+    }
+
+    try {
+      const bx = Math.floor(coords.x);
+      const by = Math.floor(coords.y);
+      const bz = Math.floor(coords.z);
+      const entityId = encodeBlock([bx, by, bz]);
+
+      await dustClient.provider.request({
+        method: "setWaypoint",
+        params: { entity: entityId, label: note.title || "Waypoint" },
+      });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Failed to set waypoint", e);
+      alert("Failed to set waypoint");
     }
   };
 
@@ -505,7 +541,7 @@ export const BackPage = () => {
               {n.content}
             </p>
 
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-neutral-300">
+            <div className="align-start flex flex-col space-y-1 text-xs pt-2 border-t border-neutral-300">
               {n.coords && (
                 <span
                   className={cn(
@@ -515,6 +551,17 @@ export const BackPage = () => {
                 >
                   x:{n.coords.x} y:{n.coords.y} z:{n.coords.z}
                 </span>
+              )}
+              {dustClient && (
+                <div>
+                  <button
+                    onClick={() => onSetWaypoint(n)}
+                    className="underline"
+                    disabled={!dustClient}
+                  >
+                    Set Waypoint
+                  </button>
+                </div>
               )}
               <span
                 className={cn(
