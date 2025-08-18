@@ -82,7 +82,7 @@ export const NoteCard = ({ note }: { note: Post }) => {
       </h3>
 
       <p className={"text-sm leading-relaxed text-neutral-800"}>
-        {note.content}
+        {note.content[0]}
       </p>
 
       <div className="align-start flex flex-col space-y-1 text-xs pt-2 border-t border-neutral-300">
