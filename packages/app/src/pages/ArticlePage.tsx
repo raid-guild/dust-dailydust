@@ -3,17 +3,21 @@ import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
+import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
+import { useENS } from "@/common/useENS";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
-import { formatDate, uriToHttp } from "@/utils/helpers";
+import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: dustClient } = useDustClient();
+  const { copyToClipboard } = useCopy();
 
   // Set waypoint for the currently viewed article (uses block-entity encoding)
   const onSetWaypoint = async (art: Post) => {
@@ -98,6 +102,7 @@ export const ArticlePage = () => {
     .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   const article = useMemo(() => posts.find((p) => p.id === id), [id, posts]);
+  const ens = useENS(article?.owner as `0x${string}` | undefined);
 
   if (!article) {
     return (
@@ -147,7 +152,16 @@ export const ArticlePage = () => {
         </div>
 
         <div className={cn("font-accent", "text-[10px] text-neutral-700")}>
-          {"By "}@{article.owner || "anonymous"} {" • "}
+          {"By "}
+          <button
+            onClick={() => {
+              copyToClipboard(article.owner);
+              toast.success(`Copied ${shortenAddress(article.owner)}`);
+            }}
+          >
+            @{ens?.data?.name ?? shortenAddress(article.owner)}
+          </button>
+          {" • "}
           {formatDate(article.createdAt)}
         </div>
       </header>

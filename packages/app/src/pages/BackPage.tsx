@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
-import { Badge } from "@/components/ui/badge";
+import { NoteCard } from "@/components/NoteCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
-import { formatDate, getDistance, parseCoords } from "@/utils/helpers";
+import { getDistance, parseCoords } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 export const BackPage = () => {
@@ -207,36 +207,6 @@ export const BackPage = () => {
       // eslint-disable-next-line no-console
       console.warn("Failed to fetch current position", e);
       alert("Failed to fetch current position");
-    }
-  };
-
-  // Set waypoint for an note by encoding its block coords into an EntityId
-  const onSetWaypoint = async (note: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-
-    const coords = note.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Note has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: note.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
     }
   };
 
@@ -552,72 +522,8 @@ export const BackPage = () => {
       )}
 
       <div className="gap-2 grid md:grid-cols-3">
-        {filteredNotes.map((n) => (
-          <div
-            key={n.id}
-            className="border border-neutral-900 bg-neutral-50 p-4 space-y-3"
-          >
-            <div className="flex items-start justify-between gap-2">
-              {n.categories[0] && (
-                <Badge
-                  className={cn(
-                    "heading-accent",
-                    "text-[9px] uppercase tracking-wider"
-                  )}
-                >
-                  {n.categories[0]}
-                </Badge>
-              )}
-              <span
-                className={cn(
-                  "font-accent",
-                  "text-[9px] text-neutral-600 uppercase tracking-wider"
-                )}
-              >
-                by {n.owner.slice(0, 6)}...{n.owner.slice(-4)}
-              </span>
-            </div>
-
-            <h3 className={cn("font-heading", "text-lg leading-tight")}>
-              {n.title}
-            </h3>
-
-            <p className={"text-sm leading-relaxed text-neutral-800"}>
-              {n.content}
-            </p>
-
-            <div className="align-start flex flex-col space-y-1 text-xs pt-2 border-t border-neutral-300">
-              {n.coords && (
-                <span
-                  className={cn(
-                    "font-accent",
-                    "text-[9px] text-neutral-600 uppercase tracking-wider"
-                  )}
-                >
-                  x:{n.coords.x} y:{n.coords.y} z:{n.coords.z}
-                </span>
-              )}
-              {dustClient && (
-                <div>
-                  <button
-                    onClick={() => onSetWaypoint(n)}
-                    className="underline"
-                    disabled={!dustClient}
-                  >
-                    Set Waypoint
-                  </button>
-                </div>
-              )}
-              <span
-                className={cn(
-                  "heading-accent",
-                  "text-[9px] text-neutral-600 uppercase tracking-wider"
-                )}
-              >
-                {formatDate(n.createdAt)}
-              </span>
-            </div>
-          </div>
+        {filteredNotes.map((note) => (
+          <NoteCard key={note.id} note={note} />
         ))}
       </div>
     </section>
