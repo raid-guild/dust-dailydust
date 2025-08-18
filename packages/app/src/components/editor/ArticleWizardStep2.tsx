@@ -20,18 +20,11 @@ export default function ArticleWizardStep2({
   authorAddress,
   category,
 }: Props) {
-  const ens = useENS(authorAddress as any);
+  const ens = useENS(authorAddress as `0x${string}`);
   const authorDisplay =
     ens?.data?.displayName ??
     ens?.data?.name ??
-    (authorAddress ? `@${authorAddress.slice(0, 6)}` : "anonymous");
-  console.log("ArticleWizardStep2", {
-    authorAddress,
-    authorDisplay,
-    ens,
-    category,
-    coverImage,
-  });
+    (authorAddress ? `@${authorAddress.slice(0, 6)}` : "Anonymous");
 
   return (
     <div className="max-h-[60vh] overflow-y-auto bg-panel border border-neutral-200 rounded p-4">

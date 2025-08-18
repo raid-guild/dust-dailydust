@@ -39,6 +39,16 @@ export const parseCoords = (input: string) => {
   return { x: parts[0], y: parts[1], z: parts[2] };
 };
 
+/**
+ * Shorten an Ethereum address for display.
+ * @param address The address to shorten.
+ * @returns The shortened address.
+ */
+export const shortenAddress = (address: string | undefined) => {
+  if (!address) return "Anonymous";
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
 const IPFS_GATEWAYS = ["https://charactersheets.mypinata.cloud"];
 
 /**

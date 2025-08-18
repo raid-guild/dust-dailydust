@@ -27,9 +27,13 @@ export const Masthead = () => {
   useEffect(() => {
     try {
       const val = localStorage.getItem("pinnedApp");
-      if (val === "true") setPinned(true);
+      if (val === "true") {
+        setPinned(true);
+        setOpen(true);
+      }
     } catch (e) {
-      // ignore
+      // eslint-disable-next-line no-console
+      console.warn("Failed to get pinnedApp from localStorage", e);
     }
   }, []);
 
@@ -39,19 +43,13 @@ export const Masthead = () => {
       setOpen(next);
       try {
         localStorage.setItem("pinnedApp", next ? "true" : "false");
-      } catch (e) {}
-      try {
-        console.log && console.log("[Masthead] togglePin", { prev, next });
-      } catch (e) {}
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to set pinnedApp in localStorage", e);
+      }
       return next;
     });
   }, []);
-
-  useEffect(() => {
-    try {
-      console.log && console.log("[Masthead] open changed", { open });
-    } catch (e) {}
-  }, [open]);
 
   const handleClose = useCallback(() => setOpen(false), []);
 
@@ -60,7 +58,10 @@ export const Masthead = () => {
     setOpen(false);
     try {
       localStorage.setItem("pinnedApp", "false");
-    } catch (e) {}
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Failed to set pinnedApp in localStorage", e);
+    }
   }, []);
 
   return (
@@ -80,7 +81,7 @@ export const Masthead = () => {
                       "sm:text-3xl text-2xl tracking-wide select-none"
                     )}
                   >
-                    The Daily DUST
+                    The Daily Dust
                   </div>
                   <div
                     className={cn(

@@ -49,7 +49,7 @@ export const ArticleCard = ({
           src={uriToHttp(article.coverImage)[0]}
           loading="lazy"
           onLoad={() => setImgLoaded(true)}
-          className={`aspect-video grayscale object-cover w-full transition-opacity duration-500 ${
+          className={`aspect-video grayscale hover:grayscale-0 object-cover w-full transition-all duration-500 ${
             imgLoaded ? "opacity-100" : "opacity-0"
           }`}
           width={800}
