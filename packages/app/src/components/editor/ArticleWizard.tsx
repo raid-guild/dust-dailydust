@@ -5,6 +5,7 @@ import mudConfig from "contracts/mud.config";
 import ArticleSystemAbi from "contracts/out/ArticleSystem.sol/ArticleSystem.abi.json";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -546,7 +547,7 @@ export const ArticleWizard: React.FC<Props> = ({
           params: [
             {
               systemId: articleSystemId,
-              abi: ArticleSystemAbi,
+              abi: ArticleSystemAbi as Abi,
               functionName: "updateArticle",
               args: [articleId, title, content, category, coverImage],
             },
@@ -590,7 +591,7 @@ export const ArticleWizard: React.FC<Props> = ({
               params: [
                 {
                   systemId: articleSystemId,
-                  abi: ArticleSystemAbi,
+                  abi: ArticleSystemAbi as Abi,
                   functionName: "createArticleWithAnchor",
                   args: [
                     title,
@@ -622,7 +623,7 @@ export const ArticleWizard: React.FC<Props> = ({
             params: [
               {
                 systemId: articleSystemId,
-                abi: ArticleSystemAbi,
+                abi: ArticleSystemAbi as Abi,
                 functionName: "createArticle",
                 args: [title, content, category, coverImage],
               },
