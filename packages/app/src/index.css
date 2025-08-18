@@ -5,19 +5,27 @@
 @tailwind utilities;
 
 @layer base {
-  html, body, #root { height: 100%; }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
   body {
     background-color: var(--bg-page);
     color: var(--text-primary);
     font-family: var(--font-body);
   }
   ::selection {
-    background-color: var(--color-brand-200);
-    color: var(--color-brand-900);
+    background-color: var(--color-neutral-300);
+    color: var(--color-neutral-900);
   }
 }
 
 @layer utilities {
-  .font-heading { font-family: var(--font-heading); }
-  .font-accent { font-family: var(--font-accent); }
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+  .font-accent {
+    font-family: var(--font-accent);
+  }
 }
