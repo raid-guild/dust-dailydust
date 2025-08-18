@@ -127,6 +127,7 @@ export const LocalPage = () => {
         owner: r.owner,
         title: r.title,
         type: isArticle ? "article" : "note",
+        updatedAt: r.updatedAt,
       };
     })
     .filter((r) => r.type === "article")
