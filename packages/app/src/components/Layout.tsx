@@ -2,8 +2,13 @@ import type { ReactNode } from "react";
 
 import { Masthead } from "@/components/Masthead";
 import { cn } from "@/lib/utils";
+import { useSyncStatus } from "@/mud/useSyncStatus";
+
+import { NewspaperLoading } from "./LoadingPaper";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
+  const { isLive, percentage } = useSyncStatus();
+
   return (
     <div
       className={cn("bg-neutral-100 min-h-screen text-neutral-900")}
@@ -22,7 +27,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
             "rounded-md border border-neutral-900 bg-[#f9f7f1] shadow-[0_6px_0_0_#111] overflow-hidden"
           )}
         >
-          {children}
+          {isLive ? children : <NewspaperLoading percentage={percentage} />}
         </div>
       </main>
     </div>

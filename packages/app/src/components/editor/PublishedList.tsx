@@ -1,31 +1,22 @@
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
 import { useDustClient } from "@/common/useDustClient";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/helpers";
+import type { Post } from "@/utils/types";
 
-type PublishedItem = {
-  id: string;
-  title: string;
-  content: string;
-  coverImage?: string;
-  updatedAt?: number;
-  owner?: string;
-  isArticle?: boolean;
-  anchor?: { x: number; y: number; z: number } | null;
-};
-
-export default function PublishedList({
+export const PublishedList = ({
   published,
   myAddress,
   onEdit,
   renderMarkdownToHtml,
-  formatDate,
 }: {
-  published: PublishedItem[];
+  published: (Post & { rawContent: string })[];
   myAddress: string;
   onEdit: (id: string) => void;
   renderMarkdownToHtml: (md: string) => string;
-  formatDate: (ts: number) => string;
-}) {
+}) => {
   const { data: dustClient } = useDustClient();
   const [search, setSearch] = useState("");
   const [locX, setLocX] = useState<string>("");
@@ -44,17 +35,18 @@ export default function PublishedList({
   const populateWithCurrentPosition = async () => {
     if (!dustClient) return;
     try {
-      const pos = await (dustClient as any).provider.request({
+      const pos = await dustClient.provider.request({
         method: "getPlayerPosition",
-        params: { entity: (dustClient as any).appContext?.userAddress },
+        params: { entity: dustClient.appContext?.userAddress },
       });
       if (!pos) return;
       setLocX(String(Math.floor(pos.x)));
       setLocY(String(Math.floor(pos.y)));
       setLocZ(String(Math.floor(pos.z)));
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.warn("Could not fetch current position", e);
-      alert("Failed to fetch position");
+      toast.error("Failed to fetch position");
     }
   };
 
@@ -74,10 +66,10 @@ export default function PublishedList({
       }
 
       if (hasLoc && rrad !== null) {
-        if (!p.anchor) return false;
-        const ax = Number(p.anchor.x || 0);
-        const ay = Number(p.anchor.y || 0);
-        const az = Number(p.anchor.z || 0);
+        if (!p.coords) return false;
+        const ax = Number(p.coords.x || 0);
+        const ay = Number(p.coords.y || 0);
+        const az = Number(p.coords.z || 0);
         const dx = rx !== null ? ax - rx : 0;
         const dy = ry !== null ? ay - ry : 0;
         const dz = rz !== null ? az - rz : 0;
@@ -85,10 +77,10 @@ export default function PublishedList({
         if (dist2 > rrad * rrad) return false;
       } else if (hasLoc && rrad === null) {
         // radius not set but coords provided: treat as exact-match box for provided axes
-        if (!p.anchor) return false;
-        const ax = Number(p.anchor.x || 0);
-        const ay = Number(p.anchor.y || 0);
-        const az = Number(p.anchor.z || 0);
+        if (!p.coords) return false;
+        const ax = Number(p.coords.x || 0);
+        const ay = Number(p.coords.y || 0);
+        const az = Number(p.coords.z || 0);
         if (rx !== null && ax !== rx) return false;
         if (ry !== null && ay !== ry) return false;
         if (rz !== null && az !== rz) return false;
@@ -112,9 +104,7 @@ export default function PublishedList({
             Clear
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-
-        </div>
+        <div className="flex items-center gap-2"></div>
       </div>
 
       <div className="flex flex-wrap gap-2 items-center">
@@ -142,37 +132,58 @@ export default function PublishedList({
           onChange={(e) => setRadius(e.target.value)}
           className="w-36 px-2 py-1 border rounded border-neutral-200"
         />
-        <Button size="sm" onClick={populateWithCurrentPosition} disabled={!dustClient}>
+        <Button
+          size="sm"
+          onClick={populateWithCurrentPosition}
+          disabled={!dustClient}
+        >
           Use my position
         </Button>
-        <div className="text-xs text-text-secondary">(leave radius empty for exact coords)</div>
+        <div className="text-xs text-text-secondary">
+          (leave radius empty for exact coords)
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="p-4 bg-panel border border-neutral-200 rounded">No articles match filters.</div>
+        <div className="p-4 bg-panel border border-neutral-200 rounded">
+          No articles match filters.
+        </div>
       ) : (
         filtered.map((p) => (
-          <div key={p.id} className="p-3 border border-neutral-200 rounded bg-white">
+          <div
+            key={p.id}
+            className="p-3 border border-neutral-200 rounded bg-white"
+          >
             <div className="flex items-start justify-between">
               <div>
-                <div className="font-heading text-lg">{p.title || "Untitled"}</div>
+                <div className="font-heading text-lg">
+                  {p.title || "Untitled"}
+                </div>
                 <div className="text-xs text-text-secondary">
-                  By {p.owner === myAddress ? "you" : p.owner} • {formatDate(p.updatedAt || Date.now())}
+                  By {p.owner === myAddress ? "you" : p.owner} •{" "}
+                  {formatDate(p.updatedAt)}
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => onEdit(p.id)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onEdit(p.id)}
+                >
                   Edit
                 </Button>
               </div>
             </div>
             <div className="mt-2 text-[15px] leading-relaxed text-text-primary">
-              <div className="prose max-w-none overflow-hidden max-h-24"
-                dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(p.content || "") }}
+              <div
+                className="prose max-w-none overflow-hidden max-h-24"
+                dangerouslySetInnerHTML={{
+                  __html: renderMarkdownToHtml(p.rawContent || ""),
+                }}
               />
-              {p.anchor && (
+              {p.coords && (
                 <div className="mt-2 text-sm text-text-secondary">
-                  Anchor: x:{p.anchor.x} y:{p.anchor.y} z:{p.anchor.z}
+                  Anchor: x:{p.coords.x} y:{p.coords.y} z:{p.coords.z}
                 </div>
               )}
             </div>
@@ -181,4 +192,4 @@ export default function PublishedList({
       )}
     </div>
   );
-}
+};

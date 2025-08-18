@@ -1,12 +1,13 @@
 import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
 import { getRecord } from "@latticexyz/stash/internal";
-import { useRecord, useRecords } from "@latticexyz/stash/react";
+import { useRecords } from "@latticexyz/stash/react";
 import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
@@ -24,6 +25,7 @@ import type { Post } from "@/utils/types";
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
 
+  const [noteCategories, setNoteCategories] = useState<string[]>([]);
   const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -87,6 +89,7 @@ export const BackPage = () => {
         owner: r.owner,
         title: r.title,
         type: isNote ? "note" : "article",
+        updatedAt: r.updatedAt,
       };
     })
     .filter((r) => r.type === "note")
@@ -144,19 +147,27 @@ export const BackPage = () => {
     });
   }, [coords, notesByDistance, q, selectedCategory, authorFilter, dateSort]);
 
-  const noteCategories = (useRecord({
-    stash,
-    table: tables.NoteCategories,
-    key: {},
-  })
-    ?.value?.map((c) => {
-      return getRecord({
-        stash,
-        table: tables.Category,
-        key: { id: c },
-      })?.value;
+  useEffect(() => {
+    const categories = (getRecord({
+      stash,
+      table: tables.NoteCategories,
+      key: {},
     })
-    .filter((c): c is string => !!c) ?? []) as string[];
+      ?.value?.map((c) => {
+        return getRecord({
+          stash,
+          table: tables.Category,
+          key: { id: c },
+        })?.value;
+      })
+      .filter((c): c is string => !!c) ?? []) as string[];
+
+    setNoteCategories(categories);
+    setForm((f) => ({
+      ...f,
+      category: categories[0] ?? "",
+    }));
+  }, []);
 
   // Fetch current player position (best-effort) to show anchor in preview when creating a new article
   useEffect(() => {
@@ -284,7 +295,6 @@ export const BackPage = () => {
       e.preventDefault();
       if (!form.title || !form.content) return;
 
-      setForm({ category: "Offer", title: "", content: "" });
       try {
         if (anchorPos) {
           await createNoteWithAnchor.mutateAsync({
@@ -300,9 +310,15 @@ export const BackPage = () => {
             category: form.category,
           });
         }
+
+        setForm({ category: "", title: "", content: "" });
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error creating note:", error);
+
+        toast.error("Error Creating Note", {
+          description: (error as Error).message,
+        });
       }
     },
     [anchorPos, createNote, createNoteWithAnchor, form]
@@ -325,7 +341,7 @@ export const BackPage = () => {
               "text-[10px] text-neutral-700 tracking-widest uppercase"
             )}
           >
-            Looking for something, offering a service, or asking for a story
+            Making a request, offering a service, and more...
           </p>
         </div>
         <div>

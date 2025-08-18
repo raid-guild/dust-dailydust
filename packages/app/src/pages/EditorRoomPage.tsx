@@ -1,12 +1,14 @@
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useDustClient } from "@/common/useDustClient";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
-import PublishedList from "@/components/editor/PublishedList";
+import { PublishedList } from "@/components/editor/PublishedList";
 import { Button } from "@/components/ui/button";
 import { stash, tables } from "@/mud/stash";
+import { formatDate } from "@/utils/helpers";
+import type { Post } from "@/utils/types";
 
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
@@ -14,20 +16,6 @@ export const EditorRoomPage = () => {
 
   const { data: dustClient } = useDustClient();
   const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
-
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffMins < 1) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
 
   // Minimal markdown -> HTML renderer (same rules as ArticleWizard)
   const renderMarkdownToHtml = (md: string) => {
@@ -58,7 +46,7 @@ export const EditorRoomPage = () => {
           html += "<ul>";
         }
         const item = ln.replace(/^\s*([-*])\s+/, "");
-        let content = escapeHtml(item)
+        const content = escapeHtml(item)
           .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
           .replace(/\*(.+?)\*/g, "<em>$1</em>");
         html += `<li>${content}</li>`;
@@ -122,65 +110,67 @@ export const EditorRoomPage = () => {
     </Button>
   );
 
-  // Published articles: read Post table and filter by IsArticle like BackPage
-  const rawPosts = useRecords({ stash, table: tables.Post }) || [];
-  const published = useMemo(() => {
-    const toNumber = (v: any) => {
-      try {
-        if (typeof v === "bigint") return Number(v);
-        if (typeof v === "string" && /^0x[0-9a-fA-F]+$/.test(v)) {
-          // hex string (bytes32) - not a timestamp
-          return 0;
-        }
-        const n = Number(v);
-        return Number.isFinite(n) ? n : 0;
-      } catch {
-        return 0;
+  const posts = useRecords({
+    stash,
+    table: tables.Post,
+  })
+    .map((r): Post & { rawContent: string } => {
+      const isArticle =
+        getRecord({
+          stash,
+          table: tables.IsArticle,
+          key: { id: r.id as `0x${string}` },
+        })?.value ?? false;
+      let category: null | string = null;
+
+      const anchor =
+        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
+        null;
+
+      const excerpt =
+        typeof r.content === "string"
+          ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
+          : "";
+
+      if (r.categories[0]) {
+        category =
+          getRecord({
+            stash,
+            table: tables.Category,
+            key: { id: r.categories[0] as `0x${string}` },
+          })?.value ?? null;
       }
-    };
 
-    return rawPosts
-      .map((r: any) => {
-        const isArticle =
-          getRecord({ stash, table: tables.IsArticle, key: { id: r.id } })
-            ?.value ?? false;
-        // Read PostAnchor record (if any)
-
-        const anchorRecord =
-          getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
-          null;
-        const anchor = anchorRecord
-          ? {
-              entityId: anchorRecord.entityId,
-              x: Number(anchorRecord.coordX || 0),
-              y: Number(anchorRecord.coordY || 0),
-              z: Number(anchorRecord.coordZ || 0),
-            }
-          : null;
-        const updatedAtRaw = r.updatedAt ?? r.createdAt ?? Date.now();
-        const updatedAt = toNumber(updatedAtRaw);
-        return {
-          id: r.id,
-          title: r.title,
-          content: r.content,
-          coverImage: r.coverImage,
-          updatedAt,
-          owner: r.owner,
-          isArticle,
-          anchor,
-        };
-      })
-      .filter((p: any) => p.isArticle)
-      .sort((a: any, b: any) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  }, [rawPosts]);
+      return {
+        id: r.id,
+        categories: category ? [category] : [],
+        content: (typeof r.content === "string"
+          ? r.content.split("\n\n")
+          : []) as string[],
+        coords: anchor
+          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
+          : null,
+        createdAt: r.createdAt,
+        coverImage: r.coverImage || "/assets/placeholder-notext.png",
+        distance: null,
+        excerpt,
+        owner: r.owner,
+        rawContent: r.content,
+        title: r.title,
+        type: isArticle ? "article" : "note",
+        updatedAt: r.updatedAt,
+      };
+    })
+    .filter((r) => r.type === "article")
+    .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   // Drafts stored in localStorage under same key as ArticleWizard
   const DRAFT_KEY = "editor-article-drafts";
-  const loadDrafts = (): any[] => {
+  const loadDrafts = () => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return [];
-      const arr = JSON.parse(raw) as any[];
+      const arr = JSON.parse(raw);
       return Array.isArray(arr)
         ? arr.sort(
             (a, b) =>
@@ -199,7 +189,7 @@ export const EditorRoomPage = () => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === DRAFT_KEY) setDrafts(loadDrafts());
     };
-    const onCustom = (_e: Event) => {
+    const onCustom = () => {
       // Refresh drafts list when ArticleWizard saves/deletes
       setDrafts(loadDrafts());
     };
@@ -221,10 +211,13 @@ export const EditorRoomPage = () => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
-      const arr = (JSON.parse(raw) as any[]).filter((d) => d.id !== id);
+      const arr = JSON.parse(raw).filter((d: { id: string }) => d.id !== id);
       localStorage.setItem(DRAFT_KEY, JSON.stringify(arr));
       setDrafts(arr);
-    } catch {}
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error("Failed to remove draft", id);
+    }
   };
 
   // Wizard dialog state
@@ -332,11 +325,10 @@ export const EditorRoomPage = () => {
 
         {tab === "published" && (
           <PublishedList
-            published={published}
+            published={posts}
             myAddress={myAddress}
             onEdit={(id) => openArticle(id)}
             renderMarkdownToHtml={renderMarkdownToHtml}
-            formatDate={formatDate}
           />
         )}
       </div>

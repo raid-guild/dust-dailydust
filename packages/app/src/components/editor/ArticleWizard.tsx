@@ -1,10 +1,11 @@
 import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
 import { getRecord } from "@latticexyz/stash/internal";
-import { useRecord } from "@latticexyz/stash/react";
 import mudConfig from "contracts/mud.config";
 import ArticleSystemAbi from "contracts/out/ArticleSystem.sol/ArticleSystem.abi.json";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+import type { Abi } from "viem";
 
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,14 +52,14 @@ function saveOrUpdateDraft(d: Draft) {
     if (idx >= 0) arr[idx] = d;
     else arr.push(d);
     localStorage.setItem(DRAFT_KEY, JSON.stringify(arr));
-    try {
-      window.dispatchEvent(
-        new CustomEvent("editor-article-drafts-updated", {
-          detail: { id: d.id, ts: Date.now() },
-        })
-      );
-    } catch {}
+
+    window.dispatchEvent(
+      new CustomEvent("editor-article-drafts-updated", {
+        detail: { id: d.id, ts: Date.now() },
+      })
+    );
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error("Failed saving draft", e);
   }
 }
@@ -69,14 +70,16 @@ function deleteDraftLocal(id: string) {
     if (!raw) return;
     const arr = (JSON.parse(raw) as Draft[]).filter((d) => d.id !== id);
     localStorage.setItem(DRAFT_KEY, JSON.stringify(arr));
-    try {
-      window.dispatchEvent(
-        new CustomEvent("editor-article-drafts-updated", {
-          detail: { id, ts: Date.now(), deleted: true },
-        })
-      );
-    } catch {}
-  } catch {}
+
+    window.dispatchEvent(
+      new CustomEvent("editor-article-drafts-updated", {
+        detail: { id, ts: Date.now(), deleted: true },
+      })
+    );
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("Failed deleting draft", e);
+  }
 }
 
 // Minimal markdown renderer used for previews (supports headings, bold, italic, lists, paragraphs)
@@ -206,6 +209,7 @@ export const ArticleWizard: React.FC<Props> = ({
 }) => {
   const { data: dustClient } = useDustClient();
 
+  const [articleCategories, setArticleCategories] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -221,19 +225,24 @@ export const ArticleWizard: React.FC<Props> = ({
     z: number;
   } | null>(null);
 
-  const articleCategories = (useRecord({
-    stash,
-    table: tables.ArticleCategories,
-    key: {},
-  })
-    ?.value?.map((c) => {
-      return getRecord({
-        stash,
-        table: tables.Category,
-        key: { id: c },
-      })?.value;
+  useEffect(() => {
+    const categories = (getRecord({
+      stash,
+      table: tables.NoteCategories,
+      key: {},
     })
-    .filter((c): c is string => !!c) ?? []) as string[];
+      ?.value?.map((c) => {
+        return getRecord({
+          stash,
+          table: tables.Category,
+          key: { id: c },
+        })?.value;
+      })
+      .filter((c): c is string => !!c) ?? []) as string[];
+
+    setArticleCategories(categories);
+    setCategory(categories[0] ?? "");
+  }, []);
 
   // If the category hasn't been set by the user or by loading an article/draft,
   // default to the first available category when the list becomes available.
@@ -264,10 +273,13 @@ export const ArticleWizard: React.FC<Props> = ({
         // in { value: ... }, { data: ... }, arrays, or even JSON strings. This helper
         // tries to unwrap common wrapper shapes recursively and return the underlying
         // payload object.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const normalize = (r: any): any => {
           if (r == null) return r;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const seen = new Set<any>();
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const unwrap = (obj: any): any => {
             if (obj == null) return obj;
             if (typeof obj === "string") {
@@ -277,6 +289,8 @@ export const ArticleWizard: React.FC<Props> = ({
                 if (typeof parsed === "object") return unwrap(parsed);
               } catch (e) {
                 // not JSON, return original string
+                // eslint-disable-next-line no-console
+                console.warn("Failed to parse JSON:", e);
                 return obj;
               }
             }
@@ -291,13 +305,13 @@ export const ArticleWizard: React.FC<Props> = ({
               seen.add(obj);
 
               // common wrapper keys
-              if ("value" in obj) return unwrap((obj as any).value);
-              if ("data" in obj) return unwrap((obj as any).data);
-              if ("values" in obj) return unwrap((obj as any).values);
+              if ("value" in obj) return unwrap(obj.value);
+              if ("data" in obj) return unwrap(obj.data);
+              if ("values" in obj) return unwrap(obj.values);
 
               // sometimes the actual payload is stored under a single key
               const keys = Object.keys(obj);
-              if (keys.length === 1) return unwrap((obj as any)[keys[0]]);
+              if (keys.length === 1) return unwrap(obj[keys[0]]);
 
               return obj;
             }
@@ -309,12 +323,14 @@ export const ArticleWizard: React.FC<Props> = ({
         };
 
         // Helper that robustly extracts a cover image URL from a normalized record.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const extractCoverImage = (rec: any): string => {
           if (!rec) return "";
 
           // If rec is an array, try first element
           if (Array.isArray(rec) && rec.length) rec = rec[0];
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const tryField = (v: any): string | null => {
             if (v === null || v === undefined) return null;
             if (typeof v === "string") return v.trim() || null;
@@ -326,14 +342,14 @@ export const ArticleWizard: React.FC<Props> = ({
               // if wrapper like {0: '...'} or nested objects, try keys
               const keys = Object.keys(v);
               for (const k of keys) {
-                const maybe: string | null = tryField((v as any)[k]);
+                const maybe: string | null = tryField(v[k]);
                 if (maybe) return maybe;
               }
             }
             return null;
           };
 
-          const candidates: any[] = [
+          const candidates = [
             rec.coverImage,
             rec.image,
             rec.imageUrl,
@@ -352,7 +368,7 @@ export const ArticleWizard: React.FC<Props> = ({
           if (typeof rec === "object") {
             for (const k of Object.keys(rec)) {
               if (/image|cover|thumbnail|media|url|src/i.test(k)) {
-                const maybe: string | null = tryField((rec as any)[k]);
+                const maybe: string | null = tryField(rec[k]);
                 if (maybe) return maybe;
               }
             }
@@ -365,11 +381,9 @@ export const ArticleWizard: React.FC<Props> = ({
           stash,
           table: tables.Post,
           key: { id: articleId as unknown as `0x${string}` },
-        }) as any | null;
-        console.debug("loading article recRaw", { articleId, recRaw });
+        });
         const rec = normalize(recRaw);
         if (rec) {
-          console.debug("normalized rec", rec);
           const possibleCover = extractCoverImage(rec) || "";
           if (possibleCover) setCoverImage(possibleCover);
           else setCoverImage("");
@@ -384,8 +398,7 @@ export const ArticleWizard: React.FC<Props> = ({
             stash,
             table: tables.PostAnchor,
             key: { id: articleId as unknown as `0x${string}` },
-          }) as any | null;
-          console.debug("loading anchorRaw", { articleId, anchorRaw });
+          });
           const anchorRec = normalize(anchorRaw);
           if (anchorRec) {
             setAnchorPos({
@@ -394,10 +407,11 @@ export const ArticleWizard: React.FC<Props> = ({
               z: Math.floor(Number(anchorRec.coordZ ?? anchorRec.z ?? 0)),
             });
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn("Failed to load article for editing", err);
       }
       return;
@@ -412,9 +426,9 @@ export const ArticleWizard: React.FC<Props> = ({
     let cancelled = false;
     (async () => {
       try {
-        const pos = await (dustClient as any).provider.request({
+        const pos = await dustClient.provider.request({
           method: "getPlayerPosition",
-          params: { entity: (dustClient as any).appContext?.userAddress },
+          params: { entity: dustClient.appContext?.userAddress },
         });
         if (cancelled) return;
         setAnchorPos({
@@ -424,6 +438,7 @@ export const ArticleWizard: React.FC<Props> = ({
         });
       } catch (e) {
         // noop - preview anchor is optional
+        // eslint-disable-next-line no-console
         console.warn("Could not fetch player position for preview anchor", e);
       }
     })();
@@ -509,11 +524,11 @@ export const ArticleWizard: React.FC<Props> = ({
 
   const handlePublish = async () => {
     if (!canContinueFrom1) {
-      alert("Please complete content before publishing");
+      toast.error("Please complete content before publishing");
       return;
     }
     if (!dustClient) {
-      alert("Wallet/client not ready");
+      toast.error("Wallet/client not ready");
       return;
     }
     setIsPublishing(true);
@@ -527,12 +542,12 @@ export const ArticleWizard: React.FC<Props> = ({
       // If creating a new article, capture the returned articleId and create an anchor at the player's current block.
       if (articleId) {
         // update existing article
-        await (dustClient as any).provider.request({
+        await dustClient.provider.request({
           method: "systemCall",
           params: [
             {
               systemId: articleSystemId,
-              abi: ArticleSystemAbi as any,
+              abi: ArticleSystemAbi as Abi,
               functionName: "updateArticle",
               args: [articleId, title, content, category, coverImage],
             },
@@ -540,7 +555,7 @@ export const ArticleWizard: React.FC<Props> = ({
         });
       } else {
         // Use the previewed anchor position if available, otherwise try to fetch it now (best-effort)
-        let playerPos: any = null;
+        let playerPos = null;
         if (anchorPos) {
           playerPos = { x: anchorPos.x, y: anchorPos.y, z: anchorPos.z };
         } else {
@@ -555,12 +570,13 @@ export const ArticleWizard: React.FC<Props> = ({
               z: Math.floor(pos.z),
             };
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.warn("Failed to get player position for article anchor", e);
           }
         }
 
         // Create the article. If we have a player position, create the article + anchor in a single call.
-        let createResult: any = null;
+        let createResult = null;
 
         // if we have player position, compute block coords and entityId and call createArticleWithAnchor
         if (playerPos) {
@@ -570,19 +586,12 @@ export const ArticleWizard: React.FC<Props> = ({
             const bz = Math.floor(playerPos.z);
             const entityId = encodeBlock([bx, by, bz]);
 
-            console.log("Creating article with anchor at", {
-              entityId,
-              bx,
-              by,
-              bz,
-            });
-
-            createResult = await (dustClient as any).provider.request({
+            createResult = await dustClient.provider.request({
               method: "systemCall",
               params: [
                 {
                   systemId: articleSystemId,
-                  abi: ArticleSystemAbi as any,
+                  abi: ArticleSystemAbi as Abi,
                   functionName: "createArticleWithAnchor",
                   args: [
                     title,
@@ -598,6 +607,7 @@ export const ArticleWizard: React.FC<Props> = ({
               ],
             });
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(
               "Failed to create article with anchor, falling back to createArticle",
               e
@@ -608,45 +618,18 @@ export const ArticleWizard: React.FC<Props> = ({
 
         // If createResult is still null (no playerPos or previous call failed), create article normally
         if (!createResult) {
-          createResult = await (dustClient as any).provider.request({
+          createResult = await dustClient.provider.request({
             method: "systemCall",
             params: [
               {
                 systemId: articleSystemId,
-                abi: ArticleSystemAbi as any,
+                abi: ArticleSystemAbi as Abi,
                 functionName: "createArticle",
                 args: [title, content, category, coverImage],
               },
             ],
           });
         }
-
-        // Optional: try to log the created article id for debugging (best-effort)
-        const extractBytes32 = (res: any): string | null => {
-          if (!res) return null;
-          const hexRegex = /0x[0-9a-fA-F]{64}/g;
-          const seen = new Set<any>();
-          const stack: any[] = [res];
-          while (stack.length) {
-            const cur = stack.pop();
-            if (!cur || typeof cur === "function") continue;
-            if (typeof cur === "string") {
-              const m = cur.match(hexRegex);
-              if (m) return m[0];
-              continue;
-            }
-            if (typeof cur === "object") {
-              if (seen.has(cur)) continue;
-              seen.add(cur);
-              for (const k of Object.keys(cur)) stack.push(cur[k]);
-            }
-          }
-          return null;
-        };
-
-        console.log("Create result", createResult);
-        const newArticleIdHex = extractBytes32(createResult);
-        console.log("Extracted new article id", newArticleIdHex);
       }
 
       // remove draft locally if exists
@@ -654,8 +637,12 @@ export const ArticleWizard: React.FC<Props> = ({
 
       onDone?.();
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error("Publish failed", e);
-      alert("Failed to publish. See console.");
+
+      toast.error("Failed to Publish", {
+        description: (e as Error).message,
+      });
     } finally {
       setIsPublishing(false);
     }
@@ -788,7 +775,7 @@ export const ArticleWizard: React.FC<Props> = ({
             content={content}
             anchorPos={anchorPos}
             renderMarkdownToHtml={renderMarkdownToHtml}
-            authorAddress={(dustClient as any)?.appContext?.userAddress}
+            authorAddress={dustClient?.appContext?.userAddress}
             category={category}
           />
         )}

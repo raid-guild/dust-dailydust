@@ -10,6 +10,7 @@ export type Post = {
   owner: string;
   title: string;
   type: PostType;
+  updatedAt: bigint;
 };
 
 export type PostType = "article" | "note";
