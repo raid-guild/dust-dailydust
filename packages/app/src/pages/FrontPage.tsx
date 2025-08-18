@@ -42,7 +42,7 @@ const TopBanner = () => {
       </h1>
       <p className="max-w-3xl mx-auto text-center text-neutral-800">
         Submit your articles through the Editor Room. The paper will display its
-        first front page of top stories on <strong>Sunday, August 17th</strong>.
+        first front page of top stories on <strong>Sunday, August 24th</strong>.
       </p>
     </div>
   );
