@@ -228,7 +228,7 @@ export const ArticleWizard: React.FC<Props> = ({
   useEffect(() => {
     const categories = (getRecord({
       stash,
-      table: tables.NoteCategories,
+      table: tables.ArticleCategories,
       key: {},
     })
       ?.value?.map((c) => {
