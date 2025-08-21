@@ -1,17 +1,19 @@
 import { encodeBlock } from "@dust/world/internal";
+import { getRecord } from "@latticexyz/stash/internal";
+import { useMemo } from "react";
 import { toast } from "sonner";
+import { hexToString, zeroAddress } from "viem";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
-import { useENS } from "@/common/useENS";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { stash, tables } from "@/mud/stash";
 import { formatDate, shortenAddress } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 export const NoteCard = ({ note }: { note: Post }) => {
   const { data: dustClient } = useDustClient();
-  const ens = useENS(note?.owner as `0x${string}` | undefined);
   const { copyToClipboard } = useCopy();
 
   // Set waypoint for an note by encoding its block coords into an EntityId
@@ -43,6 +45,20 @@ export const NoteCard = ({ note }: { note: Post }) => {
       alert("Failed to set waypoint");
     }
   };
+
+  const author = useMemo(() => {
+    const ownerUsername = getRecord({
+      stash,
+      table: tables.PlayerName,
+      key: { player: (note?.owner ?? zeroAddress) as `0x${string}` },
+    })?.name;
+
+    if (ownerUsername) {
+      return hexToString(ownerUsername).replace(/\0+$/, "");
+    }
+    return "Anonymous";
+  }, [note?.owner]);
+
   return (
     <div
       key={note.id}
@@ -72,7 +88,7 @@ export const NoteCard = ({ note }: { note: Post }) => {
               toast.success(`Copied ${shortenAddress(note.owner)}`);
             }}
           >
-            @{ens?.data?.name ?? shortenAddress(note.owner)}
+            @{author}
           </button>
         </div>
       </div>

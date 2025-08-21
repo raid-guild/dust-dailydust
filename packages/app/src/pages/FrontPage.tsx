@@ -53,7 +53,7 @@ const TopBanner = () => {
 //     <div className="border border-neutral-900 bg-neutral-50">
 //       <img
 //         alt={article.title}
-//         className="grayscale object-cover w-full"
+//         className="duration-500 grayscale hover:grayscale-0 object-cover w-full"
 //         decoding="async"
 //         fetchPriority="high"
 //         height={800}
