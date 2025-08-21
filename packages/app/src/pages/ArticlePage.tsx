@@ -4,10 +4,10 @@ import { useRecords } from "@latticexyz/stash/react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { hexToString, zeroAddress } from "viem";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
-import { useENS } from "@/common/useENS";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
@@ -103,7 +103,19 @@ export const ArticlePage = () => {
     .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   const article = useMemo(() => posts.find((p) => p.id === id), [id, posts]);
-  const ens = useENS(article?.owner as `0x${string}` | undefined);
+
+  const author = useMemo(() => {
+    const ownerUsername = getRecord({
+      stash,
+      table: tables.PlayerName,
+      key: { player: (article?.owner ?? zeroAddress) as `0x${string}` },
+    })?.name;
+
+    if (ownerUsername) {
+      return hexToString(ownerUsername).replace(/\0+$/, "");
+    }
+    return "Anonymous";
+  }, [article?.owner]);
 
   if (!article) {
     return (
@@ -160,7 +172,7 @@ export const ArticlePage = () => {
               toast.success(`Copied ${shortenAddress(article.owner)}`);
             }}
           >
-            @{ens?.data?.name ?? shortenAddress(article.owner)}
+            @{author}
           </button>
           {" • "}
           {formatDate(article.createdAt)}
@@ -171,7 +183,7 @@ export const ArticlePage = () => {
         <div className="border border-neutral-900 my-4 overflow-hidden">
           <img
             alt={article.title}
-            className="grayscale object-cover w-full"
+            className="duration-500 grayscale hover:grayscale-0 object-cover transition-all w-full"
             height={720}
             src={uriToHttp(article.coverImage)[0]}
             width={1200}

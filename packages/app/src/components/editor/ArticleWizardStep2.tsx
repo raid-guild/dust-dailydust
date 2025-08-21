@@ -1,4 +1,8 @@
-import { useENS } from "@/common/useENS";
+import { getRecord } from "@latticexyz/stash/internal";
+import { useMemo } from "react";
+import { hexToString, zeroAddress } from "viem";
+
+import { stash, tables } from "@/mud/stash";
 import { uriToHttp } from "@/utils/helpers";
 
 interface Props {
@@ -20,11 +24,18 @@ export default function ArticleWizardStep2({
   authorAddress,
   category,
 }: Props) {
-  const ens = useENS(authorAddress as `0x${string}`);
-  const authorDisplay =
-    ens?.data?.displayName ??
-    ens?.data?.name ??
-    (authorAddress ? `@${authorAddress.slice(0, 6)}` : "Anonymous");
+  const author = useMemo(() => {
+    const ownerUsername = getRecord({
+      stash,
+      table: tables.PlayerName,
+      key: { player: (authorAddress ?? zeroAddress) as `0x${string}` },
+    })?.name;
+
+    if (ownerUsername) {
+      return hexToString(ownerUsername).replace(/\0+$/, "");
+    }
+    return "Anonymous";
+  }, [authorAddress]);
 
   return (
     <div className="max-h-[60vh] overflow-y-auto bg-panel border border-neutral-200 rounded p-4">
@@ -39,7 +50,7 @@ export default function ArticleWizardStep2({
         <h1 className={"font-heading text-2xl leading-tight"}>
           {title || "Untitled"}
         </h1>
-        <div className="font-accent text-[10px] text-neutral-700">{`By ${authorDisplay}`}</div>
+        <div className="font-accent text-[10px] text-neutral-700">{`By ${author}`}</div>
         {category && (
           <div className="mt-1">
             <span className="font-accent bg-neutral-100 border border-neutral-900 px-2 py-1 rounded-[3px] text-[10px] tracking-wider uppercase">
@@ -53,7 +64,7 @@ export default function ArticleWizardStep2({
         <div className="border border-neutral-900 my-4 overflow-hidden">
           <img
             alt={title}
-            className="grayscale object-cover w-full"
+            className="duration-500 grayscale hover:grayscale-0 object-cover w-full"
             src={uriToHttp(coverImage)[0]}
           />
         </div>
