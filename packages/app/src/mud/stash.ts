@@ -9,6 +9,7 @@ import { worldAddress } from "@/common/worldAddress";
 import { redstone } from "./redstone";
 
 const selectedDustTables = {
+  Energy: dustWorldConfig.tables.Energy,
   PlayerName: dustWorldConfig.tables.PlayerName,
 };
 
