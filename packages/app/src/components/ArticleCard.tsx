@@ -14,6 +14,7 @@ export const ArticleCard = ({
   compact?: boolean;
 }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
+
   return (
     <article className="relative">
       <h3

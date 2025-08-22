@@ -10,6 +10,7 @@ import { redstone } from "./redstone";
 
 const selectedDustTables = {
   Energy: dustWorldConfig.tables.Energy,
+  EntityPosition: dustWorldConfig.tables.EntityPosition,
   PlayerName: dustWorldConfig.tables.PlayerName,
 };
 

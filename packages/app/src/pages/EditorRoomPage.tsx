@@ -2,7 +2,7 @@ import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useEffect, useState } from "react";
 
-import { useDustClient } from "@/common/useDustClient";
+import { usePlayerEntityId } from "@/common/usePlayerEntityId";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { PublishedList } from "@/components/editor/PublishedList";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,7 @@ import type { Post } from "@/utils/types";
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
   const [tab, setTab] = useState<TabKey>("drafts");
-
-  const { data: dustClient } = useDustClient();
-  const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
+  const { data: playerAddress } = usePlayerEntityId();
 
   // Minimal markdown -> HTML renderer (same rules as ArticleWizard)
   const renderMarkdownToHtml = (md: string) => {
@@ -323,10 +321,10 @@ export const EditorRoomPage = () => {
           </div>
         )}
 
-        {tab === "published" && (
+        {tab === "published" && playerAddress && (
           <PublishedList
             published={posts}
-            myAddress={myAddress}
+            myAddress={playerAddress}
             onEdit={(id) => openArticle(id)}
             renderMarkdownToHtml={renderMarkdownToHtml}
           />
