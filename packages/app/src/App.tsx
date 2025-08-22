@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import { Layout } from "@/components/Layout";
@@ -9,6 +10,7 @@ export default function App() {
     <Router>
       <Layout>
         <Toaster />
+        <Analytics />
         <AppRoutes />
       </Layout>
     </Router>
