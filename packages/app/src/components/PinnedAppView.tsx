@@ -1,4 +1,5 @@
 import { Newspaper, Pin, X } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -32,7 +33,9 @@ export const PinnedAppView: React.FC<Props> = ({
                 {closest.title}
               </button>
             ) : (
-              <div className="text-[12px] text-neutral-700">No nearby articles</div>
+              <div className="text-[12px] text-neutral-700">
+                No nearby articles
+              </div>
             )}
           </div>
         </div>

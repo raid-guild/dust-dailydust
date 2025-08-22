@@ -6,6 +6,7 @@ export function useDustClient() {
     queryKey: ["dust-client"],
     queryFn: async () => {
       const dustClient = await connectDustClient();
+      // eslint-disable-next-line no-console
       console.log("app connected", dustClient);
       document.documentElement.setAttribute(
         "data-dust-app",
