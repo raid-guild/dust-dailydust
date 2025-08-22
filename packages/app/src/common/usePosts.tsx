@@ -60,6 +60,7 @@ export const usePosts = (): {
         distance: null,
         excerpt,
         owner: r.owner,
+        rawContent: typeof r.content === "string" ? r.content : "",
         title: r.title,
         type: isArticle ? "article" : "note",
         updatedAt: r.updatedAt,

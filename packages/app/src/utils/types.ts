@@ -8,6 +8,7 @@ export type Post = {
   distance: number | null;
   excerpt: string;
   owner: string;
+  rawContent: string;
   title: string;
   type: PostType;
   updatedAt: bigint;
