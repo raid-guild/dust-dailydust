@@ -1,15 +1,13 @@
 import { encodeBlock } from "@dust/world/internal";
-import { getRecord } from "@latticexyz/stash/internal";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { hexToString, zeroAddress } from "viem";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
+import { usePlayerName } from "@/common/usePlayerName";
 import { usePosts } from "@/common/usePosts";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
@@ -55,18 +53,7 @@ export const ArticlePage = () => {
     [id, articles]
   );
 
-  const author = useMemo(() => {
-    const ownerUsername = getRecord({
-      stash,
-      table: tables.PlayerName,
-      key: { player: (article?.owner ?? zeroAddress) as `0x${string}` },
-    })?.name;
-
-    if (ownerUsername) {
-      return hexToString(ownerUsername).replace(/\0+$/, "");
-    }
-    return "Anonymous";
-  }, [article?.owner]);
+  const { playerName } = usePlayerName(article?.owner);
 
   if (!article) {
     return (
@@ -123,7 +110,7 @@ export const ArticlePage = () => {
               toast.success(`Copied ${shortenAddress(article.owner)}`);
             }}
           >
-            @{author}
+            @{playerName}
           </button>
           {" • "}
           {formatDate(article.createdAt)}
