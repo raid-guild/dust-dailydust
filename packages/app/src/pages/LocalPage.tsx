@@ -1,9 +1,9 @@
-import { encodeBlock } from "@dust/world/internal";
 import { useMemo, useState } from "react";
 
 import { useDustClient } from "@/common/useDustClient";
 import { usePlayerPositionQuery } from "@/common/usePlayerPositionQuery";
 import { usePosts } from "@/common/usePosts";
+import { useWaypoint } from "@/common/useWaypoint";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,12 +11,13 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { POPULAR_PLACES } from "@/utils/constants";
 import { getDistance, parseCoords } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const LocalPage = () => {
   const { data: dustClient } = useDustClient();
   const { articles } = usePosts();
   const { data: playerPosition } = usePlayerPositionQuery();
+  const { onSetWaypoint } = useWaypoint();
+
   const [coords, setCoords] = useState<string>("");
 
   const onResetCurrentPos = () => {
@@ -43,36 +44,6 @@ export const LocalPage = () => {
       }))
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
   }, [articles, coords, parsedCoords]);
-
-  // Set waypoint for an article by encoding its block coords into an EntityId
-  const onSetWaypoint = async (article: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-
-    const coords = article.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Article has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: article.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
 
   return (
     <section className="p-4 sm:p-6">

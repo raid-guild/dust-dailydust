@@ -1,20 +1,20 @@
-import { encodeBlock } from "@dust/world/internal";
 import { useMemo, useState } from "react";
 
 import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
 import { usePosts } from "@/common/usePosts";
+import { useWaypoint } from "@/common/useWaypoint";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { Post } from "@/utils/types";
 
 export const DiscoverPage = () => {
   const { data: dustClient } = useDustClient();
   const { articles } = usePosts();
   const { articleCategories } = useCategories();
+  const { onSetWaypoint } = useWaypoint();
 
   const [q, setQ] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -57,33 +57,6 @@ export const DiscoverPage = () => {
 
     return results;
   }, [articles, q, selectedCategory, authorFilter, dateSort]);
-
-  const onSetWaypoint = async (article: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-    const coords = article.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Article has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: article.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
 
   return (
     <div className="gap-6 p-4 sm:p-6 grid">

@@ -1,4 +1,3 @@
-import { encodeBlock } from "@dust/world/internal";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,46 +6,17 @@ import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
 import { usePlayerName } from "@/common/usePlayerName";
 import { usePosts } from "@/common/usePosts";
+import { useWaypoint } from "@/common/useWaypoint";
 import { cn } from "@/lib/utils";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: dustClient } = useDustClient();
   const { copyToClipboard } = useCopy();
   const { articles } = usePosts();
-
-  // Set waypoint for the currently viewed article (uses block-entity encoding)
-  const onSetWaypoint = async (art: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-
-    const coords = art?.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Article has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: art.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
+  const { onSetWaypoint } = useWaypoint();
 
   const article = useMemo(
     () => articles.find((p) => p.id === id),

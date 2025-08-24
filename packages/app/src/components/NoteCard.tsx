@@ -1,9 +1,9 @@
-import { encodeBlock } from "@dust/world/internal";
 import { toast } from "sonner";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
 import { usePlayerName } from "@/common/usePlayerName";
+import { useWaypoint } from "@/common/useWaypoint";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatDate, shortenAddress } from "@/utils/helpers";
@@ -13,36 +13,7 @@ export const NoteCard = ({ note }: { note: Post }) => {
   const { data: dustClient } = useDustClient();
   const { playerName } = usePlayerName(note.owner);
   const { copyToClipboard } = useCopy();
-
-  // Set waypoint for an note by encoding its block coords into an EntityId
-  const onSetWaypoint = async (note: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-
-    const coords = note.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Note has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: note.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
+  const { onSetWaypoint } = useWaypoint();
 
   return (
     <div
