@@ -1,6 +1,5 @@
 import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
-import { getRecord } from "@latticexyz/stash/internal";
 import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
@@ -9,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Abi } from "viem";
 
+import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
 import { usePlayerPositionQuery } from "@/common/usePlayerPositionQuery";
 import { usePosts } from "@/common/usePosts";
@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
 import { getDistance, parseCoords } from "@/utils/helpers";
 
@@ -26,8 +25,8 @@ export const BackPage = () => {
   const { data: dustClient } = useDustClient();
   const { data: playerPosition } = usePlayerPositionQuery();
   const { notes } = usePosts();
+  const { noteCategories } = useCategories();
 
-  const [noteCategories, setNoteCategories] = useState<string[]>([]);
   const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -96,26 +95,11 @@ export const BackPage = () => {
   }, [coords, notesByDistance, q, selectedCategory, authorFilter, dateSort]);
 
   useEffect(() => {
-    const categories = (getRecord({
-      stash,
-      table: tables.NoteCategories,
-      key: {},
-    })
-      ?.value?.map((c) => {
-        return getRecord({
-          stash,
-          table: tables.Category,
-          key: { id: c },
-        })?.value;
-      })
-      .filter((c): c is string => !!c) ?? []) as string[];
-
-    setNoteCategories(categories);
     setForm((f) => ({
       ...f,
-      category: categories[0] ?? "",
+      category: noteCategories[0] ?? "",
     }));
-  }, []);
+  }, [noteCategories]);
 
   const onResetCurrentPos = async () => {
     if (!dustClient) return;

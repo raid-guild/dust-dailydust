@@ -1,8 +1,7 @@
 import { encodeBlock } from "@dust/world/internal";
-import { getRecord } from "@latticexyz/stash/internal";
-import { useRecord } from "@latticexyz/stash/react";
 import { useMemo, useState } from "react";
 
+import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
 import { usePosts } from "@/common/usePosts";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -10,31 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import type { Post } from "@/utils/types";
 
 export const DiscoverPage = () => {
   const { data: dustClient } = useDustClient();
   const { articles } = usePosts();
+  const { articleCategories } = useCategories();
 
   const [q, setQ] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [authorFilter, setAuthorFilter] = useState<string>("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
-
-  const articleCategories = (useRecord({
-    stash,
-    table: tables.ArticleCategories,
-    key: {},
-  })
-    ?.value?.map((c) => {
-      return getRecord({
-        stash,
-        table: tables.Category,
-        key: { id: c },
-      })?.value;
-    })
-    .filter((c): c is string => !!c) ?? []) as string[];
 
   const filteredArticles = useMemo(() => {
     const term = q.trim().toLowerCase();

@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Abi } from "viem";
 
+import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { stash, tables } from "@/mud/stash";
@@ -208,8 +209,8 @@ export const ArticleWizard: React.FC<Props> = ({
   onCancel,
 }) => {
   const { data: dustClient } = useDustClient();
+  const { articleCategories } = useCategories();
 
-  const [articleCategories, setArticleCategories] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -226,31 +227,8 @@ export const ArticleWizard: React.FC<Props> = ({
   } | null>(null);
 
   useEffect(() => {
-    const categories = (getRecord({
-      stash,
-      table: tables.ArticleCategories,
-      key: {},
-    })
-      ?.value?.map((c) => {
-        return getRecord({
-          stash,
-          table: tables.Category,
-          key: { id: c },
-        })?.value;
-      })
-      .filter((c): c is string => !!c) ?? []) as string[];
-
-    setArticleCategories(categories);
-    setCategory(categories[0] ?? "");
-  }, []);
-
-  // If the category hasn't been set by the user or by loading an article/draft,
-  // default to the first available category when the list becomes available.
-  useEffect(() => {
-    if (!category && articleCategories.length > 0) {
-      setCategory(articleCategories[0]);
-    }
-  }, [articleCategories, category]);
+    setCategory(articleCategories[0] ?? "");
+  }, [articleCategories]);
 
   useEffect(() => {
     // hydrate from draft or articleId (basic)
