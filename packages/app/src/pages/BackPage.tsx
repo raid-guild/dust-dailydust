@@ -1,7 +1,5 @@
 import { encodeBlock } from "@dust/world/internal";
 import { resourceToHex } from "@latticexyz/common";
-import { getRecord } from "@latticexyz/stash/internal";
-import { useRecords } from "@latticexyz/stash/react";
 import { useMutation } from "@tanstack/react-query";
 import mudConfig from "contracts/mud.config";
 import NoteSystemAbi from "contracts/out/NoteSystem.sol/NoteSystem.abi.json";
@@ -10,34 +8,31 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Abi } from "viem";
 
+import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
+import { usePlayerPositionQuery } from "@/common/usePlayerPositionQuery";
+import { usePosts } from "@/common/usePosts";
 import { NoteCard } from "@/components/NoteCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import { POPULAR_PLACES } from "@/utils/constants";
 import { getDistance, parseCoords } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const BackPage = () => {
   const { data: dustClient } = useDustClient();
+  const { data: playerPosition } = usePlayerPositionQuery();
+  const { notes } = usePosts();
+  const { noteCategories } = useCategories();
 
-  const [noteCategories, setNoteCategories] = useState<string[]>([]);
   const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     content: "",
     category: "",
   });
-  // Anchor position (block coords) shown in preview and used for best-effort anchor creation
-  const [anchorPos, setAnchorPos] = useState<{
-    x: number;
-    y: number;
-    z: number;
-  } | null>(null);
 
   const [showPosFilters, setShowPosFilters] = useState(false);
 
@@ -47,69 +42,21 @@ export const BackPage = () => {
   const [authorFilter, setAuthorFilter] = useState<string>("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
 
-  const posts = useRecords({
-    stash,
-    table: tables.Post,
-  })
-    .map((r): Post => {
-      const isNote =
-        getRecord({
-          stash,
-          table: tables.IsNote,
-          key: { id: r.id as `0x${string}` },
-        })?.value ?? false;
-      let category: null | string = null;
-
-      const anchor =
-        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
-        null;
-
-      if (r.categories[0]) {
-        category =
-          getRecord({
-            stash,
-            table: tables.Category,
-            key: { id: r.categories[0] as `0x${string}` },
-          })?.value ?? null;
-      }
-
-      return {
-        id: r.id,
-        categories: category ? [category] : [],
-        content: (typeof r.content === "string"
-          ? r.content.split("\n\n")
-          : []) as string[],
-        coords: anchor
-          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
-          : null,
-        createdAt: r.createdAt,
-        coverImage: r.coverImage || "/assets/placeholder-notext.png",
-        distance: null,
-        excerpt: "",
-        owner: r.owner,
-        title: r.title,
-        type: isNote ? "note" : "article",
-        updatedAt: r.updatedAt,
-      };
-    })
-    .filter((r) => r.type === "note")
-    .sort((a, b) => Number(b.createdAt - a.createdAt));
-
   const parsedCoords = useMemo(
     () => (coords ? parseCoords(coords) : null),
     [coords]
   );
 
   const notesByDistance = useMemo(() => {
-    if (!parsedCoords) return posts;
-    return posts
+    if (!parsedCoords) return notes;
+    return notes
       .filter((a) => !!a.coords)
       .map((p) => ({
         ...p,
         distance: p.coords ? getDistance(parsedCoords, p.coords) : null,
       }))
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
-  }, [parsedCoords, posts]);
+  }, [notes, parsedCoords]);
 
   const filteredNotes = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -148,54 +95,11 @@ export const BackPage = () => {
   }, [coords, notesByDistance, q, selectedCategory, authorFilter, dateSort]);
 
   useEffect(() => {
-    const categories = (getRecord({
-      stash,
-      table: tables.NoteCategories,
-      key: {},
-    })
-      ?.value?.map((c) => {
-        return getRecord({
-          stash,
-          table: tables.Category,
-          key: { id: c },
-        })?.value;
-      })
-      .filter((c): c is string => !!c) ?? []) as string[];
-
-    setNoteCategories(categories);
     setForm((f) => ({
       ...f,
-      category: categories[0] ?? "",
+      category: noteCategories[0] ?? "",
     }));
-  }, []);
-
-  // Fetch current player position (best-effort) to show anchor in preview when creating a new article
-  useEffect(() => {
-    if (!dustClient) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const pos = await dustClient.provider.request({
-          method: "getPlayerPosition",
-          params: { entity: dustClient.appContext?.userAddress },
-        });
-        if (cancelled) return;
-        setAnchorPos({
-          x: Math.floor(pos.x),
-          y: Math.floor(pos.y),
-          z: Math.floor(pos.z),
-        });
-      } catch (e) {
-        // preview anchor is optional
-        // eslint-disable-next-line no-console
-        console.warn("Could not fetch player position for preview anchor", e);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [dustClient]);
+  }, [noteCategories]);
 
   const onResetCurrentPos = async () => {
     if (!dustClient) return;
@@ -296,12 +200,12 @@ export const BackPage = () => {
       if (!form.title || !form.content) return;
 
       try {
-        if (anchorPos) {
+        if (playerPosition) {
           await createNoteWithAnchor.mutateAsync({
             title: form.title,
             content: form.content,
             category: form.category,
-            anchorPos,
+            anchorPos: playerPosition,
           });
         } else {
           await createNote.mutateAsync({
@@ -321,7 +225,7 @@ export const BackPage = () => {
         });
       }
     },
-    [anchorPos, createNote, createNoteWithAnchor, form]
+    [createNote, createNoteWithAnchor, form, playerPosition]
   );
 
   const isDisabled = useMemo(() => {
@@ -418,8 +322,8 @@ export const BackPage = () => {
                 </form>
                 <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
                   <div className={"font-accent text-[10px] text-neutral-700"}>
-                    {anchorPos
-                      ? `${"Preview anchor"} • x:${anchorPos.x} y:${anchorPos.y} z:${anchorPos.z}`
+                    {playerPosition
+                      ? `${"Preview anchor"} • x:${playerPosition.x} y:${playerPosition.y} z:${playerPosition.z}`
                       : "No anchor"}
                   </div>
                 </footer>

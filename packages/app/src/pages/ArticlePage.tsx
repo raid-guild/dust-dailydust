@@ -1,121 +1,29 @@
-import { encodeBlock } from "@dust/world/internal";
-import { getRecord } from "@latticexyz/stash/internal";
-import { useRecords } from "@latticexyz/stash/react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { hexToString, zeroAddress } from "viem";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
+import { usePlayerName } from "@/common/usePlayerName";
+import { usePosts } from "@/common/usePosts";
+import { useWaypoint } from "@/common/useWaypoint";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: dustClient } = useDustClient();
   const { copyToClipboard } = useCopy();
+  const { articles } = usePosts();
+  const { onSetWaypoint } = useWaypoint();
 
-  // Set waypoint for the currently viewed article (uses block-entity encoding)
-  const onSetWaypoint = async (art: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
+  const article = useMemo(
+    () => articles.find((p) => p.id === id),
+    [id, articles]
+  );
 
-    const coords = art?.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Article has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: art.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
-
-  const posts = useRecords({
-    stash,
-    table: tables.Post,
-  })
-    .map((r): Post => {
-      const isArticle =
-        getRecord({
-          stash,
-          table: tables.IsArticle,
-          key: { id: r.id as `0x${string}` },
-        })?.value ?? false;
-      let category: null | string = null;
-
-      const anchor =
-        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
-        null;
-
-      const excerpt =
-        typeof r.content === "string"
-          ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
-          : "";
-
-      if (r.categories[0]) {
-        category =
-          getRecord({
-            stash,
-            table: tables.Category,
-            key: { id: r.categories[0] as `0x${string}` },
-          })?.value ?? null;
-      }
-
-      return {
-        id: r.id,
-        categories: category ? [category] : [],
-        content: (typeof r.content === "string"
-          ? r.content.split("\n\n")
-          : []) as string[],
-        coords: anchor
-          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
-          : null,
-        createdAt: r.createdAt,
-        coverImage: r.coverImage || "/assets/placeholder-notext.png",
-        distance: null,
-        excerpt,
-        owner: r.owner,
-        title: r.title,
-        type: isArticle ? "article" : "note",
-        updatedAt: r.updatedAt,
-      };
-    })
-    .filter((r) => r.type === "article")
-    .sort((a, b) => Number(b.createdAt - a.createdAt));
-
-  const article = useMemo(() => posts.find((p) => p.id === id), [id, posts]);
-
-  const author = useMemo(() => {
-    const ownerUsername = getRecord({
-      stash,
-      table: tables.PlayerName,
-      key: { player: (article?.owner ?? zeroAddress) as `0x${string}` },
-    })?.name;
-
-    if (ownerUsername) {
-      return hexToString(ownerUsername).replace(/\0+$/, "");
-    }
-    return "Anonymous";
-  }, [article?.owner]);
+  const { playerName } = usePlayerName(article?.owner);
 
   if (!article) {
     return (
@@ -172,7 +80,7 @@ export const ArticlePage = () => {
               toast.success(`Copied ${shortenAddress(article.owner)}`);
             }}
           >
-            @{author}
+            @{playerName}
           </button>
           {" • "}
           {formatDate(article.createdAt)}

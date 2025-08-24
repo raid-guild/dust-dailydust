@@ -1,21 +1,13 @@
-import { getRecord } from "@latticexyz/stash/internal";
-import { useRecords } from "@latticexyz/stash/react";
 import { useEffect, useState } from "react";
 
-import { useDustClient } from "@/common/useDustClient";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { PublishedList } from "@/components/editor/PublishedList";
 import { Button } from "@/components/ui/button";
-import { stash, tables } from "@/mud/stash";
 import { formatDate } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
   const [tab, setTab] = useState<TabKey>("drafts");
-
-  const { data: dustClient } = useDustClient();
-  const myAddress = (dustClient?.appContext.userAddress || "").toLowerCase();
 
   // Minimal markdown -> HTML renderer (same rules as ArticleWizard)
   const renderMarkdownToHtml = (md: string) => {
@@ -109,60 +101,6 @@ export const EditorRoomPage = () => {
       {label}
     </Button>
   );
-
-  const posts = useRecords({
-    stash,
-    table: tables.Post,
-  })
-    .map((r): Post & { rawContent: string } => {
-      const isArticle =
-        getRecord({
-          stash,
-          table: tables.IsArticle,
-          key: { id: r.id as `0x${string}` },
-        })?.value ?? false;
-      let category: null | string = null;
-
-      const anchor =
-        getRecord({ stash, table: tables.PostAnchor, key: { id: r.id } }) ??
-        null;
-
-      const excerpt =
-        typeof r.content === "string"
-          ? (r.content.split("\n\n")[0] || r.content).slice(0, 240)
-          : "";
-
-      if (r.categories[0]) {
-        category =
-          getRecord({
-            stash,
-            table: tables.Category,
-            key: { id: r.categories[0] as `0x${string}` },
-          })?.value ?? null;
-      }
-
-      return {
-        id: r.id,
-        categories: category ? [category] : [],
-        content: (typeof r.content === "string"
-          ? r.content.split("\n\n")
-          : []) as string[],
-        coords: anchor
-          ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
-          : null,
-        createdAt: r.createdAt,
-        coverImage: r.coverImage || "/assets/placeholder-notext.png",
-        distance: null,
-        excerpt,
-        owner: r.owner,
-        rawContent: r.content,
-        title: r.title,
-        type: isArticle ? "article" : "note",
-        updatedAt: r.updatedAt,
-      };
-    })
-    .filter((r) => r.type === "article")
-    .sort((a, b) => Number(b.createdAt - a.createdAt));
 
   // Drafts stored in localStorage under same key as ArticleWizard
   const DRAFT_KEY = "editor-article-drafts";
@@ -325,8 +263,6 @@ export const EditorRoomPage = () => {
 
         {tab === "published" && (
           <PublishedList
-            published={posts}
-            myAddress={myAddress}
             onEdit={(id) => openArticle(id)}
             renderMarkdownToHtml={renderMarkdownToHtml}
           />

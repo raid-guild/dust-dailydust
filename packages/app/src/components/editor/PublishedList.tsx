@@ -2,22 +2,22 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useDustClient } from "@/common/useDustClient";
+import { usePlayerEntityId } from "@/common/usePlayerEntityId";
+import { usePosts } from "@/common/usePosts";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/helpers";
-import type { Post } from "@/utils/types";
 
 export const PublishedList = ({
-  published,
-  myAddress,
   onEdit,
   renderMarkdownToHtml,
 }: {
-  published: (Post & { rawContent: string })[];
-  myAddress: string;
   onEdit: (id: string) => void;
   renderMarkdownToHtml: (md: string) => string;
 }) => {
   const { data: dustClient } = useDustClient();
+  const { data: playerAddress } = usePlayerEntityId();
+  const { articles } = usePosts();
+
   const [search, setSearch] = useState("");
   const [locX, setLocX] = useState<string>("");
   const [locY, setLocY] = useState<string>("");
@@ -50,7 +50,7 @@ export const PublishedList = ({
     }
   };
 
-  const filtered = useMemo(() => {
+  const filteredArticles = useMemo(() => {
     const s = search.trim().toLowerCase();
     const hasLoc = locX !== "" || locY !== "" || locZ !== "" || radius !== "";
     const rx = locX === "" ? null : Number(locX);
@@ -58,8 +58,9 @@ export const PublishedList = ({
     const rz = locZ === "" ? null : Number(locZ);
     const rrad = radius === "" ? null : Number(radius);
 
-    return published.filter((p) => {
+    return articles.filter((p) => {
       if (!p) return false;
+      if (p.owner !== playerAddress) return false;
       if (s) {
         const hay = (p.title || "") + "\n" + (p.content || "");
         if (!hay.toLowerCase().includes(s)) return false;
@@ -88,7 +89,7 @@ export const PublishedList = ({
 
       return true;
     });
-  }, [published, search, locX, locY, locZ, radius]);
+  }, [articles, locX, locY, locZ, playerAddress, radius, search]);
 
   return (
     <div className="grid gap-3">
@@ -144,12 +145,12 @@ export const PublishedList = ({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {filteredArticles.length === 0 ? (
         <div className="p-4 bg-panel border border-neutral-200 rounded">
           No articles match filters.
         </div>
       ) : (
-        filtered.map((p) => (
+        filteredArticles.map((p) => (
           <div
             key={p.id}
             className="p-3 border border-neutral-200 rounded bg-white"
@@ -160,7 +161,7 @@ export const PublishedList = ({
                   {p.title || "Untitled"}
                 </div>
                 <div className="text-xs text-text-secondary">
-                  By {p.owner === myAddress ? "you" : p.owner} •{" "}
+                  By {p.owner === playerAddress ? "you" : p.owner} •{" "}
                   {formatDate(p.updatedAt)}
                 </div>
               </div>

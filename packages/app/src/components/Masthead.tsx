@@ -51,8 +51,6 @@ export const Masthead = () => {
     });
   }, []);
 
-  const handleClose = useCallback(() => setOpen(false), []);
-
   const handleUnpin = useCallback(() => {
     setPinned(false);
     setOpen(false);
@@ -130,9 +128,7 @@ export const Masthead = () => {
       </div>
 
       {/* Pinned app mount */}
-      {open && (
-        <PinnedApp open={open} onClose={handleClose} onUnpin={handleUnpin} />
-      )}
+      {open && <PinnedApp open={open} onUnpin={handleUnpin} />}
     </header>
   );
 };

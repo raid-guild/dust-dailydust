@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Abi } from "viem";
 
+import { useCategories } from "@/common/useCategories";
 import { useDustClient } from "@/common/useDustClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { stash, tables } from "@/mud/stash";
@@ -208,8 +209,8 @@ export const ArticleWizard: React.FC<Props> = ({
   onCancel,
 }) => {
   const { data: dustClient } = useDustClient();
+  const { articleCategories } = useCategories();
 
-  const [articleCategories, setArticleCategories] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -226,31 +227,10 @@ export const ArticleWizard: React.FC<Props> = ({
   } | null>(null);
 
   useEffect(() => {
-    const categories = (getRecord({
-      stash,
-      table: tables.ArticleCategories,
-      key: {},
-    })
-      ?.value?.map((c) => {
-        return getRecord({
-          stash,
-          table: tables.Category,
-          key: { id: c },
-        })?.value;
-      })
-      .filter((c): c is string => !!c) ?? []) as string[];
-
-    setArticleCategories(categories);
-    setCategory(categories[0] ?? "");
-  }, []);
-
-  // If the category hasn't been set by the user or by loading an article/draft,
-  // default to the first available category when the list becomes available.
-  useEffect(() => {
-    if (!category && articleCategories.length > 0) {
-      setCategory(articleCategories[0]);
-    }
-  }, [articleCategories, category]);
+    // Only choose a default when creating a new article and category isn't set yet
+    if (articleId) return;
+    if (!category) setCategory(articleCategories[0] ?? "");
+  }, [articleCategories, articleId, category]);
 
   useEffect(() => {
     // hydrate from draft or articleId (basic)
@@ -389,7 +369,18 @@ export const ArticleWizard: React.FC<Props> = ({
           else setCoverImage("");
           setTitle(rec.title ?? "");
           setContent(rec.content ?? "");
+          setCategory(rec.categories[0] ?? "");
           setDraftLocalId(null);
+
+          const articleCategoryId = rec.categories[0] ?? "";
+          if (articleCategoryId) {
+            const articleCategory = getRecord({
+              stash,
+              table: tables.Category,
+              key: { id: articleCategoryId },
+            })?.value;
+            if (articleCategory) setCategory(articleCategory);
+          }
         }
 
         // Try to load an existing anchor for this post so preview shows anchor coords

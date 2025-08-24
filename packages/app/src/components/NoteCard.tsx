@@ -1,63 +1,19 @@
-import { encodeBlock } from "@dust/world/internal";
-import { getRecord } from "@latticexyz/stash/internal";
-import { useMemo } from "react";
 import { toast } from "sonner";
-import { hexToString, zeroAddress } from "viem";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
+import { usePlayerName } from "@/common/usePlayerName";
+import { useWaypoint } from "@/common/useWaypoint";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { stash, tables } from "@/mud/stash";
 import { formatDate, shortenAddress } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 export const NoteCard = ({ note }: { note: Post }) => {
   const { data: dustClient } = useDustClient();
+  const { playerName } = usePlayerName(note.owner);
   const { copyToClipboard } = useCopy();
-
-  // Set waypoint for an note by encoding its block coords into an EntityId
-  const onSetWaypoint = async (note: Post) => {
-    if (!dustClient) {
-      alert("Wallet/client not ready");
-      return;
-    }
-
-    const coords = note.coords;
-    if (!coords || typeof coords.x !== "number") {
-      alert("Note has no anchor/coordinates to set a waypoint for");
-      return;
-    }
-
-    try {
-      const bx = Math.floor(coords.x);
-      const by = Math.floor(coords.y);
-      const bz = Math.floor(coords.z);
-      const entityId = encodeBlock([bx, by, bz]);
-
-      await dustClient.provider.request({
-        method: "setWaypoint",
-        params: { entity: entityId, label: note.title || "Waypoint" },
-      });
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to set waypoint", e);
-      alert("Failed to set waypoint");
-    }
-  };
-
-  const author = useMemo(() => {
-    const ownerUsername = getRecord({
-      stash,
-      table: tables.PlayerName,
-      key: { player: (note?.owner ?? zeroAddress) as `0x${string}` },
-    })?.name;
-
-    if (ownerUsername) {
-      return hexToString(ownerUsername).replace(/\0+$/, "");
-    }
-    return "Anonymous";
-  }, [note?.owner]);
+  const { onSetWaypoint } = useWaypoint();
 
   return (
     <div
@@ -88,7 +44,7 @@ export const NoteCard = ({ note }: { note: Post }) => {
               toast.success(`Copied ${shortenAddress(note.owner)}`);
             }}
           >
-            @{author}
+            @{playerName}
           </button>
         </div>
       </div>
