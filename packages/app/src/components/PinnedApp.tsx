@@ -29,7 +29,7 @@ export const PinnedApp: React.FC<Props> = ({ open, onUnpin }) => {
       }))
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
 
-    return articlesByDistance[0] ?? null;
+    return articlesByDistance[0] ?? articles[0];
   }, [articles, playerPosition]);
 
   // keep a state-backed `closestState` so the UI updates reliably when the memoized

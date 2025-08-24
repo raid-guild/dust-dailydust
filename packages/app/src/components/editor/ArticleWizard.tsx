@@ -227,8 +227,10 @@ export const ArticleWizard: React.FC<Props> = ({
   } | null>(null);
 
   useEffect(() => {
-    setCategory(articleCategories[0] ?? "");
-  }, [articleCategories]);
+    // Only choose a default when creating a new article and category isn't set yet
+    if (articleId) return;
+    if (!category) setCategory(articleCategories[0] ?? "");
+  }, [articleCategories, articleId, category]);
 
   useEffect(() => {
     // hydrate from draft or articleId (basic)
@@ -367,7 +369,18 @@ export const ArticleWizard: React.FC<Props> = ({
           else setCoverImage("");
           setTitle(rec.title ?? "");
           setContent(rec.content ?? "");
+          setCategory(rec.categories[0] ?? "");
           setDraftLocalId(null);
+
+          const articleCategoryId = rec.categories[0] ?? "";
+          if (articleCategoryId) {
+            const articleCategory = getRecord({
+              stash,
+              table: tables.Category,
+              key: { id: articleCategoryId },
+            })?.value;
+            if (articleCategory) setCategory(articleCategory);
+          }
         }
 
         // Try to load an existing anchor for this post so preview shows anchor coords

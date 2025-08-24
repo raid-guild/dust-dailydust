@@ -10,7 +10,7 @@ export const useCategories = () => {
   useEffect(() => {
     const _articleCategories = (getRecord({
       stash,
-      table: tables.NoteCategories,
+      table: tables.ArticleCategories,
       key: {},
     })
       ?.value?.map((c) => {
