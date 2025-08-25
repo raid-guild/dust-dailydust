@@ -11,7 +11,7 @@ import { IsArticle } from "./tables/IsArticle.sol";
 import { IsEditor } from "./tables/IsEditor.sol";
 import { IsEditorPublication } from "./tables/IsEditorPublication.sol";
 import { IsNote } from "./tables/IsNote.sol";
-import { LastEditorPublication } from "./tables/LastEditorPublication.sol";
+import { LatestEditorPublication } from "./tables/LatestEditorPublication.sol";
 import { NoteCategories } from "./tables/NoteCategories.sol";
 import { Post, PostData } from "./tables/Post.sol";
 import { PostAnchor, PostAnchorData } from "./tables/PostAnchor.sol";

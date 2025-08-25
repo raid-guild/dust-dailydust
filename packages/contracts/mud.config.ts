@@ -57,7 +57,15 @@ export default defineWorld({
     IsEditor: "bool", // ID is player ID
     IsEditorPublication: "bool", // ID is collection ID
     IsNote: "bool", // ID is Post ID
-    LastEditorPublication: "uint64", // timestamp of last front page publication
+    LatestEditorPublication: {
+      schema: {
+        value: "uint64",
+      },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
+    },
     NoteCategories: {
       schema: {
         value: "bytes32[]",

@@ -23,12 +23,29 @@ export const FrontPage = () => {
     table: tables.Collection,
   })
     .map((r) => {
-      return getRecord({
+      const isFrontPage = getRecord({
+        stash,
+        table: tables.IsEditorPublication,
+        key: { id: r.id as `0x${string}` },
+      });
+      const collection = getRecord({
         stash,
         table: tables.Collection,
         key: { id: r.id as `0x${string}` },
       });
+
+      return {
+        id: collection?.id ?? "",
+        createdAt: collection?.createdAt ?? 0,
+        owner: collection?.owner ?? "",
+        updatedAt: collection?.updatedAt ?? 0,
+        coverImage: collection?.coverImage ?? "",
+        description: collection?.description ?? "",
+        title: collection?.title ?? "",
+        isFrontPage: isFrontPage ?? false,
+      };
     })
+    .filter((r) => r.isFrontPage)
     .sort((a, b) => Number(b?.createdAt ?? 0) - Number(a?.createdAt ?? 0))[0];
 
   const frontPagePostIds = useMemo(() => {
@@ -39,7 +56,7 @@ export const FrontPage = () => {
         key: { id: frontPageCollection?.id as `0x${string}` },
       })?.posts ?? []
     );
-  }, [frontPageCollection]);
+  }, [frontPageCollection?.id]);
 
   const frontPageArticles = useMemo(() => {
     return (
@@ -56,7 +73,7 @@ export const FrontPage = () => {
     );
   }, [articles, frontPagePostIds]);
 
-  if (!frontPageCollection)
+  if (!frontPageCollection?.id)
     return (
       <TopBanner
         title="An Error Occurred"

@@ -6,7 +6,7 @@ import { Collection, CollectionData } from "../codegen/tables/Collection.sol";
 import { CollectionPosts } from "../codegen/tables/CollectionPosts.sol";
 import { IsEditor } from "../codegen/tables/IsEditor.sol";
 import { IsEditor } from "../codegen/tables/IsEditor.sol";
-import { LastEditorPublication } from "../codegen/tables/LastEditorPublication.sol";
+import { LatestEditorPublication } from "../codegen/tables/LatestEditorPublication.sol";
 import { IsEditorPublication } from "../codegen/tables/IsEditorPublication.sol";
 import { encodePlayerEntityId } from "../Libraries/PlayerEntityIdLib.sol";
 
@@ -52,13 +52,13 @@ contract CollectionSystem is System {
 
     bytes32 playerId = encodePlayerEntityId(_msgSender());
     if (IsEditor.get(playerId)) {
-      uint64 timeSinceLastPublication = currentTime - LastEditorPublication.get(collectionId);
+      uint64 timeSinceLastPublication = currentTime - LatestEditorPublication.get();
       if (timeSinceLastPublication < 7 days) {
         revert("Editor publication interval not met");
       }
 
       IsEditorPublication.set(collectionId, true);
-      LastEditorPublication.set(collectionId, currentTime);
+      LatestEditorPublication.set(currentTime);
     }
 
     return collectionId;

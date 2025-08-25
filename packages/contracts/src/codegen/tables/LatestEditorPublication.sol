@@ -16,15 +16,15 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library LastEditorPublication {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "thedailydust", name: "LastEditorPublic", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x74627468656461696c796475737400004c617374456469746f725075626c6963);
+library LatestEditorPublication {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "thedailydust", name: "LatestEditorPubl", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x74627468656461696c796475737400004c6174657374456469746f725075626c);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0008010008000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (bytes32)
-  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of ()
+  Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (uint64)
   Schema constant _valueSchema = Schema.wrap(0x0008010007000000000000000000000000000000000000000000000000000000);
 
@@ -33,8 +33,7 @@ library LastEditorPublication {
    * @return keyNames An array of strings with the names of key fields.
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
-    keyNames = new string[](1);
-    keyNames[0] = "id";
+    keyNames = new string[](0);
   }
 
   /**
@@ -63,9 +62,8 @@ library LastEditorPublication {
   /**
    * @notice Get value.
    */
-  function getValue(bytes32 id) internal view returns (uint64 value) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function getValue() internal view returns (uint64 value) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint64(bytes8(_blob)));
@@ -74,9 +72,8 @@ library LastEditorPublication {
   /**
    * @notice Get value.
    */
-  function _getValue(bytes32 id) internal view returns (uint64 value) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function _getValue() internal view returns (uint64 value) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint64(bytes8(_blob)));
@@ -85,9 +82,8 @@ library LastEditorPublication {
   /**
    * @notice Get value.
    */
-  function get(bytes32 id) internal view returns (uint64 value) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function get() internal view returns (uint64 value) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint64(bytes8(_blob)));
@@ -96,9 +92,8 @@ library LastEditorPublication {
   /**
    * @notice Get value.
    */
-  function _get(bytes32 id) internal view returns (uint64 value) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function _get() internal view returns (uint64 value) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint64(bytes8(_blob)));
@@ -107,9 +102,8 @@ library LastEditorPublication {
   /**
    * @notice Set value.
    */
-  function setValue(bytes32 id, uint64 value) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function setValue(uint64 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
@@ -117,9 +111,8 @@ library LastEditorPublication {
   /**
    * @notice Set value.
    */
-  function _setValue(bytes32 id, uint64 value) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function _setValue(uint64 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
@@ -127,9 +120,8 @@ library LastEditorPublication {
   /**
    * @notice Set value.
    */
-  function set(bytes32 id, uint64 value) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function set(uint64 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
@@ -137,9 +129,8 @@ library LastEditorPublication {
   /**
    * @notice Set value.
    */
-  function _set(bytes32 id, uint64 value) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function _set(uint64 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
@@ -147,9 +138,8 @@ library LastEditorPublication {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function deleteRecord() internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -157,9 +147,8 @@ library LastEditorPublication {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function _deleteRecord() internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -190,9 +179,8 @@ library LastEditorPublication {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(bytes32 id) internal pure returns (bytes32[] memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
+  function encodeKeyTuple() internal pure returns (bytes32[] memory) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
 
     return _keyTuple;
   }
