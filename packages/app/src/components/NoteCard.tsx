@@ -7,6 +7,7 @@ import { useWaypoint } from "@/common/useWaypoint";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatDate, shortenAddress } from "@/utils/helpers";
+import { renderMarkdownToHtml } from "@/utils/markdown";
 import type { Post } from "@/utils/types";
 
 export const NoteCard = ({ note }: { note: Post }) => {
@@ -53,9 +54,13 @@ export const NoteCard = ({ note }: { note: Post }) => {
         {note.title}
       </h3>
 
-      <p className={"text-sm leading-relaxed text-neutral-800"}>
-        {note.content[0]}
-      </p>
+      {/* Render note content as markdown with compact styling */}
+      <div
+        className="text-sm leading-relaxed text-neutral-800 prose prose-sm max-w-none"
+        dangerouslySetInnerHTML={{
+          __html: renderMarkdownToHtml(note.rawContent || note.content[0] || "")
+        }}
+      />
 
       <div className="align-start flex flex-col space-y-1 text-xs pt-2 border-t border-neutral-300">
         {note.coords && (
