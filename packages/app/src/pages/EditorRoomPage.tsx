@@ -4,92 +4,11 @@ import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { PublishedList } from "@/components/editor/PublishedList";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/helpers";
+import { renderMarkdownToHtml } from "@/utils/markdown";
 
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
   const [tab, setTab] = useState<TabKey>("drafts");
-
-  // Minimal markdown -> HTML renderer (same rules as ArticleWizard)
-  const renderMarkdownToHtml = (md: string) => {
-    if (!md) return "";
-    const escapeHtml = (s: string) =>
-      s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    const text = md.replace(/\r\n?/g, "\n");
-    const lines = text.split("\n");
-    let html = "";
-    let inList = false;
-    let paraBuf: string[] = [];
-    const pushPara = () => {
-      if (!paraBuf.length) return;
-      html += `<p>${paraBuf.join("\n").replace(/\n/g, "<br />")}</p>`;
-      paraBuf = [];
-    };
-    for (let i = 0; i < lines.length; i++) {
-      const ln = lines[i];
-      if (/^\s*([-*])\s+/.test(ln)) {
-        pushPara();
-        if (!inList) {
-          inList = true;
-          html += "<ul>";
-        }
-        const item = ln.replace(/^\s*([-*])\s+/, "");
-        const content = escapeHtml(item)
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g, "<em>$1</em>");
-        html += `<li>${content}</li>`;
-        continue;
-      } else {
-        if (inList) {
-          html += "</ul>";
-          inList = false;
-        }
-      }
-
-      const h1 = ln.match(/^\s*#\s+(.*)/);
-      const h2 = ln.match(/^\s*##\s+(.*)/);
-      const h3 = ln.match(/^\s*###\s+(.*)/);
-      if (h1) {
-        pushPara();
-        html += `<h1>${escapeHtml(h1[1])
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h1>`;
-        continue;
-      }
-      if (h2) {
-        pushPara();
-        html += `<h2>${escapeHtml(h2[1])
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h2>`;
-        continue;
-      }
-      if (h3) {
-        pushPara();
-        html += `<h3>${escapeHtml(h3[1])
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h3>`;
-        continue;
-      }
-
-      if (ln.trim() === "") {
-        pushPara();
-        continue;
-      }
-
-      paraBuf.push(
-        escapeHtml(ln)
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      );
-    }
-    if (inList) html += "</ul>";
-    pushPara();
-    return html;
-  };
 
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
     <Button
@@ -111,10 +30,10 @@ export const EditorRoomPage = () => {
       const arr = JSON.parse(raw);
       return Array.isArray(arr)
         ? arr.sort(
-            (a, b) =>
-              (b.lastSaved || b.createdAt || 0) -
-              (a.lastSaved || a.createdAt || 0)
-          )
+          (a, b) =>
+            (b.lastSaved || b.createdAt || 0) -
+            (a.lastSaved || a.createdAt || 0)
+        )
         : [];
     } catch {
       return [];
