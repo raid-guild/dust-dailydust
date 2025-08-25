@@ -10,6 +10,7 @@ import { useWaypoint } from "@/common/useWaypoint";
 import { cn } from "@/lib/utils";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 import { formatDate, shortenAddress } from "@/utils/helpers";
+import { renderMarkdownToHtml } from "@/utils/markdown";
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -104,22 +105,13 @@ export const ArticlePage = () => {
           "gap-8 leading-relaxed lg:columns-3 md:columns-2 text-[16px] text-neutral-900 [column-fill:_balance]"
         }
       >
-        {(article.content && article.content.length > 0
-          ? article.content
-          : [article.excerpt]
-        ).map((p, idx) => (
-          <p
-            key={idx}
-            className={cn(
-              "mb-4 break-inside-avoid",
-              idx === 0 &&
-                "first-letter:text-5xl first-letter:leading-none first-letter:mr-2 first-letter:float-left"
-            )}
-            style={idx === 0 ? { fontVariantLigatures: "none" } : undefined}
-          >
-            {p}
-          </p>
-        ))}
+        {/* Render article content as markdown with proper styling */}
+        <div
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: renderMarkdownToHtml(article.rawContent || article.excerpt)
+          }}
+        />
       </div>
 
       <footer className="border-neutral-900 border-t flex flex-wrap gap-3 items-center justify-between mt-6 pt-3">
