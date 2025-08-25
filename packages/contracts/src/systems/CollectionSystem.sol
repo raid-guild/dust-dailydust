@@ -15,7 +15,7 @@ contract CollectionSystem is System {
    * @dev Create a new collection
    * @param title Collection title
    * @param description Collection description
-   * @param coverImage Collection cover image
+   * @param coverImage Collection cover image (optional)
    * @param postIds Array of post IDs to include in the collection
    */
   function createCollection(
@@ -28,29 +28,27 @@ contract CollectionSystem is System {
 
     // Ensure the collection does not already exist (owner == address(0) sentinel)
     require(Collection.getOwner(collectionId) == address(0), "Collection exists");
+    require(bytes(title).length > 0, "Title is required");
+    require(bytes(description).length > 0, "Description is required");
 
     uint64 currentTime = uint64(block.timestamp);
 
     Collection.set(
-        collectionId,
-        CollectionData({
-          createdAt: currentTime,
-          owner: _msgSender(),
-          updatedAt: currentTime,
-          coverImage: coverImage,
-          description: description,
-          title: title
-        })
-      );
+      collectionId,
+      CollectionData({
+        createdAt: currentTime,
+        owner: _msgSender(),
+        updatedAt: currentTime,
+        coverImage: coverImage,
+        description: description,
+        title: title
+      })
+    );
 
     require(postIds.length > 0, "Collection must have at least one post");
     require(postIds.length <= 5, "Collection cannot have more than 5 posts");
 
-    CollectionPosts.set(
-      collectionId,
-      postIds
-    );
-
+    CollectionPosts.set(collectionId, postIds);
 
     bytes32 playerId = encodePlayerEntityId(_msgSender());
     if (IsEditor.get(playerId)) {
@@ -72,10 +70,17 @@ contract CollectionSystem is System {
    * @param description Collection description
    * @param coverImage Collection cover image
    */
-  function updateCollection(bytes32 collectionId, string memory title, string memory description, string memory coverImage) public returns (bytes32) {
+  function updateCollection(
+    bytes32 collectionId,
+    string memory title,
+    string memory description,
+    string memory coverImage
+  ) public returns (bytes32) {
     address owner = Collection.getOwner(collectionId);
     require(owner != address(0), "Collection does not exist");
     require(owner == _msgSender(), "Only owner can update collection");
+    require(bytes(title).length > 0, "Title is required");
+    require(bytes(description).length > 0, "Description is required");
 
     Collection.setTitle(collectionId, title);
     Collection.setDescription(collectionId, description);
@@ -105,7 +110,7 @@ contract CollectionSystem is System {
    * @param collectionId The ID of the collection to update
    * @param postIds The IDs of the posts to add or update
    */
-  function updateCollectionPosts(bytes32 collectionId, bytes32[] memory postIds) public returns (bytes32){
+  function updateCollectionPosts(bytes32 collectionId, bytes32[] memory postIds) public returns (bytes32) {
     address owner = Collection.getOwner(collectionId);
     require(owner != address(0), "Collection does not exist");
     require(owner == _msgSender(), "Only owner can modify collection");

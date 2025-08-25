@@ -37,6 +37,10 @@ struct RootCallWrapper {
 library AdminSystemLib {
   error AdminSystemLib_CallingFromRootSystem();
 
+  function addEditor(AdminSystemType self, address editor) internal {
+    return CallWrapper(self.toResourceId(), address(0)).addEditor(editor);
+  }
+
   function addArticleCategory(AdminSystemType self, string memory categoryName) internal returns (bytes32 categoryId) {
     return CallWrapper(self.toResourceId(), address(0)).addArticleCategory(categoryName);
   }
@@ -51,6 +55,16 @@ library AdminSystemLib {
 
   function removeNoteCategory(AdminSystemType self, bytes32 categoryId) internal {
     return CallWrapper(self.toResourceId(), address(0)).removeNoteCategory(categoryId);
+  }
+
+  function addEditor(CallWrapper memory self, address editor) internal {
+    // if the contract calling this function is a root system, it should use `callAsRoot`
+    if (address(_world()) == address(this)) revert AdminSystemLib_CallingFromRootSystem();
+
+    bytes memory systemCall = abi.encodeCall(_addEditor_address.addEditor, (editor));
+    self.from == address(0)
+      ? _world().call(self.systemId, systemCall)
+      : _world().callFrom(self.from, self.systemId, systemCall);
   }
 
   function addArticleCategory(
@@ -104,6 +118,11 @@ library AdminSystemLib {
     self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+  }
+
+  function addEditor(RootCallWrapper memory self, address editor) internal {
+    bytes memory systemCall = abi.encodeCall(_addEditor_address.addEditor, (editor));
+    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
   }
 
   function addArticleCategory(
@@ -179,6 +198,10 @@ library AdminSystemLib {
  *
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
+
+interface _addEditor_address {
+  function addEditor(address editor) external;
+}
 
 interface _addArticleCategory_string {
   function addArticleCategory(string memory categoryName) external;

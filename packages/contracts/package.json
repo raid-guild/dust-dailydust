@@ -13,6 +13,7 @@
     "manager:registerApp:local": ". ./set-env.sh local && forge script RegisterApp --broadcast --sig 'run(address)' -- $WORLD_ADDRESS",
     "manager:registerApp:redstone": ". ./set-env.sh redstone && forge script RegisterApp --aws --sig 'run(address)' -- $WORLD_ADDRESS",
     "admin:addCategory:redstone": "forge script script/AddCategory.s.sol:AddCategory --fork-url https://rpc.redstonechain.com --broadcast",
+    "admin:addEditor:redstone": "forge script script/AddEditor.s.sol:AddEditor --fork-url https://rpc.redstonechain.com --broadcast",
     "lint": "pnpm run prettier && pnpm run solhint",
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",

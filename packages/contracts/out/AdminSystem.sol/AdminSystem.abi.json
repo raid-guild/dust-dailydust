@@ -59,6 +59,19 @@
   },
   {
     "type": "function",
+    "name": "addEditor",
+    "inputs": [
+      {
+        "name": "editor",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "addNoteCategory",
     "inputs": [
       {
@@ -179,6 +192,37 @@
         "type": "bytes32",
         "indexed": false,
         "internalType": "EncodedLengths"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_SpliceStaticData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
       },
       {
         "name": "data",

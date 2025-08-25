@@ -2,10 +2,15 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { ArticleCategories, Category, NoteCategories } from "../codegen/index.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { ArticleCategories, Category, IsEditor, NoteCategories } from "../codegen/index.sol";
+import { encodePlayerEntityId } from "../Libraries/PlayerEntityIdLib.sol";
 
 contract AdminSystem is System {
+  function addEditor(address editor) external {
+    bytes32 playerId = encodePlayerEntityId(editor);
+    IsEditor.set(playerId, true);
+  }
+
   function addArticleCategory(string memory categoryName) external returns (bytes32 categoryId) {
     categoryId = keccak256(abi.encodePacked(categoryName));
     Category.set(categoryId, categoryName);

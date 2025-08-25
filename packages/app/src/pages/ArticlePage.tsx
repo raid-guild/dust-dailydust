@@ -9,7 +9,7 @@ import { usePosts } from "@/common/usePosts";
 import { useWaypoint } from "@/common/useWaypoint";
 import { cn } from "@/lib/utils";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
-import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
+import { formatDate, shortenAddress } from "@/utils/helpers";
 
 export const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -93,7 +93,7 @@ export const ArticlePage = () => {
             alt={article.title}
             className="duration-500 grayscale hover:grayscale-0 object-cover transition-all w-full"
             height={720}
-            src={uriToHttp(article.coverImage)[0]}
+            src={article.coverImage}
             width={1200}
           />
         </div>
