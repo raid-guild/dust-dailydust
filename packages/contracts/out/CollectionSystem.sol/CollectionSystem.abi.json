@@ -40,36 +40,8 @@
   },
   {
     "type": "function",
-    "name": "addNoteToCollection",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "noteId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "index",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "createCollection",
     "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
       {
         "name": "title",
         "type": "string",
@@ -79,9 +51,25 @@
         "name": "description",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "coverImage",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "postIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -94,25 +82,13 @@
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "removeNoteFromCollection",
-    "inputs": [
+    "outputs": [
       {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "noteId",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -136,24 +112,6 @@
   },
   {
     "type": "function",
-    "name": "transferCollectionOwnership",
-    "inputs": [
-      {
-        "name": "collectionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "updateCollection",
     "inputs": [
       {
@@ -170,9 +128,44 @@
         "name": "description",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "coverImage",
+        "type": "string",
+        "internalType": "string"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateCollectionPosts",
+    "inputs": [
+      {
+        "name": "collectionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "postIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {

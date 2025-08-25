@@ -46,16 +46,18 @@ export default defineWorld({
       },
       key: ["id"],
     },
-    CollectionPost: {
+    CollectionPosts: {
       schema: {
-        collectionId: "bytes32",
-        noteId: "bytes32",
-        index: "uint16",
+        id: "bytes32", // Collection ID
+        posts: "bytes32[]", // array of Post IDs
       },
-      key: ["collectionId", "noteId"],
+      key: ["id"],
     },
     IsArticle: "bool", // ID is Post ID
+    IsEditor: "bool", // ID is player ID
+    IsEditorPublication: "bool", // ID is collection ID
     IsNote: "bool", // ID is Post ID
+    LastEditorPublication: "uint64", // timestamp of last front page publication
     NoteCategories: {
       schema: {
         value: "bytes32[]",
