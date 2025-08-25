@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { ARTICLE_PAGE_PATH } from "@/Routes";
-import { uriToHttp } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 export const ArticleCard = ({
@@ -47,7 +46,7 @@ export const ArticleCard = ({
         )}
         <img
           alt={article.title}
-          src={uriToHttp(article.coverImage)[0]}
+          src={article.coverImage}
           loading="lazy"
           onLoad={() => setImgLoaded(true)}
           className={`aspect-video grayscale hover:grayscale-0 object-cover w-full transition-all duration-500 ${

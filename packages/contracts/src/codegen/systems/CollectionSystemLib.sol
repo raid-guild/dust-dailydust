@@ -39,181 +39,184 @@ library CollectionSystemLib {
 
   function createCollection(
     CollectionSystemType self,
-    bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
-    return CallWrapper(self.toResourceId(), address(0)).createCollection(collectionId, title, description);
+    string memory description,
+    string memory coverImage,
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).createCollection(title, description, coverImage, postIds);
   }
 
   function updateCollection(
     CollectionSystemType self,
     bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
-    return CallWrapper(self.toResourceId(), address(0)).updateCollection(collectionId, title, description);
+    string memory description,
+    string memory coverImage
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).updateCollection(collectionId, title, description, coverImage);
   }
 
-  function deleteCollection(CollectionSystemType self, bytes32 collectionId) internal {
+  function deleteCollection(CollectionSystemType self, bytes32 collectionId) internal returns (bytes32 __auxRet0) {
     return CallWrapper(self.toResourceId(), address(0)).deleteCollection(collectionId);
   }
 
-  function addNoteToCollection(CollectionSystemType self, bytes32 collectionId, bytes32 noteId, uint16 index) internal {
-    return CallWrapper(self.toResourceId(), address(0)).addNoteToCollection(collectionId, noteId, index);
-  }
-
-  function removeNoteFromCollection(CollectionSystemType self, bytes32 collectionId, bytes32 noteId) internal {
-    return CallWrapper(self.toResourceId(), address(0)).removeNoteFromCollection(collectionId, noteId);
-  }
-
-  function transferCollectionOwnership(CollectionSystemType self, bytes32 collectionId, address newOwner) internal {
-    return CallWrapper(self.toResourceId(), address(0)).transferCollectionOwnership(collectionId, newOwner);
+  function updateCollectionPosts(
+    CollectionSystemType self,
+    bytes32 collectionId,
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
+    return CallWrapper(self.toResourceId(), address(0)).updateCollectionPosts(collectionId, postIds);
   }
 
   function createCollection(
     CallWrapper memory self,
-    bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
+    string memory description,
+    string memory coverImage,
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _createCollection_bytes32_string_string.createCollection,
-      (collectionId, title, description)
+      _createCollection_string_string_string_bytes32Array.createCollection,
+      (title, description, coverImage, postIds)
     );
-    self.from == address(0)
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function updateCollection(
     CallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
+    string memory description,
+    string memory coverImage
+  ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _updateCollection_bytes32_string_string.updateCollection,
-      (collectionId, title, description)
+      _updateCollection_bytes32_string_string_string.updateCollection,
+      (collectionId, title, description, coverImage)
     );
-    self.from == address(0)
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function deleteCollection(CallWrapper memory self, bytes32 collectionId) internal {
+  function deleteCollection(CallWrapper memory self, bytes32 collectionId) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(_deleteCollection_bytes32.deleteCollection, (collectionId));
-    self.from == address(0)
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function addNoteToCollection(CallWrapper memory self, bytes32 collectionId, bytes32 noteId, uint16 index) internal {
+  function updateCollectionPosts(
+    CallWrapper memory self,
+    bytes32 collectionId,
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
     // if the contract calling this function is a root system, it should use `callAsRoot`
     if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
 
     bytes memory systemCall = abi.encodeCall(
-      _addNoteToCollection_bytes32_bytes32_uint16.addNoteToCollection,
-      (collectionId, noteId, index)
+      _updateCollectionPosts_bytes32_bytes32Array.updateCollectionPosts,
+      (collectionId, postIds)
     );
-    self.from == address(0)
+
+    bytes memory result = self.from == address(0)
       ? _world().call(self.systemId, systemCall)
       : _world().callFrom(self.from, self.systemId, systemCall);
-  }
-
-  function removeNoteFromCollection(CallWrapper memory self, bytes32 collectionId, bytes32 noteId) internal {
-    // if the contract calling this function is a root system, it should use `callAsRoot`
-    if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
-
-    bytes memory systemCall = abi.encodeCall(
-      _removeNoteFromCollection_bytes32_bytes32.removeNoteFromCollection,
-      (collectionId, noteId)
-    );
-    self.from == address(0)
-      ? _world().call(self.systemId, systemCall)
-      : _world().callFrom(self.from, self.systemId, systemCall);
-  }
-
-  function transferCollectionOwnership(CallWrapper memory self, bytes32 collectionId, address newOwner) internal {
-    // if the contract calling this function is a root system, it should use `callAsRoot`
-    if (address(_world()) == address(this)) revert CollectionSystemLib_CallingFromRootSystem();
-
-    bytes memory systemCall = abi.encodeCall(
-      _transferCollectionOwnership_bytes32_address.transferCollectionOwnership,
-      (collectionId, newOwner)
-    );
-    self.from == address(0)
-      ? _world().call(self.systemId, systemCall)
-      : _world().callFrom(self.from, self.systemId, systemCall);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function createCollection(
     RootCallWrapper memory self,
-    bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
+    string memory description,
+    string memory coverImage,
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(
-      _createCollection_bytes32_string_string.createCollection,
-      (collectionId, title, description)
+      _createCollection_string_string_string_bytes32Array.createCollection,
+      (title, description, coverImage, postIds)
     );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function updateCollection(
     RootCallWrapper memory self,
     bytes32 collectionId,
     string memory title,
-    string memory description
-  ) internal {
+    string memory description,
+    string memory coverImage
+  ) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(
-      _updateCollection_bytes32_string_string.updateCollection,
-      (collectionId, title, description)
+      _updateCollection_bytes32_string_string_string.updateCollection,
+      (collectionId, title, description, coverImage)
     );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function deleteCollection(RootCallWrapper memory self, bytes32 collectionId) internal {
+  function deleteCollection(RootCallWrapper memory self, bytes32 collectionId) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(_deleteCollection_bytes32.deleteCollection, (collectionId));
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
-  function addNoteToCollection(
+  function updateCollectionPosts(
     RootCallWrapper memory self,
     bytes32 collectionId,
-    bytes32 noteId,
-    uint16 index
-  ) internal {
+    bytes32[] memory postIds
+  ) internal returns (bytes32 __auxRet0) {
     bytes memory systemCall = abi.encodeCall(
-      _addNoteToCollection_bytes32_bytes32_uint16.addNoteToCollection,
-      (collectionId, noteId, index)
+      _updateCollectionPosts_bytes32_bytes32Array.updateCollectionPosts,
+      (collectionId, postIds)
     );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
-  }
 
-  function removeNoteFromCollection(RootCallWrapper memory self, bytes32 collectionId, bytes32 noteId) internal {
-    bytes memory systemCall = abi.encodeCall(
-      _removeNoteFromCollection_bytes32_bytes32.removeNoteFromCollection,
-      (collectionId, noteId)
-    );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
-  }
-
-  function transferCollectionOwnership(RootCallWrapper memory self, bytes32 collectionId, address newOwner) internal {
-    bytes memory systemCall = abi.encodeCall(
-      _transferCollectionOwnership_bytes32_address.transferCollectionOwnership,
-      (collectionId, newOwner)
-    );
-    SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    bytes memory result = SystemCall.callWithHooksOrRevert(self.from, self.systemId, systemCall, msg.value);
+    // skip decoding an empty result, which can happen after expectRevert
+    if (result.length != 0) {
+      return abi.decode(result, (bytes32));
+    }
   }
 
   function callFrom(CollectionSystemType self, address from) internal pure returns (CallWrapper memory) {
@@ -254,28 +257,30 @@ library CollectionSystemLib {
  * Each interface is uniquely named based on the function name and parameters to prevent collisions.
  */
 
-interface _createCollection_bytes32_string_string {
-  function createCollection(bytes32 collectionId, string memory title, string memory description) external;
+interface _createCollection_string_string_string_bytes32Array {
+  function createCollection(
+    string memory title,
+    string memory description,
+    string memory coverImage,
+    bytes32[] memory postIds
+  ) external;
 }
 
-interface _updateCollection_bytes32_string_string {
-  function updateCollection(bytes32 collectionId, string memory title, string memory description) external;
+interface _updateCollection_bytes32_string_string_string {
+  function updateCollection(
+    bytes32 collectionId,
+    string memory title,
+    string memory description,
+    string memory coverImage
+  ) external;
 }
 
 interface _deleteCollection_bytes32 {
   function deleteCollection(bytes32 collectionId) external;
 }
 
-interface _addNoteToCollection_bytes32_bytes32_uint16 {
-  function addNoteToCollection(bytes32 collectionId, bytes32 noteId, uint16 index) external;
-}
-
-interface _removeNoteFromCollection_bytes32_bytes32 {
-  function removeNoteFromCollection(bytes32 collectionId, bytes32 noteId) external;
-}
-
-interface _transferCollectionOwnership_bytes32_address {
-  function transferCollectionOwnership(bytes32 collectionId, address newOwner) external;
+interface _updateCollectionPosts_bytes32_bytes32Array {
+  function updateCollectionPosts(bytes32 collectionId, bytes32[] memory postIds) external;
 }
 
 using CollectionSystemLib for CollectionSystemType global;

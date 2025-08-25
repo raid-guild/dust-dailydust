@@ -3,7 +3,7 @@ import { useRecords } from "@latticexyz/stash/react";
 import { useMemo } from "react";
 
 import { stash, tables } from "@/mud/stash";
-import { getDistance } from "@/utils/helpers";
+import { getDistance, uriToHttp } from "@/utils/helpers";
 import type { Post } from "@/utils/types";
 
 import { usePlayerPositionQuery } from "./usePlayerPositionQuery";
@@ -56,7 +56,8 @@ export const usePosts = (): {
           ? { x: anchor.coordX, y: anchor.coordY, z: anchor.coordZ }
           : null,
         createdAt: r.createdAt,
-        coverImage: r.coverImage || "/assets/placeholder-notext.png",
+        coverImage:
+          uriToHttp(r.coverImage)[0] || "/assets/placeholder-notext.png",
         distance: null,
         excerpt,
         owner: r.owner,
