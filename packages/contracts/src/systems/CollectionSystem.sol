@@ -5,7 +5,6 @@ import { System } from "@latticexyz/world/src/System.sol";
 import { Collection, CollectionData } from "../codegen/tables/Collection.sol";
 import { CollectionPosts } from "../codegen/tables/CollectionPosts.sol";
 import { IsEditor } from "../codegen/tables/IsEditor.sol";
-import { IsEditor } from "../codegen/tables/IsEditor.sol";
 import { LatestEditorPublication } from "../codegen/tables/LatestEditorPublication.sol";
 import { IsEditorPublication } from "../codegen/tables/IsEditorPublication.sol";
 import { encodePlayerEntityId } from "../Libraries/PlayerEntityIdLib.sol";
