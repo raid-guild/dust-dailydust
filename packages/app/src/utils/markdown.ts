@@ -6,6 +6,8 @@
  * - Bold text: **text** or __text__
  * - Italic text: *text* or _text_
  * - Lists: - item or * item
+ * - Code blocks: ```code``` (with optional language)
+ * - Inline code: `code`
  * - Paragraphs with proper spacing
  * - Drop-cap styling for the first letter of articles
  * 
@@ -30,6 +32,9 @@ export function renderMarkdownToHtml(md: string) {
 
     let html = "";
     let inList = false;
+    let inCodeBlock = false;
+    let codeBlockContent = "";
+    let codeBlockLanguage = "";
 
     // Helper function to convert paragraph buffer to HTML
     const flushParagraph = (p: string) => {
@@ -46,9 +51,43 @@ export function renderMarkdownToHtml(md: string) {
         paraBuf = [];
     };
 
+    // Helper function to process inline formatting (bold, italic, inline code)
+    const processInlineFormatting = (text: string) => {
+        return text
+            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.+?)\*/g, "<em>$1</em>")
+            .replace(/`([^`]+)`/g, "<code>$1</code>");
+    };
+
     // Process each line of markdown
     for (let i = 0; i < lines.length; i++) {
         const ln = lines[i];
+
+        // Check for code block start/end (```)
+        const codeBlockMatch = ln.match(/^```(\w*)$/);
+        if (codeBlockMatch) {
+            if (!inCodeBlock) {
+                // Start of code block
+                pushPara();
+                inCodeBlock = true;
+                codeBlockLanguage = codeBlockMatch[1] || "";
+                codeBlockContent = "";
+            } else {
+                // End of code block
+                inCodeBlock = false;
+                const languageClass = codeBlockLanguage ? ` class="language-${codeBlockLanguage}"` : "";
+                html += `<pre><code${languageClass}>${escapeHtml(codeBlockContent.trim())}</code></pre>`;
+                codeBlockContent = "";
+                codeBlockLanguage = "";
+            }
+            continue;
+        }
+
+        // If we're inside a code block, accumulate content
+        if (inCodeBlock) {
+            codeBlockContent += ln + "\n";
+            continue;
+        }
 
         // Check for list items (lines starting with - or *)
         if (/^\s*([-*])\s+/.test(ln)) {
@@ -60,9 +99,8 @@ export function renderMarkdownToHtml(md: string) {
             }
             const item = ln.replace(/^\s*([-*])\s+/, "");
             let content = escapeHtml(item);
-            // Apply inline formatting (bold, italic) to list items
-            content = content.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-            content = content.replace(/\*(.+?)\*/g, "<em>$1</em>");
+            // Apply inline formatting (bold, italic, inline code) to list items
+            content = processInlineFormatting(content);
             html += `<li>${content}</li>`;
             continue;
         } else {
@@ -80,23 +118,17 @@ export function renderMarkdownToHtml(md: string) {
 
         if (h1) {
             pushPara();
-            html += `<h1>${escapeHtml(h1[1])
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h1>`;
+            html += `<h1>${processInlineFormatting(escapeHtml(h1[1]))}</h1>`;
             continue;
         }
         if (h2) {
             pushPara();
-            html += `<h2>${escapeHtml(h2[1])
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h2>`;
+            html += `<h2>${processInlineFormatting(escapeHtml(h2[1]))}</h2>`;
             continue;
         }
         if (h3) {
             pushPara();
-            html += `<h3>${escapeHtml(h3[1])
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")}</h3>`;
+            html += `<h3>${processInlineFormatting(escapeHtml(h3[1]))}</h3>`;
             continue;
         }
 
@@ -108,11 +140,7 @@ export function renderMarkdownToHtml(md: string) {
         }
 
         // Accumulate regular text into paragraph buffer with inline formatting
-        paraBuf.push(
-            escapeHtml(ln)
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")
-        );
+        paraBuf.push(processInlineFormatting(escapeHtml(ln)));
     }
 
     // Close any open list and flush remaining paragraph content
