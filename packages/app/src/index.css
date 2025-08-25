@@ -5,16 +5,19 @@
 @tailwind utilities;
 
 @layer base {
+
   html,
   body,
   #root {
     height: 100%;
   }
+
   body {
     background-color: var(--bg-page);
     color: var(--text-primary);
     font-family: var(--font-body);
   }
+
   ::selection {
     background-color: var(--color-neutral-300);
     color: var(--color-neutral-900);
@@ -25,7 +28,71 @@
   .font-heading {
     font-family: var(--font-heading);
   }
+
   .font-accent {
     font-family: var(--font-accent);
   }
+}
+
+/* 
+ * Markdown content styling for rendered articles and notes
+ * 
+ * These styles ensure that markdown content displays with proper typography,
+ * including correctly sized headers, proper spacing, and consistent styling
+ * that matches the application's design system.
+ */
+.prose h1 {
+  font-size: 2.25rem;
+  /* 36px - Large, prominent heading */
+  line-height: 2.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+}
+
+.prose h2 {
+  font-size: 1.875rem;
+  /* 30px - Medium heading */
+  line-height: 2.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-heading);
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  /* 24px - Small heading */
+  line-height: 2rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-heading);
+}
+
+/* Paragraph styling with comfortable reading spacing */
+.prose p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+/* List styling with proper indentation and spacing */
+.prose ul {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+/* Inline text formatting */
+.prose strong {
+  font-weight: 700;
+}
+
+.prose em {
+  font-style: italic;
 }
