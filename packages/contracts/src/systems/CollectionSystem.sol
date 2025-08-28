@@ -31,7 +31,24 @@ contract CollectionSystem is System {
     require(bytes(title).length > 0, "Title is required");
     require(bytes(description).length > 0, "Description is required");
 
+    require(postIds.length > 0, "Collection must have at least one post");
+    require(postIds.length <= 5, "Collection cannot have more than 5 posts");
+
+    for (uint256 i = 0; i < postIds.length; i++) {
+      require(IsArticle.get(postIds[i]), "All postIds must be an article");
+    }
+
     uint64 currentTime = uint64(block.timestamp);
+    bytes32 playerId = encodePlayerEntityId(_msgSender());
+    if (IsEditor.get(playerId)) {
+      uint64 timeSinceLastPublication = currentTime - LatestEditorPublication.get();
+      if (timeSinceLastPublication < 7 days) {
+        revert("Editor publication interval not met");
+      }
+
+      IsEditorPublication.set(collectionId, true);
+      LatestEditorPublication.set(currentTime);
+    }
 
     Collection.set(
       collectionId,
@@ -45,25 +62,7 @@ contract CollectionSystem is System {
       })
     );
 
-    require(postIds.length > 0, "Collection must have at least one post");
-    require(postIds.length <= 5, "Collection cannot have more than 5 posts");
-
-    for (uint256 i = 0; i < postIds.length; i++) {
-      require(IsArticle.get(postIds[i]), "All postIds must be an article");
-    }
-
     CollectionPosts.set(collectionId, postIds);
-
-    bytes32 playerId = encodePlayerEntityId(_msgSender());
-    if (IsEditor.get(playerId)) {
-      uint64 timeSinceLastPublication = currentTime - LatestEditorPublication.get();
-      if (timeSinceLastPublication < 7 days) {
-        revert("Editor publication interval not met");
-      }
-
-      IsEditorPublication.set(collectionId, true);
-      LatestEditorPublication.set(currentTime);
-    }
 
     return collectionId;
   }

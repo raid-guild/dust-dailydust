@@ -41,21 +41,24 @@ export const CollectionWizardStep3: React.FC<CollectionWizardStep3Props> = ({
         <div className="bg-yellow-100 border border-yellow-300 p-4 rounded text-yellow-800">
           As an editor, you can publish a new collection to the Front Page once
           every 7 days.
-          {latestEditorPublication > BigInt(SEVEN_DAYS_SECONDS) && (
+          {latestEditorPublication > BigInt(0) && (
             <div className="mt-1 text-sm text-yellow-700">
-              Your last publication was{" "}
-              {new Date(
-                Number(latestEditorPublication) * 1000
-              ).toLocaleDateString()}{" "}
-              - you will be able to publish again on{" "}
-              {new Date(
-                (Number(latestEditorPublication) + SEVEN_DAYS_SECONDS) * 1000
-              ).toLocaleDateString()}{" "}
-              at{" "}
-              {new Date(
-                (Number(latestEditorPublication) + SEVEN_DAYS_SECONDS) * 1000
-              ).toLocaleTimeString()}
-              .
+              {(() => {
+                const last = Number(latestEditorPublication);
+                const next = (last + SEVEN_DAYS_SECONDS) * 1000;
+                const now = Date.now();
+                return now < next ? (
+                  <>
+                    Your last publication was{" "}
+                    {new Date(last * 1000).toLocaleDateString()} - you will be
+                    able to publish again on{" "}
+                    {new Date(next).toLocaleDateString()} at{" "}
+                    {new Date(next).toLocaleTimeString()}.
+                  </>
+                ) : (
+                  <>You can publish now.</>
+                );
+              })()}
             </div>
           )}
         </div>

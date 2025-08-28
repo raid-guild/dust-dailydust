@@ -34,8 +34,9 @@ export const CollectionWizardStep1: React.FC<CollectionWizardStep1Props> = ({
     // Using Jimp to resize the image and convert to a PNG
     const buffer = await file.arrayBuffer();
     const image = await Jimp.read(buffer);
+    const targetW = Math.min(1000, image.bitmap.width);
     const pngBuffer = (await image
-      .resize({ w: 1000 })
+      .resize({ w: targetW }) // don't upscale
       .getBuffer("image/png")) as BlobPart;
 
     const form = new FormData();

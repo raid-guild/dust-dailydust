@@ -41,7 +41,7 @@ export const CollectionWizard: React.FC<CollectionWizardProps> = ({
     useRecord({
       stash,
       table: tables.IsEditor,
-      key: { id: encodePlayer(playerEntityId ?? "0x") },
+      key: { id: playerEntityId ? encodePlayer(playerEntityId) : "0x" },
     })?.value ?? false;
 
   const latestEditorPublication =
@@ -82,11 +82,27 @@ export const CollectionWizard: React.FC<CollectionWizardProps> = ({
     },
   });
 
+  const canPublish = useMemo(() => {
+    if (!isEditor) return true;
+    if (latestEditorPublication === BigInt(0)) return true;
+    const now = BigInt(Math.floor(Date.now() / 1000));
+    return now - latestEditorPublication >= BigInt(SEVEN_DAYS_SECONDS);
+  }, [isEditor, latestEditorPublication]);
+
   const onPublishCollection = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!title || !description) return;
-      if (articleIds.length === 0) return;
+      if (articleIds.length === 0 || articleIds.length > 5) {
+        toast.error("Select between 1 and 5 articles.");
+        return;
+      }
+      if (!canPublish) {
+        toast.error("Too early", {
+          description: "Editors can publish once every 7 days.",
+        });
+        return;
+      }
 
       try {
         await createCollection.mutateAsync({
@@ -111,20 +127,21 @@ export const CollectionWizard: React.FC<CollectionWizardProps> = ({
         });
       }
     },
-    [articleIds, coverImage, createCollection, description, onDone, title]
+    [
+      articleIds,
+      canPublish,
+      coverImage,
+      createCollection,
+      description,
+      onDone,
+      title,
+    ]
   );
 
   const canContinueFrom1 = useMemo(
     () => title.trim().length > 0 && description.trim().length > 0,
     [title, description]
   );
-
-  const canPublish = useMemo(() => {
-    if (!isEditor) return true;
-    if (latestEditorPublication === BigInt(0)) return true;
-    const now = BigInt(Math.floor(Date.now() / 1000));
-    return now - latestEditorPublication >= BigInt(SEVEN_DAYS_SECONDS);
-  }, [isEditor, latestEditorPublication]);
 
   return (
     <Card>

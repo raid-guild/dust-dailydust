@@ -30,7 +30,8 @@ export const usePosts = (): {
       let author = "Anonymous";
 
       if (ownerName) {
-        author = hexToString(ownerName).replace(/\0+$/, "");
+        const decoded = hexToString(ownerName).replace(/\0+$/, "").trim();
+        if (decoded) author = decoded;
       }
 
       const isArticle =
