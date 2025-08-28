@@ -1,5 +1,6 @@
 export type Post = {
   id: string;
+  author: string;
   categories: string[];
   content: string[];
   coords: { x: number; y: number; z: number } | null;

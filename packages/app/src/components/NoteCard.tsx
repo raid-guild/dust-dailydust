@@ -2,7 +2,6 @@ import { toast } from "sonner";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
-import { usePlayerName } from "@/common/usePlayerName";
 import { useWaypoint } from "@/common/useWaypoint";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,6 @@ import type { Post } from "@/utils/types";
 
 export const NoteCard = ({ note }: { note: Post }) => {
   const { data: dustClient } = useDustClient();
-  const { playerName } = usePlayerName(note.owner);
   const { copyToClipboard } = useCopy();
   const { onSetWaypoint } = useWaypoint();
 
@@ -45,7 +43,7 @@ export const NoteCard = ({ note }: { note: Post }) => {
               toast.success(`Copied ${shortenAddress(note.owner)}`);
             }}
           >
-            @{playerName}
+            @{note.author}
           </button>
         </div>
       </div>
@@ -58,7 +56,9 @@ export const NoteCard = ({ note }: { note: Post }) => {
       <div
         className="text-sm leading-relaxed text-neutral-800 prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{
-          __html: renderMarkdownToHtml(note.rawContent || note.content[0] || "")
+          __html: renderMarkdownToHtml(
+            note.rawContent || note.content[0] || ""
+          ),
         }}
       />
 

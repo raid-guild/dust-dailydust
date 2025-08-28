@@ -1,4 +1,5 @@
 import { Jimp } from "jimp";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,10 @@ export default function ArticleWizardStep1({
                   .catch((err) => {
                     // eslint-disable-next-line no-console
                     console.error("Failed to upload image:", err);
+
+                    toast.error("Failed to Upload", {
+                      description: (err as Error).message,
+                    });
                   });
               }
             }}

@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import { System } from "@latticexyz/world/src/System.sol";
 import { Collection, CollectionData } from "../codegen/tables/Collection.sol";
 import { CollectionPosts } from "../codegen/tables/CollectionPosts.sol";
+import { IsArticle } from "../codegen/tables/IsArticle.sol";
 import { IsEditor } from "../codegen/tables/IsEditor.sol";
 import { LatestEditorPublication } from "../codegen/tables/LatestEditorPublication.sol";
 import { IsEditorPublication } from "../codegen/tables/IsEditorPublication.sol";
@@ -46,6 +47,10 @@ contract CollectionSystem is System {
 
     require(postIds.length > 0, "Collection must have at least one post");
     require(postIds.length <= 5, "Collection cannot have more than 5 posts");
+
+    for (uint256 i = 0; i < postIds.length; i++) {
+      require(IsArticle.get(postIds[i]), "All postIds must be an article");
+    }
 
     CollectionPosts.set(collectionId, postIds);
 
@@ -115,6 +120,10 @@ contract CollectionSystem is System {
     require(owner == _msgSender(), "Only owner can modify collection");
     require(postIds.length > 0, "Collection must have at least one post");
     require(postIds.length <= 5, "Collection cannot have more than 5 posts");
+
+    for (uint256 i = 0; i < postIds.length; i++) {
+      require(IsArticle.get(postIds[i]), "All postIds must be an article");
+    }
 
     Collection.setUpdatedAt(collectionId, uint64(block.timestamp));
     CollectionPosts.set(collectionId, postIds);

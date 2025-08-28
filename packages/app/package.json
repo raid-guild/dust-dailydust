@@ -27,6 +27,7 @@
     "clsx": "^2.1.1",
     "contracts": "workspace:*",
     "dustkit": "https://pkg.pr.new/dustproject/dust/dustkit@27f724c",
+    "fuse.js": "^7.1.0",
     "jimp": "^1.6.0",
     "lucide-react": "^0.539.0",
     "next-themes": "^0.4.4",
