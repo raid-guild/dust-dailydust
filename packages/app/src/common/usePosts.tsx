@@ -1,6 +1,7 @@
 import { getRecord } from "@latticexyz/stash/internal";
 import { useRecords } from "@latticexyz/stash/react";
 import { useMemo } from "react";
+import { hexToString } from "viem";
 
 import { stash, tables } from "@/mud/stash";
 import { getDistance, uriToHttp } from "@/utils/helpers";
@@ -20,6 +21,19 @@ export const usePosts = (): {
     table: tables.Post,
   })
     .map((r): Post => {
+      const ownerName = getRecord({
+        stash,
+        table: tables.PlayerName,
+        key: { player: r.owner as `0x${string}` },
+      })?.name;
+
+      let author = "Anonymous";
+
+      if (ownerName) {
+        const decoded = hexToString(ownerName).replace(/\0+$/, "").trim();
+        if (decoded) author = decoded;
+      }
+
       const isArticle =
         getRecord({
           stash,
@@ -48,6 +62,7 @@ export const usePosts = (): {
 
       return {
         id: r.id,
+        author,
         categories: category ? [category] : [],
         content: (typeof r.content === "string"
           ? r.content.split("\n\n")

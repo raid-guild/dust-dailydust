@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
-import { usePlayerName } from "@/common/usePlayerName";
 import { usePosts } from "@/common/usePosts";
 import { useWaypoint } from "@/common/useWaypoint";
 import { cn } from "@/lib/utils";
@@ -23,8 +22,6 @@ export const ArticlePage = () => {
     () => articles.find((p) => p.id === id),
     [id, articles]
   );
-
-  const { playerName } = usePlayerName(article?.owner);
 
   if (!article) {
     return (
@@ -81,7 +78,7 @@ export const ArticlePage = () => {
               toast.success(`Copied ${shortenAddress(article.owner)}`);
             }}
           >
-            @{playerName}
+            @{article.author}
           </button>
           {" • "}
           {formatDate(article.createdAt)}
@@ -109,7 +106,7 @@ export const ArticlePage = () => {
         <div
           className="prose max-w-none"
           dangerouslySetInnerHTML={{
-            __html: renderMarkdownToHtml(article.rawContent || article.excerpt)
+            __html: renderMarkdownToHtml(article.rawContent || article.excerpt),
           }}
         />
       </div>

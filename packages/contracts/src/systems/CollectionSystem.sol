@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import { System } from "@latticexyz/world/src/System.sol";
 import { Collection, CollectionData } from "../codegen/tables/Collection.sol";
 import { CollectionPosts } from "../codegen/tables/CollectionPosts.sol";
+import { IsArticle } from "../codegen/tables/IsArticle.sol";
 import { IsEditor } from "../codegen/tables/IsEditor.sol";
 import { LatestEditorPublication } from "../codegen/tables/LatestEditorPublication.sol";
 import { IsEditorPublication } from "../codegen/tables/IsEditorPublication.sol";
@@ -30,7 +31,24 @@ contract CollectionSystem is System {
     require(bytes(title).length > 0, "Title is required");
     require(bytes(description).length > 0, "Description is required");
 
+    require(postIds.length > 0, "Collection must have at least one post");
+    require(postIds.length <= 5, "Collection cannot have more than 5 posts");
+
+    for (uint256 i = 0; i < postIds.length; i++) {
+      require(IsArticle.get(postIds[i]), "All postIds must be an article");
+    }
+
     uint64 currentTime = uint64(block.timestamp);
+    bytes32 playerId = encodePlayerEntityId(_msgSender());
+    if (IsEditor.get(playerId)) {
+      uint64 timeSinceLastPublication = currentTime - LatestEditorPublication.get();
+      if (timeSinceLastPublication < 7 days) {
+        revert("Editor publication interval not met");
+      }
+
+      IsEditorPublication.set(collectionId, true);
+      LatestEditorPublication.set(currentTime);
+    }
 
     Collection.set(
       collectionId,
@@ -44,21 +62,7 @@ contract CollectionSystem is System {
       })
     );
 
-    require(postIds.length > 0, "Collection must have at least one post");
-    require(postIds.length <= 5, "Collection cannot have more than 5 posts");
-
     CollectionPosts.set(collectionId, postIds);
-
-    bytes32 playerId = encodePlayerEntityId(_msgSender());
-    if (IsEditor.get(playerId)) {
-      uint64 timeSinceLastPublication = currentTime - LatestEditorPublication.get();
-      if (timeSinceLastPublication < 7 days) {
-        revert("Editor publication interval not met");
-      }
-
-      IsEditorPublication.set(collectionId, true);
-      LatestEditorPublication.set(currentTime);
-    }
 
     return collectionId;
   }
@@ -115,6 +119,10 @@ contract CollectionSystem is System {
     require(owner == _msgSender(), "Only owner can modify collection");
     require(postIds.length > 0, "Collection must have at least one post");
     require(postIds.length <= 5, "Collection cannot have more than 5 posts");
+
+    for (uint256 i = 0; i < postIds.length; i++) {
+      require(IsArticle.get(postIds[i]), "All postIds must be an article");
+    }
 
     Collection.setUpdatedAt(collectionId, uint64(block.timestamp));
     CollectionPosts.set(collectionId, postIds);

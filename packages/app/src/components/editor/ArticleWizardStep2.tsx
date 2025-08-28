@@ -45,7 +45,7 @@ export default function ArticleWizardStep2({
         )}
       </header>
 
-      {coverImage ? (
+      {coverImage && (
         <div className="border border-neutral-900 my-4 overflow-hidden">
           <img
             alt={title}
@@ -53,7 +53,7 @@ export default function ArticleWizardStep2({
             src={uriToHttp(coverImage)[0]}
           />
         </div>
-      ) : null}
+      )}
 
       <div
         className={

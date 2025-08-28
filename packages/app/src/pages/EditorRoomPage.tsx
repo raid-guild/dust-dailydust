@@ -1,14 +1,34 @@
 import { useEffect, useState } from "react";
 
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
+import { CollectionWizard } from "@/components/editor/CollectionWizard";
 import { PublishedList } from "@/components/editor/PublishedList";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/helpers";
 import { renderMarkdownToHtml } from "@/utils/markdown";
 
+// Drafts stored in localStorage under same key as ArticleWizard
+const DRAFT_KEY = "editor-article-drafts";
+const loadDrafts = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr)
+      ? arr.sort(
+          (a, b) =>
+            (b.lastSaved || b.createdAt || 0) -
+            (a.lastSaved || a.createdAt || 0)
+        )
+      : [];
+  } catch {
+    return [];
+  }
+};
+
 export const EditorRoomPage = () => {
   type TabKey = "published" | "drafts";
-  const [tab, setTab] = useState<TabKey>("drafts");
+  const [tab, setTab] = useState<TabKey>("published");
 
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
     <Button
@@ -20,25 +40,6 @@ export const EditorRoomPage = () => {
       {label}
     </Button>
   );
-
-  // Drafts stored in localStorage under same key as ArticleWizard
-  const DRAFT_KEY = "editor-article-drafts";
-  const loadDrafts = () => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return [];
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr)
-        ? arr.sort(
-          (a, b) =>
-            (b.lastSaved || b.createdAt || 0) -
-            (a.lastSaved || a.createdAt || 0)
-        )
-        : [];
-    } catch {
-      return [];
-    }
-  };
 
   const [drafts, setDrafts] = useState(() => loadDrafts());
 
@@ -78,7 +79,8 @@ export const EditorRoomPage = () => {
   };
 
   // Wizard dialog state
-  const [open, setOpen] = useState(false);
+  const [openCollectionWizard, setOpenCollectionWizard] = useState(false);
+  const [openArticleWizard, setOpenArticleWizard] = useState(false);
   const [wizardDraftId, setWizardDraftId] = useState<string | undefined>(
     undefined
   );
@@ -86,25 +88,27 @@ export const EditorRoomPage = () => {
     undefined
   );
 
-  const openNew = () => {
+  const onOpenNewArticle = () => {
     setWizardDraftId(undefined);
     setWizardArticleId(undefined);
-    setOpen(true);
-  };
-  const openDraft = (id: string) => {
-    setWizardDraftId(id);
-    setWizardArticleId(undefined);
-    setOpen(true);
-  };
-  const openArticle = (id: string) => {
-    setWizardArticleId(id);
-    setWizardDraftId(undefined);
-    setOpen(true);
+    setOpenArticleWizard(true);
   };
 
-  const handleDone = () => {
+  const onOpenDraft = (id: string) => {
+    setWizardDraftId(id);
+    setWizardArticleId(undefined);
+    setOpenArticleWizard(true);
+  };
+
+  const onOpenArticle = (id: string) => {
+    setWizardArticleId(id);
+    setWizardDraftId(undefined);
+    setOpenArticleWizard(true);
+  };
+
+  const onArticleDone = () => {
     // close and refresh local drafts and rely on stash/react to update published
-    setOpen(false);
+    setOpenArticleWizard(false);
     setWizardArticleId(undefined);
     setWizardDraftId(undefined);
     setDrafts(loadDrafts());
@@ -117,8 +121,20 @@ export const EditorRoomPage = () => {
           <TabButton k="published" label="Published" />
           <TabButton k="drafts" label="Drafts" />
         </div>
-        <div>
-          <Button onClick={openNew} size="sm" className="border-neutral-900">
+        <div className="flex items-center gap-2">
+          <Button
+            className="border-neutral-900"
+            variant="outline"
+            onClick={() => setOpenCollectionWizard(true)}
+            size="sm"
+          >
+            New Collection
+          </Button>
+          <Button
+            className="border-neutral-900"
+            onClick={onOpenNewArticle}
+            size="sm"
+          >
             New Article
           </Button>
         </div>
@@ -151,7 +167,7 @@ export const EditorRoomPage = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => openDraft(d.id)}
+                        onClick={() => onOpenDraft(d.id)}
                       >
                         Edit
                       </Button>
@@ -182,25 +198,42 @@ export const EditorRoomPage = () => {
 
         {tab === "published" && (
           <PublishedList
-            onEdit={(id) => openArticle(id)}
+            onEdit={(id) => onOpenArticle(id)}
             renderMarkdownToHtml={renderMarkdownToHtml}
           />
         )}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4">
+      {openCollectionWizard && (
+        <div className="fixed flex inset-0 items-start justify-center p-4 sm:items-center z-50">
           <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpen(false)}
+            className="absolute bg-black/50 inset-0"
+            onClick={() => setOpenCollectionWizard(false)}
           />
-          <div className="relative w-full max-w-4xl mx-auto">
-            <div className="bg-panel border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg max-h-[80vh] overflow-scroll">
+          <div className="max-w-4xl mx-auto relative w-full">
+            <div className="bg-panel max-h-[80vh] overflow-scroll">
+              <CollectionWizard
+                onCancel={() => setOpenCollectionWizard(false)}
+                onDone={() => setOpenCollectionWizard(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openArticleWizard && (
+        <div className="fixed flex inset-0 items-start justify-center p-4 sm:items-center z-50">
+          <div
+            className="absolute bg-black/50 inset-0"
+            onClick={() => setOpenArticleWizard(false)}
+          />
+          <div className="max-w-4xl mx-auto relative w-full">
+            <div className="bg-panel max-h-[80vh] overflow-scroll">
               <ArticleWizard
-                draftId={wizardDraftId}
                 articleId={wizardArticleId}
-                onDone={handleDone}
-                onCancel={() => setOpen(false)}
+                draftId={wizardDraftId}
+                onCancel={() => setOpenArticleWizard(false)}
+                onDone={onArticleDone}
               />
             </div>
           </div>
