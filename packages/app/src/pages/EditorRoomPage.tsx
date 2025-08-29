@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useDustClient } from "@/common/useDustClient";
 import { ArticleWizard } from "@/components/editor/ArticleWizard";
 import { CollectionWizard } from "@/components/editor/CollectionWizard";
 import { PublishedList } from "@/components/editor/PublishedList";
@@ -26,8 +27,11 @@ const loadDrafts = () => {
   }
 };
 
+type TabKey = "published" | "drafts";
+
 export const EditorRoomPage = () => {
-  type TabKey = "published" | "drafts";
+  const { data: dustClient } = useDustClient();
+
   const [tab, setTab] = useState<TabKey>("published");
 
   const TabButton = ({ k, label }: { k: TabKey; label: string }) => (
@@ -113,6 +117,14 @@ export const EditorRoomPage = () => {
     setWizardDraftId(undefined);
     setDrafts(loadDrafts());
   };
+
+  if (!dustClient) {
+    return (
+      <div className="p-4">
+        Please open the app in DUST to use the Editor Room.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4">
