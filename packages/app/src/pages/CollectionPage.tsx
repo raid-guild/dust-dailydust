@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { stash, tables } from "@/mud/stash";
-import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
+import {
+  ARTICLE_PAGE_PATH,
+  DISCOVER_PAGE_PATH,
+  FRONT_PAGE_PATH,
+} from "@/Routes";
 import { formatDate, shortenAddress, uriToHttp } from "@/utils/helpers";
 import type { Collection } from "@/utils/types";
 
@@ -68,9 +72,13 @@ export const CollectionPage = () => {
   const collectionArticles = useMemo(() => {
     if (!collection) return [];
 
-    return articles.filter((article) =>
-      collection.articleIds.includes(article.id)
-    );
+    return articles
+      .filter((article) => collection.articleIds.includes(article.id))
+      .sort((a, b) => {
+        const aIndex = collection.articleIds.indexOf(a.id);
+        const bIndex = collection.articleIds.indexOf(b.id);
+        return aIndex - bIndex;
+      });
   }, [collection, articles]);
 
   if (!collection) {
@@ -156,7 +164,7 @@ export const CollectionPage = () => {
                     <div className="flex-1">
                       <h2 className={cn("font-heading", "mb-2 text-2xl")}>
                         <Link
-                          to={`/articles/${article.id}`}
+                          to={`${ARTICLE_PAGE_PATH}${article.id}`}
                           className="hover:underline"
                         >
                           {article.title}
@@ -215,7 +223,7 @@ export const CollectionPage = () => {
                   </div>
 
                   <div className="border-t border-neutral-200 mt-4 pt-4">
-                    <Link to={`/articles/${article.id}`}>
+                    <Link to={`${ARTICLE_PAGE_PATH}${article.id}`}>
                       <Button
                         className={cn("font-accent", "text-[10px]")}
                         size="sm"

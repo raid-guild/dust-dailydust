@@ -30,7 +30,7 @@ const loadDrafts = () => {
 type TabKey = "published" | "drafts";
 
 export const EditorRoomPage = () => {
-  const { data: dustClient } = useDustClient();
+  const { data: dustClient, isLoading } = useDustClient();
 
   const [tab, setTab] = useState<TabKey>("published");
 
@@ -117,6 +117,10 @@ export const EditorRoomPage = () => {
     setWizardDraftId(undefined);
     setDrafts(loadDrafts());
   };
+
+  if (isLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
 
   if (!dustClient) {
     return (

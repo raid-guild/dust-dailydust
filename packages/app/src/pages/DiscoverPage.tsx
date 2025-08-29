@@ -84,13 +84,17 @@ export const DiscoverPage = () => {
         .map((res) => res.item);
     }
 
+    if (selectedCategory) {
+      results = results.filter((a) => a.categories.includes(selectedCategory));
+    }
+
     results.sort((a, b) => {
       if (dateSort === "newest") return Number(b.createdAt - a.createdAt);
       return Number(a.createdAt - b.createdAt);
     });
 
     return results;
-  }, [articles, searchQuery, dateSort]);
+  }, [articles, dateSort, searchQuery, selectedCategory]);
 
   const filteredCollections = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
@@ -112,7 +116,7 @@ export const DiscoverPage = () => {
     });
 
     return results;
-  }, [collections, searchQuery, dateSort]);
+  }, [collections, dateSort, searchQuery]);
 
   return (
     <div className="gap-6 p-4 sm:p-6 grid">
