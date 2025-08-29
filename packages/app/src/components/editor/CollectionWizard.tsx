@@ -117,7 +117,7 @@ export const CollectionWizard: React.FC<CollectionWizardProps> = ({
         setCoverImage("");
         setArticleIds([]);
         onDone();
-        toast.success("Collection Published!");
+        toast.success("Collection Published! View in the Discover page.");
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error publishing collection:", error);

@@ -1,3 +1,15 @@
+export type Collection = {
+  id: string;
+  articleIds: string[];
+  author: string;
+  coverImage: string;
+  createdAt: bigint;
+  description: string;
+  owner: string;
+  title: string;
+  updatedAt: bigint;
+};
+
 export type Post = {
   id: string;
   author: string;
