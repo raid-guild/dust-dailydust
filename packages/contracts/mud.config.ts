@@ -53,6 +53,33 @@ export default defineWorld({
       },
       key: ["id"],
     },
+    Creators: {
+      schema: {
+        value: "address[]",
+      },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    DevContributors: {
+      schema: {
+        value: "address[]",
+      },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Editors: {
+      schema: {
+        value: "address[]",
+      },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
+    },
     IsArticle: "bool", // ID is Post ID
     IsEditor: "bool", // ID is player ID
     IsEditorPublication: "bool", // ID is collection ID
@@ -98,6 +125,53 @@ export default defineWorld({
         coordZ: "int32",
       },
       key: ["id"],
+    },
+    TipCounter: "uint256", // ID is Post ID
+    // These details are of the tip before it is split between receivers
+    TipDetails: {
+      schema: {
+        id: "bytes32", // ID is keccak256(tipperAddress, postId, timestamp)
+        amount: "uint256", // Amount tipped
+        createdAt: "uint64", // Timestamp of when the tip was made
+        postId: "bytes32", // Post ID
+        tipper: "address", // Address of the user who tipped
+        tokenAddress: "address", // Address of the token used for tipping (e.g., PESOS, RAID, USDC)
+      },
+      key: ["id"],
+      type: "offchainTable",
+    },
+    // If Tipper has already tipped a post, don't increment the TipCounter
+    Tipper: {
+      schema: {
+        playerId: "bytes32", // use encodePlayerEntityId
+        postId: "bytes32",
+        tipped: "bool",
+      },
+      key: ["playerId", "postId"],
+      codegen: { dataStruct: false },
+    },
+    // These details are of the tip after it is split between receivers
+    TipReceipt: {
+      schema: {
+        id: "bytes32", // ID is keccak256(tipperAddress, postId, timestamp, receiver)
+        amount: "uint256", // Amount received (as opposed to what was tipped)
+        createdAt: "uint64", // Timestamp of when the tip was made
+        postId: "bytes32", // Post ID
+        receiver: "address", // Address of the user who received the tip (post owner)
+        tipper: "address", // Address of the user who tipped
+        tokenAddress: "address", // Address of the token used for tipping (e.g., PESOS, RAID, USDC)
+      },
+      key: ["id"],
+      type: "offchainTable",
+    },
+    Treasury: {
+      schema: {
+        value: "address",
+      },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
     },
   },
 });
