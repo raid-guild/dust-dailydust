@@ -20,7 +20,7 @@ struct TipDetailsData {
   uint256 amount;
   uint64 createdAt;
   bytes32 postId;
-  address tipper;
+  address tipperAddress;
   address tokenAddress;
 }
 
@@ -54,7 +54,7 @@ library TipDetails {
     fieldNames[0] = "amount";
     fieldNames[1] = "createdAt";
     fieldNames[2] = "postId";
-    fieldNames[3] = "tipper";
+    fieldNames[3] = "tipperAddress";
     fieldNames[4] = "tokenAddress";
   }
 
@@ -133,23 +133,23 @@ library TipDetails {
   }
 
   /**
-   * @notice Set tipper.
+   * @notice Set tipperAddress.
    */
-  function setTipper(bytes32 id, address tipper) internal {
+  function setTipperAddress(bytes32 id, address tipperAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((tipper)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((tipperAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set tipper.
+   * @notice Set tipperAddress.
    */
-  function _setTipper(bytes32 id, address tipper) internal {
+  function _setTipperAddress(bytes32 id, address tipperAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((tipper)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((tipperAddress)), _fieldLayout);
   }
 
   /**
@@ -180,10 +180,10 @@ library TipDetails {
     uint256 amount,
     uint64 createdAt,
     bytes32 postId,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -202,10 +202,10 @@ library TipDetails {
     uint256 amount,
     uint64 createdAt,
     bytes32 postId,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -224,7 +224,7 @@ library TipDetails {
       _table.amount,
       _table.createdAt,
       _table.postId,
-      _table.tipper,
+      _table.tipperAddress,
       _table.tokenAddress
     );
 
@@ -245,7 +245,7 @@ library TipDetails {
       _table.amount,
       _table.createdAt,
       _table.postId,
-      _table.tipper,
+      _table.tipperAddress,
       _table.tokenAddress
     );
 
@@ -263,14 +263,18 @@ library TipDetails {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (uint256 amount, uint64 createdAt, bytes32 postId, address tipper, address tokenAddress) {
+  )
+    internal
+    pure
+    returns (uint256 amount, uint64 createdAt, bytes32 postId, address tipperAddress, address tokenAddress)
+  {
     amount = (uint256(Bytes.getBytes32(_blob, 0)));
 
     createdAt = (uint64(Bytes.getBytes8(_blob, 32)));
 
     postId = (Bytes.getBytes32(_blob, 40));
 
-    tipper = (address(Bytes.getBytes20(_blob, 72)));
+    tipperAddress = (address(Bytes.getBytes20(_blob, 72)));
 
     tokenAddress = (address(Bytes.getBytes20(_blob, 92)));
   }
@@ -286,7 +290,9 @@ library TipDetails {
     EncodedLengths,
     bytes memory
   ) internal pure returns (TipDetailsData memory _table) {
-    (_table.amount, _table.createdAt, _table.postId, _table.tipper, _table.tokenAddress) = decodeStatic(_staticData);
+    (_table.amount, _table.createdAt, _table.postId, _table.tipperAddress, _table.tokenAddress) = decodeStatic(
+      _staticData
+    );
   }
 
   /**
@@ -317,10 +323,10 @@ library TipDetails {
     uint256 amount,
     uint64 createdAt,
     bytes32 postId,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(amount, createdAt, postId, tipper, tokenAddress);
+    return abi.encodePacked(amount, createdAt, postId, tipperAddress, tokenAddress);
   }
 
   /**
@@ -333,10 +339,10 @@ library TipDetails {
     uint256 amount,
     uint64 createdAt,
     bytes32 postId,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

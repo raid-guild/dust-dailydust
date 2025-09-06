@@ -23,8 +23,8 @@ library Tipper {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0001010001000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (bytes32, bytes32)
-  Schema constant _keySchema = Schema.wrap(0x004002005f5f0000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (address, bytes32)
+  Schema constant _keySchema = Schema.wrap(0x00340200615f0000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (bool)
   Schema constant _valueSchema = Schema.wrap(0x0001010060000000000000000000000000000000000000000000000000000000);
 
@@ -34,7 +34,7 @@ library Tipper {
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
     keyNames = new string[](2);
-    keyNames[0] = "playerId";
+    keyNames[0] = "tipperAddress";
     keyNames[1] = "postId";
   }
 
@@ -64,9 +64,9 @@ library Tipper {
   /**
    * @notice Get tipped.
    */
-  function getTipped(bytes32 playerId, bytes32 postId) internal view returns (bool tipped) {
+  function getTipped(address tipperAddress, bytes32 postId) internal view returns (bool tipped) {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -76,9 +76,9 @@ library Tipper {
   /**
    * @notice Get tipped.
    */
-  function _getTipped(bytes32 playerId, bytes32 postId) internal view returns (bool tipped) {
+  function _getTipped(address tipperAddress, bytes32 postId) internal view returns (bool tipped) {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -88,9 +88,9 @@ library Tipper {
   /**
    * @notice Get tipped.
    */
-  function get(bytes32 playerId, bytes32 postId) internal view returns (bool tipped) {
+  function get(address tipperAddress, bytes32 postId) internal view returns (bool tipped) {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -100,9 +100,9 @@ library Tipper {
   /**
    * @notice Get tipped.
    */
-  function _get(bytes32 playerId, bytes32 postId) internal view returns (bool tipped) {
+  function _get(address tipperAddress, bytes32 postId) internal view returns (bool tipped) {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -112,9 +112,9 @@ library Tipper {
   /**
    * @notice Set tipped.
    */
-  function setTipped(bytes32 playerId, bytes32 postId, bool tipped) internal {
+  function setTipped(address tipperAddress, bytes32 postId, bool tipped) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tipped)), _fieldLayout);
@@ -123,9 +123,9 @@ library Tipper {
   /**
    * @notice Set tipped.
    */
-  function _setTipped(bytes32 playerId, bytes32 postId, bool tipped) internal {
+  function _setTipped(address tipperAddress, bytes32 postId, bool tipped) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tipped)), _fieldLayout);
@@ -134,9 +134,9 @@ library Tipper {
   /**
    * @notice Set tipped.
    */
-  function set(bytes32 playerId, bytes32 postId, bool tipped) internal {
+  function set(address tipperAddress, bytes32 postId, bool tipped) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tipped)), _fieldLayout);
@@ -145,9 +145,9 @@ library Tipper {
   /**
    * @notice Set tipped.
    */
-  function _set(bytes32 playerId, bytes32 postId, bool tipped) internal {
+  function _set(address tipperAddress, bytes32 postId, bool tipped) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tipped)), _fieldLayout);
@@ -156,9 +156,9 @@ library Tipper {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(bytes32 playerId, bytes32 postId) internal {
+  function deleteRecord(address tipperAddress, bytes32 postId) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
@@ -167,9 +167,9 @@ library Tipper {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(bytes32 playerId, bytes32 postId) internal {
+  function _deleteRecord(address tipperAddress, bytes32 postId) internal {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
@@ -201,9 +201,9 @@ library Tipper {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(bytes32 playerId, bytes32 postId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(address tipperAddress, bytes32 postId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](2);
-    _keyTuple[0] = playerId;
+    _keyTuple[0] = bytes32(uint256(uint160(tipperAddress)));
     _keyTuple[1] = postId;
 
     return _keyTuple;

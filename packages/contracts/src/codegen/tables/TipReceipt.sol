@@ -21,7 +21,7 @@ struct TipReceiptData {
   uint64 createdAt;
   bytes32 postId;
   address receiver;
-  address tipper;
+  address tipperAddress;
   address tokenAddress;
 }
 
@@ -56,7 +56,7 @@ library TipReceipt {
     fieldNames[1] = "createdAt";
     fieldNames[2] = "postId";
     fieldNames[3] = "receiver";
-    fieldNames[4] = "tipper";
+    fieldNames[4] = "tipperAddress";
     fieldNames[5] = "tokenAddress";
   }
 
@@ -155,23 +155,23 @@ library TipReceipt {
   }
 
   /**
-   * @notice Set tipper.
+   * @notice Set tipperAddress.
    */
-  function setTipper(bytes32 id, address tipper) internal {
+  function setTipperAddress(bytes32 id, address tipperAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((tipper)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((tipperAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set tipper.
+   * @notice Set tipperAddress.
    */
-  function _setTipper(bytes32 id, address tipper) internal {
+  function _setTipperAddress(bytes32 id, address tipperAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((tipper)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((tipperAddress)), _fieldLayout);
   }
 
   /**
@@ -203,10 +203,10 @@ library TipReceipt {
     uint64 createdAt,
     bytes32 postId,
     address receiver,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -226,10 +226,10 @@ library TipReceipt {
     uint64 createdAt,
     bytes32 postId,
     address receiver,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -249,7 +249,7 @@ library TipReceipt {
       _table.createdAt,
       _table.postId,
       _table.receiver,
-      _table.tipper,
+      _table.tipperAddress,
       _table.tokenAddress
     );
 
@@ -271,7 +271,7 @@ library TipReceipt {
       _table.createdAt,
       _table.postId,
       _table.receiver,
-      _table.tipper,
+      _table.tipperAddress,
       _table.tokenAddress
     );
 
@@ -292,7 +292,14 @@ library TipReceipt {
   )
     internal
     pure
-    returns (uint256 amount, uint64 createdAt, bytes32 postId, address receiver, address tipper, address tokenAddress)
+    returns (
+      uint256 amount,
+      uint64 createdAt,
+      bytes32 postId,
+      address receiver,
+      address tipperAddress,
+      address tokenAddress
+    )
   {
     amount = (uint256(Bytes.getBytes32(_blob, 0)));
 
@@ -302,7 +309,7 @@ library TipReceipt {
 
     receiver = (address(Bytes.getBytes20(_blob, 72)));
 
-    tipper = (address(Bytes.getBytes20(_blob, 92)));
+    tipperAddress = (address(Bytes.getBytes20(_blob, 92)));
 
     tokenAddress = (address(Bytes.getBytes20(_blob, 112)));
   }
@@ -323,7 +330,7 @@ library TipReceipt {
       _table.createdAt,
       _table.postId,
       _table.receiver,
-      _table.tipper,
+      _table.tipperAddress,
       _table.tokenAddress
     ) = decodeStatic(_staticData);
   }
@@ -357,10 +364,10 @@ library TipReceipt {
     uint64 createdAt,
     bytes32 postId,
     address receiver,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(amount, createdAt, postId, receiver, tipper, tokenAddress);
+    return abi.encodePacked(amount, createdAt, postId, receiver, tipperAddress, tokenAddress);
   }
 
   /**
@@ -374,10 +381,10 @@ library TipReceipt {
     uint64 createdAt,
     bytes32 postId,
     address receiver,
-    address tipper,
+    address tipperAddress,
     address tokenAddress
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipper, tokenAddress);
+    bytes memory _staticData = encodeStatic(amount, createdAt, postId, receiver, tipperAddress, tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

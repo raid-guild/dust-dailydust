@@ -134,7 +134,7 @@ export default defineWorld({
         amount: "uint256", // Amount tipped
         createdAt: "uint64", // Timestamp of when the tip was made
         postId: "bytes32", // Post ID
-        tipper: "address", // Address of the user who tipped
+        tipperAddress: "address", // Address of the user who tipped
         tokenAddress: "address", // Address of the token used for tipping (e.g., PESOS, RAID, USDC)
       },
       key: ["id"],
@@ -143,11 +143,11 @@ export default defineWorld({
     // If Tipper has already tipped a post, don't increment the TipCounter
     Tipper: {
       schema: {
-        playerId: "bytes32", // use encodePlayerEntityId
+        tipperAddress: "address",
         postId: "bytes32",
         tipped: "bool",
       },
-      key: ["playerId", "postId"],
+      key: ["tipperAddress", "postId"],
       codegen: { dataStruct: false },
     },
     // These details are of the tip after it is split between receivers
@@ -158,7 +158,7 @@ export default defineWorld({
         createdAt: "uint64", // Timestamp of when the tip was made
         postId: "bytes32", // Post ID
         receiver: "address", // Address of the user who received the tip (post owner)
-        tipper: "address", // Address of the user who tipped
+        tipperAddress: "address", // Address of the user who tipped
         tokenAddress: "address", // Address of the token used for tipping (e.g., PESOS, RAID, USDC)
       },
       key: ["id"],
