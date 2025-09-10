@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -6,6 +6,8 @@ import { useCopy } from "@/common/useCopy";
 import { useDustClient } from "@/common/useDustClient";
 import { usePosts } from "@/common/usePosts";
 import { useWaypoint } from "@/common/useWaypoint";
+import { TipDialog } from "@/components/dialogs/TipDialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DISCOVER_PAGE_PATH, FRONT_PAGE_PATH } from "@/Routes";
 import { formatDate, shortenAddress } from "@/utils/helpers";
@@ -18,10 +20,14 @@ export const ArticlePage = () => {
   const { articles } = usePosts();
   const { onSetWaypoint } = useWaypoint();
 
+  const [isTipModalOpen, setIsTipModalOpen] = useState(false);
+
   const article = useMemo(
     () => articles.find((p) => p.id === id),
     [id, articles]
   );
+
+  const tipCount: number = 2;
 
   if (!article) {
     return (
@@ -70,18 +76,37 @@ export const ArticlePage = () => {
           ))}
         </div>
 
-        <div className={cn("font-accent", "text-[10px] text-neutral-700")}>
-          {"By "}
-          <button
-            onClick={() => {
-              copyToClipboard(article.owner);
-              toast.success(`Copied ${shortenAddress(article.owner)}`);
-            }}
-          >
-            @{article.author}
-          </button>
-          {" • "}
-          {formatDate(article.createdAt)}
+        <div className="flex justify-between items-center">
+          <div className={cn("font-accent", "text-[10px] text-neutral-700")}>
+            {"By "}
+            <button
+              onClick={() => {
+                copyToClipboard(article.owner);
+                toast.success(`Copied ${shortenAddress(article.owner)}`);
+              }}
+            >
+              @{article.author}
+            </button>
+            {" • "}
+            {formatDate(article.createdAt)}
+          </div>
+          <div className="flex gap-3 items-center">
+            <div
+              className={cn(
+                "font-accent",
+                "bg-green-100 border border-green-300 text-green-800 text-[10px] px-2 py-1"
+              )}
+            >
+              {tipCount} {tipCount === 1 ? "tip" : "tips"} received
+            </div>
+            <Button
+              className="bg-green-700 h-auto hover:bg-green-800 text-white text-xs px-3 py-1"
+              onClick={() => setIsTipModalOpen(true)}
+              size="sm"
+            >
+              Tip Article
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -133,6 +158,14 @@ export const ArticlePage = () => {
           </Link>
         </div>
       </footer>
+
+      <TipDialog
+        articleId={article.id}
+        articleTitle={article.title}
+        authorName={article.author}
+        isOpen={isTipModalOpen}
+        onClose={() => setIsTipModalOpen(false)}
+      />
     </article>
   );
 };

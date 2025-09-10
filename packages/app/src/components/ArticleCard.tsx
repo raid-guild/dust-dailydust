@@ -14,6 +14,8 @@ export const ArticleCard = ({
 }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
 
+  const tipCount: number = 2;
+
   return (
     <article className="relative">
       <h3
@@ -60,12 +62,24 @@ export const ArticleCard = ({
       <p className={"text-[15px] leading-relaxed text-neutral-800"}>
         {article.excerpt}
       </p>
-      {article.coords && (
-        <div className={cn("font-accent", "mt-1 text-[10px] text-neutral-700")}>
-          x:{article.coords.x} y:
-          {article.coords.y} z:{article.coords.z}
+      <div className="flex gap-4 items-center">
+        {article.coords && (
+          <div
+            className={cn("font-accent", "mt-1 text-[10px] text-neutral-700")}
+          >
+            x:{article.coords.x} y:
+            {article.coords.y} z:{article.coords.z}
+          </div>
+        )}
+        <div
+          className={cn(
+            "font-accent",
+            "bg-green-100 border-green-300 px-2 py-1 border text-green-800 text-[10px]"
+          )}
+        >
+          {tipCount} {tipCount === 1 ? "tip" : "tips"}
         </div>
-      )}
+      </div>
     </article>
   );
 };
